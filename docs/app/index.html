@@ -29,11 +29,18 @@
   });
   document.title = {"easi":"EASI","sfari":"SFARI","deep":"DEEP"}[tool] + " · STAF";
 })();</script>
+    <script>window.jQuery = window.jQuery || function (target) {
+  return { on: function (events, handler) {
+    String(events).split(" ").forEach(function (type) { if (type) target.addEventListener(type, handler); });
+    return this;
+  } };
+};</script>
     <script src="js/staf/staf-ns.js?v=1d4dbc9891" defer></script>
     <script src="js/staf/geocode-autocomplete.js?v=026c13bfd7" defer></script>
     <script src="js/staf/legend-dock.js?v=1ab8a0b672" defer></script>
     <script src="js/staf/tooltip.js?v=7bf8ab487e" defer></script>
     <script src="js/staf/report-ready.js?v=fbe0973c23" defer></script>
+    <script src="js/staf/unsaved-guard.js?v=834e7b849b" defer></script>
     <script src="js/staf/scenarios.js?v=219b864ab4" defer></script>
     <script src="js/staf/metric-rows.js?v=8475905c97" defer></script>
     <script src="js/staf/coord-entry.js?v=b45c1033ac" defer></script>
@@ -43,10 +50,13 @@
     <script src="js/sfari/field-review.js?v=6bc954a5fb" defer></script>
     <script src="js/deep/measure.js?v=4127244e21" defer></script>
     <script src="js/deep/coverage.js?v=ffe00febc6" defer></script>
-    <script type="module" crossorigin src="/staf/app/assets/index-DG6Bzc98.js"></script>
-    <link rel="modulepreload" crossorigin href="/staf/app/assets/chunk-DSKUU3CF.js">
+    <script type="module" crossorigin src="/staf/app/assets/index-CabBZe1J.js"></script>
+    <link rel="modulepreload" crossorigin href="/staf/app/assets/chunk-B63O5pr_.js">
+    <link rel="modulepreload" crossorigin href="/staf/app/assets/chunk-BwP1DIml.js">
+    <link rel="modulepreload" crossorigin href="/staf/app/assets/chunk-otjm7tro.js">
+    <link rel="modulepreload" crossorigin href="/staf/app/assets/chunk-CmdrVVic.js">
   </head>
-  <body class="bslib-page-fill bslib-gap-spacing bslib-flow-mobile html-fill-container" style="padding:0;">
+  <body class="bslib-page-fill bslib-gap-spacing bslib-flow-mobile html-fill-container" style="padding:0;" data-bs-no-jquery="">
     <div class="staf-header easi-header">
           <div class="staf-header-left">
             <a href="https://usace-wrises.github.io/staf/" target="_blank" rel="noopener" class="staf-brand" title="Stream Tiered Assessment Framework">STAF</a>

@@ -24,9 +24,9 @@ export const WARM: Record<ToolKey, string[]> = {
     'points/wqp_temperature.parquet', 'points/nas.parquet', 'engine/ecoregions_l3.geojson', 'engine/physio_divisions.geojson'],
   sfari: ['bundle/links2.parquet', 'bundle/values/extras2_{vpu}.parquet', ...VALUES, 'bundle/v2/idindex.parquet', 'topo/v2_{vpu}.parquet',
     'bundle/v2/streamcat2_{vpu}.parquet', 'xs/xs-{vpu}.parquet', 'xs/xs-{vpu}-sections.parquet', ...POINTS, 'points/nwis.parquet',
-    'engine/physio_divisions.geojson', 'engine/bfi48grd.tif'],
+    'engine/physio_divisions.geojson', 'engine/bfi48grd.tif', 'engine/ecoregions_l3.geojson'],
   deep: ['bundle/links2.parquet', 'bundle/values/extras2_{vpu}.parquet', ...VALUES, 'bundle/v2/idindex.parquet', 'topo/v2_{vpu}.parquet',
-    'bundle/v2/streamcat2_{vpu}.parquet', 'points/nid.parquet', 'engine/bfi48grd.tif'],
+    'bundle/v2/streamcat2_{vpu}.parquet', 'points/nid.parquet', 'engine/bfi48grd.tif', 'engine/ecoregions_l3.geojson'],
 }
 
 /** The base-flow grid's first read (`metrics.bfiImage`: its first 16 KB, or the whole file when small). */

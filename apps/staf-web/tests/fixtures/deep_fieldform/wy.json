@@ -1,0 +1,48 @@
+{
+ "name": "wy",
+ "bundle": "apps/library/assessments/wy-sqt-adapted/v1/assessment.deep.json",
+ "ref": "",
+ "measured": {
+  "reach-inflow-concentrated-flow-points": {
+   "value": 2.5,
+   "origin": "field",
+   "source": ""
+  },
+  "streamflow-regime-flow-alteration-module": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "channel-and-floodplain-dynamics-bank-height-ratio-bhr": {
+   "value": 7.5,
+   "origin": "field",
+   "source": ""
+  },
+  "channel-and-floodplain-dynamics-percent-streambank-armoring": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "bed-composition-and-large-wood-percent-fines-2mm": {
+   "value": 12.5,
+   "origin": "field",
+   "source": ""
+  },
+  "carbon-processing-riparian-extent": {
+   "value": 17.5,
+   "origin": "field",
+   "source": ""
+  },
+  "habitat-provision-pool-depth-ratio": {
+   "value": 22.5,
+   "origin": "field",
+   "source": ""
+  },
+  "population-support-game-species-biomass": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  }
+ },
+ "delineation": {}
+}

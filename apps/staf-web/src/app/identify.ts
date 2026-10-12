@@ -114,6 +114,11 @@ export class Identify {
     return this.status === 'ready' && this.snapped !== null && (this.host.key === 'easi' ? this.snapped[3] !== null : comidOf(this.anchor) !== null)
   }
 
+  /** The lookup runs: snapping, finding or retrying (SFARI's and DEEP's Get Forms wait on it). */
+  busy(): boolean {
+    return this.status === 'snapping' || this.status === 'finding' || this.status === 'retrying'
+  }
+
   // ---------------------------------------------------------------- the map's pieces
 
   private placePin(lat: number, lon: number): void {
@@ -475,6 +480,38 @@ export class Identify {
     const rec = await flowlineAt(this.host.nets.v2.src, 'bundle/v2/', line.region, line.row).catch(() => null)
     if (!rec) return
     for (const [key, src] of fields) if (scored[key] == null && rec[src] != null) scored[key] = rec[src]
+  }
+
+  /** Open (each app.py _load_session): a saved site's pick as the file left it, no lookup run again.
+   * ``point`` is the pick ([lat, lon, ft, id]: EASI's id the reach's COMID, SFARI's and DEEP's the HR
+   * line's), ``anchor`` its reach classification; the dashed route to a downstream reach is drawn, then
+   * the pin at ``pin`` (on top of the basin), then the reach's glow once its line is read. */
+  restore(point: Hit | null, anchor: Anchor | null, pin: [number, number] | null,
+    findReach: (comid: number) => Promise<FlowlineRecord | null>): void {
+    this.generation += 1
+    const gen = this.generation
+    this.removePin()
+    const cid = this.host.key === 'easi' ? (point ? point[3] : null) : comidOf(anchor)
+    this.reset(point && (this.host.key === 'easi' || cid !== null) ? 'ready' : point ? 'snapping' : 'idle')
+    this.snapped = point
+    this.anchor = anchor
+    const name = anchor?.scoredReach?.gnisName
+    if (cid !== null) this.reach = { comid: cid, name: name ? String(name).trim() || null : null }
+    this.setRoute(anchor)
+    if (pin) this.placePin(pin[0], pin[1])
+    this.host.changed()
+    if (cid === null) return
+    void findReach(cid).then((rec) => {
+      if (gen !== this.generation || !rec) return
+      this.setScored({ type: 'Feature', properties: { comid: cid, gnis_name: rec.gnis_name }, geometry: rec.geometry })
+      this.host.changed()
+    }, () => {})
+  }
+
+  /** A saved site whose reach was never resolved (a file from before 2026-09-07): resolved again from
+   * its point, as typed coordinates are (each app's coord_snap_task). */
+  resnap(lat: number, lon: number): void {
+    this.typed(lat, lon)
   }
 
   /** Clear and New: no point, no reach, nothing pending (each app.py _reset). */

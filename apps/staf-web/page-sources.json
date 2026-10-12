@@ -21,6 +21,10 @@
    "source": "apps/deep/deep/method_text.py: CONCISE",
    "sha256": "5d1b67dbc2b94664b658f1e700238b7cb2bedfe1b5d1e782db49a867560ad744"
   },
+  "content/easi/acquisition.json": {
+   "source": "apps/easi/easi/method_package.py: acquisition_digest()",
+   "sha256": "3f5eb2f08f74eaf08607bd98782195b644e63c10c3f47541e82c1b94d4cc15ad"
+  },
   "content/easi/adopted-method.json": {
    "source": "apps/easi/data/source/adopted-method.json",
    "sha256": "43add6db8c9cf8cdc5595578dad7e145f36c84bddd50f8ec8f6705b5af09b3ef"
@@ -33,9 +37,17 @@
    "source": "plotly 6.8.0: the default template",
    "sha256": "eb2c9afe3921894fbc47c6cac35f134b7d06a7440724dab748f530e5cd7d6dd3"
   },
+  "content/easi/summaryplot-text.json": {
+   "source": "matplotlib 3.11.0: DejaVu Sans (normal, bold) text metrics at 100 and 150 dpi",
+   "sha256": "56f0bc56a7c21a74112b4356521189a5057b5c4278e0b7b40e28b4faadd30f76"
+  },
   "content/easi/xsplot-text.json": {
    "source": "matplotlib 3.11.0: DejaVu Sans text metrics at 100 and 130 dpi",
    "sha256": "57e2b6d8027a3e4f896495427b76aa67e9728625eb48dde487f3ea142258f57f"
+  },
+  "content/pdf/fonts.json": {
+   "source": "reportlab 4.5.1: the standard-14 fonts' widths and codecs",
+   "sha256": "36b04d9db1a8f94a9fabd39dabb0308919889e0227378499b60cf7f5db56664c"
   },
   "content/sfari/sfari-functions.json": {
    "source": "apps/sfari/data/sfari-functions.json",
@@ -161,17 +173,37 @@
    "source": "libs/staf_workbook/assets/staf.css",
    "sha256": "1e3fa9b5dc7796f25e03cf99390f06fcbd117a0e1a6bf2a06240907308596a9d"
   },
+  "data/us_states.geojson.gz": {
+   "source": "apps/deep/data/us_states.geojson.gz",
+   "sha256": "63074614d3bb15eff19461659cd056a770b2555ec22bb667da889ff00a866821"
+  },
   "favicon.svg": {
    "source": "apps/staf/www/shell/favicon.svg",
    "sha256": "936f1776807ae1f6308074a763020b778d714c6032ec745a6922df4232ee41e2"
+  },
+  "fonts/dejavu-sans-bold.woff2": {
+   "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans Bold, cut to the summary plot's characters)",
+   "sha256": "83cf3298842331fe93a301cdab44d9e74062767d8f61c77535db6677c77dff95"
   },
   "fonts/dejavu-sans-license.txt": {
    "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, LICENSE_DEJAVU)",
    "sha256": "d75938dec098f06f0ac3c00853065d94f020be1c3c62ef1dc2975ba15b4d9b0e"
   },
+  "fonts/dejavu-sans-summary.woff2": {
+   "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, cut to the summary plot's characters)",
+   "sha256": "6082e719e13895ecdae0d96d762156be4ec83228a6a8141c9a1113acb5ca514a"
+  },
   "fonts/dejavu-sans.woff2": {
    "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, cut to the image's characters)",
    "sha256": "8f6e3e17d3b8747af3f55c5c1704be8ecede2011c71348be82947a40a7c3d302"
+  },
+  "forms/sfari/SFARI_Calculator_Draft_2026-06-29.xlsx": {
+   "source": "apps/sfari/data/calculator/SFARI_Calculator_Draft_2026-06-29.xlsx",
+   "sha256": "c5795f9e6e12160ae8a3377fbc96eebaa33a445006b835dbae1baaad17aa3b70"
+  },
+  "forms/sfari/SFARI_Field_Form_v1.0.pdf": {
+   "source": "apps/sfari/data/FieldForm/SFARI_Field_Form_v1.0.pdf",
+   "sha256": "3878b7311e3f605fe943e8bbae334bfc54550745549bbd3c4ad68c1f2ad63411"
   },
   "js/deep/coverage.js": {
    "source": "apps/deep/www/coverage.js",
@@ -228,6 +260,10 @@
   "js/staf/tooltip.js": {
    "source": "libs/staf_workbook/assets/tooltip.js",
    "sha256": "7bf8ab487edfe47d7ffe11c1650c8597bb23e65a7950a2c30f69bcdaeaee4d74"
+  },
+  "js/staf/unsaved-guard.js": {
+   "source": "libs/staf_workbook/assets/unsaved-guard.js",
+   "sha256": "834e7b849b99fa4a99aaf35e9850767aabfac4558b781746e492e9866bfb83a2"
   }
  }
 }

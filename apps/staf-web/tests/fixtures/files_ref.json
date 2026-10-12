@@ -1,0 +1,1970 @@
+{
+ "digests": [
+  {
+   "text": "",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+   "md5": "d41d8cd98f00b204e9800998ecf8427e",
+   "b64": "",
+   "uuid5_url": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
+   "uuid5_dns": "4ebd0208-8328-5d69-8c44-ec50939c0967"
+  },
+  {
+   "text": "abc",
+   "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+   "sha1": "a9993e364706816aba3e25717850c26c9cd0d89d",
+   "md5": "900150983cd24fb0d6963f7d28e17f72",
+   "b64": "YWJj",
+   "uuid5_url": "68661508-f3c4-55b4-945d-ae2b4dfe5db4",
+   "uuid5_dns": "6cb8e707-0fc5-5f55-88d4-d4fed43e64a8"
+  },
+  {
+   "text": "STAF ✓ km²",
+   "sha256": "1a027c22b2034844763913ed406959cc3677524186093c90e9d49cbb7e040a52",
+   "sha1": "f792f22dbfdbdd41dcf195b80436abbb11c6d31a",
+   "md5": "1b326cfbfaf33442f622ad23893c45c1",
+   "b64": "U1RBRiDinJMga23Csg==",
+   "uuid5_url": "2c8388ef-04e1-5ab8-92e3-056b5461e496",
+   "uuid5_dns": "0a11fd54-86f7-5d87-a4ff-7db0ee65bce2"
+  },
+  {
+   "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "sha256": "d5e285683cd4efc02d021a5c62014694958901005d6f71e89e0989fac77e4072",
+   "sha1": "cef734ba81a024479e09eb5a75b6ddae62e6abf1",
+   "md5": "04364420e25c512fd958a70738aa8f72",
+   "b64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+   "uuid5_url": "d7c769b2-da3b-59fa-bdd6-2f3e8c5ed303",
+   "uuid5_dns": "4c506c2a-c3a2-508b-b2ce-25c3a06bf481"
+  },
+  {
+   "text": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "sha256": "4877e564e5e36e367c7c8d59670774becd3350610b6df4c399c9fa9b66da5813",
+   "sha1": "8902d391f35bbaf08469aee6ab763e4048f3f6ba",
+   "md5": "6c830a5d23df58dbe0171eb5639bf3e4",
+   "b64": "eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXk=",
+   "uuid5_url": "cf24ec48-1b0b-5fe0-a033-3e2880d9d34c",
+   "uuid5_dns": "4d280fc6-b05a-5094-b818-94a93e901355"
+  },
+  {
+   "text": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "sha256": "72996563049cc84daa2c3f31fd5c3d10770e69d6ebbb8da5b6d76db303dbae43",
+   "sha1": "668cd5ae72f64e8194014f99778081e5ae46df53",
+   "md5": "3ecc49f9d9d6c263b4f0de7fc3f38aed",
+   "b64": "enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6eg==",
+   "uuid5_url": "727c7c28-ad19-527c-859b-bcdfbfb096bd",
+   "uuid5_dns": "e7749742-f7ff-5e30-bdfe-cc3db2284dd2"
+  },
+  {
+   "text": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+   "sha256": "04ffd92aef8aafe6f4f8388bc9f7c5b0d39eae37128b1ca693647b8569f8e629",
+   "sha1": "950bbb327695ac0bbe496f0072a5659ac1075b40",
+   "md5": "67583cbc0955e79057720d3ef1732cfc",
+   "b64": "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3dw==",
+   "uuid5_url": "2898b784-ba15-547e-90a2-cf71baa35a00",
+   "uuid5_dns": "1ab1bd42-5cdd-51ce-a5d0-24ef6659f2c8"
+  },
+  {
+   "text": "\u0000\u0001ÿ",
+   "sha256": "06c6dc1a1421eaead7fe2f5082a04727164ac612258c4ef3a8bcd4e6667c19d4",
+   "sha1": "734c43613a2c7ca8dc655d383f5b8b3ca02fc4f9",
+   "md5": "e859a53f19b3351aaed08583d74e44bf",
+   "b64": "AAHDvw==",
+   "uuid5_url": "41785fbf-926c-5c26-901b-31c0ece03da3",
+   "uuid5_dns": "d5bfc5e6-4292-553b-b0ec-9afa88081379"
+  }
+ ],
+ "json": [
+  {
+   "source": "{\"a\": 1.0, \"b\": 2, \"c\": [1.5, 1e5, -0.0, 0.0, 3, 1E-7, 12345678901234.0], \"d\": \"km²\"}",
+   "dumps": [
+    {
+     "options": {},
+     "text": "{\"a\": 1.0, \"b\": 2, \"c\": [1.5, 100000.0, -0.0, 0.0, 3, 1e-07, 12345678901234.0], \"d\": \"km\\u00b2\"}"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "{\n  \"a\": 1.0,\n  \"b\": 2,\n  \"c\": [\n    1.5,\n    100000.0,\n    -0.0,\n    0.0,\n    3,\n    1e-07,\n    12345678901234.0\n  ],\n  \"d\": \"km\\u00b2\"\n}"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "{\"a\":1.0,\"b\":2,\"c\":[1.5,100000.0,-0.0,0.0,3,1e-07,12345678901234.0],\"d\":\"km²\"}"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "{\"a\": 1.0, \"b\": 2, \"c\": [1.5, 100000.0, -0.0, 0.0, 3, 1e-07, 12345678901234.0], \"d\": \"km\\u00b2\"}"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "{\n \"a\": 1.0,\n \"b\": 2,\n \"c\": [\n  1.5,\n  100000.0,\n  -0.0,\n  0.0,\n  3,\n  1e-07,\n  12345678901234.0\n ],\n \"d\": \"km²\"\n}"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "{\n  \"a\": 1.0, \n  \"b\": 2, \n  \"c\": [\n    1.5, \n    100000.0, \n    -0.0, \n    0.0, \n    3, \n    1e-07, \n    12345678901234.0\n  ], \n  \"d\": \"km\\u00b2\"\n}"
+    }
+   ]
+  },
+  {
+   "source": "{\"5\": \"five\", \"1\": \"one\", \"4A\": \"x\", \"nested\": {\"10\": [], \"2\": {}}, \"z\": null, \"t\": true, \"f\": false}",
+   "dumps": [
+    {
+     "options": {},
+     "text": "{\"5\": \"five\", \"1\": \"one\", \"4A\": \"x\", \"nested\": {\"10\": [], \"2\": {}}, \"z\": null, \"t\": true, \"f\": false}"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "{\n  \"5\": \"five\",\n  \"1\": \"one\",\n  \"4A\": \"x\",\n  \"nested\": {\n    \"10\": [],\n    \"2\": {}\n  },\n  \"z\": null,\n  \"t\": true,\n  \"f\": false\n}"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "{\"5\":\"five\",\"1\":\"one\",\"4A\":\"x\",\"nested\":{\"10\":[],\"2\":{}},\"z\":null,\"t\":true,\"f\":false}"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "{\"1\": \"one\", \"4A\": \"x\", \"5\": \"five\", \"f\": false, \"nested\": {\"10\": [], \"2\": {}}, \"t\": true, \"z\": null}"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "{\n \"5\": \"five\",\n \"1\": \"one\",\n \"4A\": \"x\",\n \"nested\": {\n  \"10\": [],\n  \"2\": {}\n },\n \"z\": null,\n \"t\": true,\n \"f\": false\n}"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "{\n  \"1\": \"one\", \n  \"4A\": \"x\", \n  \"5\": \"five\", \n  \"f\": false, \n  \"nested\": {\n    \"10\": [], \n    \"2\": {}\n  }, \n  \"t\": true, \n  \"z\": null\n}"
+    }
+   ]
+  },
+  {
+   "source": "{\"nan\": NaN, \"inf\": Infinity, \"ninf\": -Infinity, \"big\": 1e400, \"tiny\": 5e-324}",
+   "dumps": [
+    {
+     "options": {},
+     "text": "{\"nan\": NaN, \"inf\": Infinity, \"ninf\": -Infinity, \"big\": Infinity, \"tiny\": 5e-324}"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "{\n  \"nan\": NaN,\n  \"inf\": Infinity,\n  \"ninf\": -Infinity,\n  \"big\": Infinity,\n  \"tiny\": 5e-324\n}"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "{\"nan\":NaN,\"inf\":Infinity,\"ninf\":-Infinity,\"big\":Infinity,\"tiny\":5e-324}"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "{\"big\": Infinity, \"inf\": Infinity, \"nan\": NaN, \"ninf\": -Infinity, \"tiny\": 5e-324}"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "{\n \"nan\": NaN,\n \"inf\": Infinity,\n \"ninf\": -Infinity,\n \"big\": Infinity,\n \"tiny\": 5e-324\n}"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "{\n  \"big\": Infinity, \n  \"inf\": Infinity, \n  \"nan\": NaN, \n  \"ninf\": -Infinity, \n  \"tiny\": 5e-324\n}"
+    }
+   ]
+  },
+  {
+   "source": "[1, 2.5, \"a\\u00e9\\ud83d\\ude00\\n\\t\\\"\\\\\", [], {}, [[]], {\"k\": [1, {\"m\": 2.0}]}]",
+   "dumps": [
+    {
+     "options": {},
+     "text": "[1, 2.5, \"a\\u00e9\\ud83d\\ude00\\n\\t\\\"\\\\\", [], {}, [[]], {\"k\": [1, {\"m\": 2.0}]}]"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "[\n  1,\n  2.5,\n  \"a\\u00e9\\ud83d\\ude00\\n\\t\\\"\\\\\",\n  [],\n  {},\n  [\n    []\n  ],\n  {\n    \"k\": [\n      1,\n      {\n        \"m\": 2.0\n      }\n    ]\n  }\n]"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "[1,2.5,\"aé😀\\n\\t\\\"\\\\\",[],{},[[]],{\"k\":[1,{\"m\":2.0}]}]"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "[1, 2.5, \"a\\u00e9\\ud83d\\ude00\\n\\t\\\"\\\\\", [], {}, [[]], {\"k\": [1, {\"m\": 2.0}]}]"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "[\n 1,\n 2.5,\n \"aé😀\\n\\t\\\"\\\\\",\n [],\n {},\n [\n  []\n ],\n {\n  \"k\": [\n   1,\n   {\n    \"m\": 2.0\n   }\n  ]\n }\n]"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "[\n  1, \n  2.5, \n  \"a\\u00e9\\ud83d\\ude00\\n\\t\\\"\\\\\", \n  [], \n  {}, \n  [\n    []\n  ], \n  {\n    \"k\": [\n      1, \n      {\n        \"m\": 2.0\n      }\n    ]\n  }\n]"
+    }
+   ]
+  },
+  {
+   "source": "{\"b\": 1, \"a\": 2, \"\\u00e9\": 3, \"Z\": 4, \"_\": 5}",
+   "dumps": [
+    {
+     "options": {},
+     "text": "{\"b\": 1, \"a\": 2, \"\\u00e9\": 3, \"Z\": 4, \"_\": 5}"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "{\n  \"b\": 1,\n  \"a\": 2,\n  \"\\u00e9\": 3,\n  \"Z\": 4,\n  \"_\": 5\n}"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "{\"b\":1,\"a\":2,\"é\":3,\"Z\":4,\"_\":5}"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "{\"Z\": 4, \"_\": 5, \"a\": 2, \"b\": 1, \"\\u00e9\": 3}"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "{\n \"b\": 1,\n \"a\": 2,\n \"é\": 3,\n \"Z\": 4,\n \"_\": 5\n}"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "{\n  \"Z\": 4, \n  \"_\": 5, \n  \"a\": 2, \n  \"b\": 1, \n  \"\\u00e9\": 3\n}"
+    }
+   ]
+  },
+  {
+   "source": "{\"dup\": 1, \"other\": 2, \"dup\": 3.0}",
+   "dumps": [
+    {
+     "options": {},
+     "text": "{\"dup\": 3.0, \"other\": 2}"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "{\n  \"dup\": 3.0,\n  \"other\": 2\n}"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "{\"dup\":3.0,\"other\":2}"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "{\"dup\": 3.0, \"other\": 2}"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "{\n \"dup\": 3.0,\n \"other\": 2\n}"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "{\n  \"dup\": 3.0, \n  \"other\": 2\n}"
+    }
+   ]
+  },
+  {
+   "source": "\"just a string\\u0007\"",
+   "dumps": [
+    {
+     "options": {},
+     "text": "\"just a string\\u0007\""
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "\"just a string\\u0007\""
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "\"just a string\\u0007\""
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "\"just a string\\u0007\""
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "\"just a string\\u0007\""
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "\"just a string\\u0007\""
+    }
+   ]
+  },
+  {
+   "source": "-0",
+   "dumps": [
+    {
+     "options": {},
+     "text": "0"
+    },
+    {
+     "options": {
+      "indent": 2
+     },
+     "text": "0"
+    },
+    {
+     "options": {
+      "separators": [
+       ",",
+       ":"
+      ],
+      "ensure_ascii": false
+     },
+     "text": "0"
+    },
+    {
+     "options": {
+      "sort_keys": true
+     },
+     "text": "0"
+    },
+    {
+     "options": {
+      "indent": 1,
+      "ensure_ascii": false
+     },
+     "text": "0"
+    },
+    {
+     "options": {
+      "indent": 2,
+      "sort_keys": true,
+      "separators": [
+       ", ",
+       ": "
+      ]
+     },
+     "text": "0"
+    }
+   ]
+  }
+ ],
+ "jsonRefused": [
+  "﻿{}",
+  "{'a': 1}",
+  "[1,]",
+  "{\"a\" 1}",
+  "01",
+  "[1] x",
+  "\"\u0001\"",
+  "\"\\x\"",
+  "nan",
+  "-NaN",
+  ""
+ ],
+ "csv": [
+  {
+   "row": [],
+   "kinds": [],
+   "text": "\r\n"
+  },
+  {
+   "row": [
+    ""
+   ],
+   "kinds": [
+    "str"
+   ],
+   "text": "\"\"\r\n"
+  },
+  {
+   "row": [
+    null
+   ],
+   "kinds": [
+    "NoneType"
+   ],
+   "text": "\"\"\r\n"
+  },
+  {
+   "row": [
+    "",
+    ""
+   ],
+   "kinds": [
+    "str",
+    "str"
+   ],
+   "text": ",\r\n"
+  },
+  {
+   "row": [
+    "a",
+    "b,c",
+    "say \"hi\"",
+    "line\nbreak",
+    "cr\rx",
+    " lead",
+    "trail "
+   ],
+   "kinds": [
+    "str",
+    "str",
+    "str",
+    "str",
+    "str",
+    "str",
+    "str"
+   ],
+   "text": "a,\"b,c\",\"say \"\"hi\"\"\",\"line\nbreak\",\"cr\rx\", lead,trail \r\n"
+  },
+  {
+   "row": [
+    1,
+    "2.5",
+    "-0.0",
+    "1e+16",
+    "1e-05",
+    "3.0",
+    true,
+    false,
+    null,
+    "nan",
+    "inf"
+   ],
+   "kinds": [
+    "int",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
+    "bool",
+    "bool",
+    "NoneType",
+    "float",
+    "float"
+   ],
+   "text": "1,2.5,-0.0,1e+16,1e-05,3.0,True,False,,nan,inf\r\n"
+  },
+  {
+   "row": [
+    "km²",
+    "✓",
+    1234567890123
+   ],
+   "kinds": [
+    "str",
+    "str",
+    "int"
+   ],
+   "text": "km²,✓,1234567890123\r\n"
+  }
+ ],
+ "utf8": [
+  {
+   "bytes": [
+    255
+   ],
+   "message": "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"
+  },
+  {
+   "bytes": [
+    111,
+    107,
+    128
+   ],
+   "message": "'utf-8' codec can't decode byte 0x80 in position 2: invalid start byte"
+  },
+  {
+   "bytes": [
+    226,
+    130
+   ],
+   "message": "'utf-8' codec can't decode bytes in position 0-1: unexpected end of data"
+  },
+  {
+   "bytes": [
+    226,
+    40,
+    161
+   ],
+   "message": "'utf-8' codec can't decode byte 0xe2 in position 0: invalid continuation byte"
+  },
+  {
+   "bytes": [
+    240,
+    159,
+    152
+   ],
+   "message": "'utf-8' codec can't decode bytes in position 0-2: unexpected end of data"
+  },
+  {
+   "bytes": [
+    97,
+    192,
+    175
+   ],
+   "message": "'utf-8' codec can't decode byte 0xc0 in position 1: invalid start byte"
+  },
+  {
+   "bytes": [
+    237,
+    160,
+    128
+   ],
+   "message": "'utf-8' codec can't decode byte 0xed in position 0: invalid continuation byte"
+  },
+  {
+   "bytes": [
+    244,
+    144,
+    128,
+    128
+   ],
+   "message": "'utf-8' codec can't decode byte 0xf4 in position 0: invalid continuation byte"
+  },
+  {
+   "bytes": [
+    97,
+    98,
+    99,
+    226,
+    130,
+    172,
+    226
+   ],
+   "message": "'utf-8' codec can't decode byte 0xe2 in position 6: unexpected end of data"
+  }
+ ],
+ "controls": {
+  "numeric": [
+   {
+    "args": [
+     "sfari-xs_slope",
+     "Channel slope (m/m)",
+     0.00123,
+     {
+      "min": 1e-05,
+      "step": 0.0005
+     }
+    ],
+    "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"sfari-xs_slope-label\" for=\"sfari-xs_slope\">Channel slope (m/m)</label><input id=\"sfari-xs_slope\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.00123\" min=\"1e-05\" step=\"0.0005\" data-update-on=\"change\"/>\n</div>"
+   },
+   {
+    "args": [
+     "sfari-xs_nchan",
+     "Manning n (channel)",
+     0.035,
+     {
+      "step": 0.005
+     }
+    ],
+    "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"sfari-xs_nchan-label\" for=\"sfari-xs_nchan\">Manning n (channel)</label><input id=\"sfari-xs_nchan\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.035\" step=\"0.005\" data-update-on=\"change\"/>\n</div>"
+   },
+   {
+    "args": [
+     "sfari-xs_targetq",
+     "Target discharge Q (cfs)",
+     100,
+     {
+      "min": 0,
+      "step": 1
+     }
+    ],
+    "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"sfari-xs_targetq-label\" for=\"sfari-xs_targetq\">Target discharge Q (cfs)</label><input id=\"sfari-xs_targetq\" type=\"number\" class=\"shiny-input-number form-control\" value=\"100\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n</div>"
+   },
+   {
+    "args": [
+     "sfari-xs_d50",
+     "Bed D50 (mm)",
+     "30.0",
+     {
+      "min": 0,
+      "step": 1
+     }
+    ],
+    "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"sfari-xs_d50-label\" for=\"sfari-xs_d50\">Bed D50 (mm)</label><input id=\"sfari-xs_d50\" type=\"number\" class=\"shiny-input-number form-control\" value=\"30.0\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n</div>"
+   }
+  ],
+  "row": "<div class=\"row\">\n  <div class=\"col-sm-4\">\n    <div>a</div>\n  </div>\n  <div class=\"col-sm-8\">\n    <div>b</div>\n  </div>\n</div>",
+  "selectNull": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label shiny-label-null\" id=\"sfari-assess_pick_0-label\" for=\"sfari-assess_pick_0\"></label>\n  <div>\n    <select class=\"shiny-input-select form-select\" id=\"sfari-assess_pick_0\">      <option value=\"a\">A</option>\n      <option value=\"b\" selected=\"\">B &amp; C</option></select>\n  </div>\n</div>",
+  "pills": "<ul class=\"nav nav-pills shiny-tab-input\" id=\"sfari-ff_tabs\" data-tabsetid=\"TABSET\">\n  <li class=\"nav-item\">\n    <a data-bs-toggle=\"tab\" data-toggle=\"tab\" data-value=\"ff\" role=\"tab\" class=\"nav-link active\" href=\"#tab-TABSET-0\">Field forms</a>\n  </li>\n  <li class=\"nav-item\">\n    <a data-bs-toggle=\"tab\" data-toggle=\"tab\" data-value=\"Desktop\" role=\"tab\" class=\"nav-link\" href=\"#tab-TABSET-1\">Desktop</a>\n  </li>\n  <li class=\"bslib-nav-spacer\"></li>\n  <li>\n    <div class=\"staf-dl\">\n      <a class=\"btn btn-default shiny-download-link disabled btn-sm btn-primary\" id=\"sfari-dl_forms\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\" title=\"The field forms to print\">Field forms PDF</a>\n    </div>\n  </li>\n  <li>\n    <div class=\"staf-dl\">\n      <a class=\"btn btn-default shiny-download-link disabled btn-sm btn-primary\" id=\"sfari-dl_metrics\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">Desktop metrics PDF</a>\n    </div>\n  </li>\n  <li>\n    <div class=\"staf-dl\">\n      <a class=\"btn btn-default shiny-download-link disabled btn-sm btn-primary\" id=\"sfari-dl_wb\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\" title=\"The Excel calculator with this assessment entered\">Completed workbook</a>\n    </div>\n  </li>\n  <li>\n    <div class=\"staf-dl\">\n      <a class=\"btn btn-default shiny-download-link disabled btn-sm btn-primary\" id=\"sfari-dl_blank\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\" title=\"The Excel calculator with empty entry cells\">Blank workbook</a>\n    </div>\n  </li>\n</ul>\n<div class=\"tab-content\" data-tabsetid=\"TABSET\">\n  <div class=\"tab-pane active\" role=\"tabpanel\" data-value=\"ff\" id=\"tab-TABSET-0\">\n    <div>x</div>\n  </div>\n  <div class=\"tab-pane\" role=\"tabpanel\" data-value=\"Desktop\" id=\"tab-TABSET-1\">y</div>\n</div>",
+  "pillsNoWorkbook": "<ul class=\"nav nav-pills shiny-tab-input\" id=\"sfari-ff_tabs\" data-tabsetid=\"TABSET\">\n  <li class=\"nav-item\">\n    <a data-bs-toggle=\"tab\" data-toggle=\"tab\" data-value=\"Metrics\" role=\"tab\" class=\"nav-link active\" href=\"#tab-TABSET-0\">Metrics</a>\n  </li>\n  <li class=\"bslib-nav-spacer\"></li>\n  <li>\n    <div class=\"staf-dl\">\n      <a class=\"btn btn-default shiny-download-link disabled btn-sm btn-primary\" id=\"sfari-dl_metrics\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\" title=\"The metrics list\">Desktop metrics PDF</a>\n    </div>\n  </li>\n  <li>\n    <div class=\"staf-dl-note\">No calculator workbook for this version</div>\n  </li>\n</ul>\n<div class=\"tab-content\" data-tabsetid=\"TABSET\">\n  <div class=\"tab-pane active\" role=\"tabpanel\" data-value=\"Metrics\" id=\"tab-TABSET-0\">\n    <div>x</div>\n  </div>\n</div>",
+  "footer": "<a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_pdf\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">PDF</a><a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_csv\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">CSV</a><a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_geojson\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">GeoJSON</a><a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_workbook\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\" title=\"The Excel calculator with this assessment entered\">Completed workbook</a><button class=\"btn btn-default sfari-btn primary staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>",
+  "footerNoWorkbook": "<a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_pdf\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">PDF</a><a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_csv\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">CSV</a><a class=\"btn btn-default shiny-download-link disabled sfari-btn staf-btn\" id=\"sfari-dl_geojson\" href=\"\" target=\"_blank\" rel=\"noopener\" aria-disabled=\"true\" tabindex=\"-1\">GeoJSON</a><button class=\"btn btn-default sfari-btn primary staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>",
+  "newDialog": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Start a new assessment?</h4>\n      </div>\n      <div class=\"modal-body\"><p>Clear the delineation and every score, note and photo and start a new assessment? Use <strong>Save</strong> first if you want to keep it.</p>\n</div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n        <button class=\"btn btn-default action-button btn-danger\" id=\"sfari-confirm_new\" type=\"button\">\n          <span class=\"action-label\">Clear &amp; start new</span>\n        </button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+ },
+ "scenarioSuffix": [
+  {
+   "name": "Alternative 1",
+   "id": "s2",
+   "suffix": "-alternative-1"
+  },
+  {
+   "name": "Restored  buffer!!",
+   "id": "s2",
+   "suffix": "-restored-buffer"
+  },
+  {
+   "name": "---",
+   "id": "s2",
+   "suffix": "-s2"
+  },
+  {
+   "name": "Ünïcode Plan",
+   "id": "s2",
+   "suffix": "-n-code-plan"
+  },
+  {
+   "name": null,
+   "id": "existing",
+   "suffix": ""
+  }
+ ],
+ "summaries": [
+  {
+   "app": "SFARI",
+   "info": {
+    "reachName": " Mink Brook ",
+    "reachLengthFt": 1000.0,
+    "drainageAreaSqkm": 12.345,
+    "nan": false,
+    "streamOrder": 3,
+    "regions": {
+     "l3": "58",
+     "l3_name": "Northeastern Highlands",
+     "l2": "5.3",
+     "l2_name": "Atlantic Highlands",
+     "l1": "5",
+     "l1_name": "Northern Forests",
+     "nars9": "NAP",
+     "nars9_name": "Northern Appalachians"
+    }
+   },
+   "rows": [
+    [
+     "Reach name",
+     "Mink Brook"
+    ],
+    [
+     "Assessment tier",
+     "Rapid"
+    ],
+    [
+     "Reach length",
+     "1,000 ft"
+    ],
+    [
+     "Drainage area",
+     "12.35 km²"
+    ],
+    [
+     "Stream order (Strahler)",
+     "3"
+    ],
+    [
+     "NARS-9 region",
+     "Northern Appalachians (NAP)"
+    ],
+    [
+     "EPA Level I ecoregion",
+     "Northern Forests (5)"
+    ],
+    [
+     "EPA Level II ecoregion",
+     "Atlantic Highlands (5.3)"
+    ],
+    [
+     "EPA Level III ecoregion",
+     "Northeastern Highlands (58)"
+    ]
+   ]
+  },
+  {
+   "app": "DEEP",
+   "info": {
+    "reachName": null,
+    "reachLengthFt": null,
+    "drainageAreaSqkm": 1234.5,
+    "nan": false,
+    "streamOrder": 0,
+    "regions": {
+     "l3": "66",
+     "l3_name": "Blue Ridge",
+     "l2": "8.4",
+     "l2_name": "Ozark/Ouachita-Appalachian Forests",
+     "l1": "8",
+     "l1_name": "Eastern Temperate Forests",
+     "nars9": "SAP",
+     "nars9_name": "Southern Appalachians"
+    }
+   },
+   "rows": [
+    [
+     "Reach name",
+     "Unnamed"
+    ],
+    [
+     "Assessment tier",
+     "Detailed"
+    ],
+    [
+     "Reach length",
+     "Not available"
+    ],
+    [
+     "Drainage area",
+     "1,234.50 km²"
+    ],
+    [
+     "Stream order (Strahler)",
+     "Not available"
+    ],
+    [
+     "NARS-9 region",
+     "Southern Appalachians (SAP)"
+    ],
+    [
+     "EPA Level I ecoregion",
+     "Eastern Temperate Forests (8)"
+    ],
+    [
+     "EPA Level II ecoregion",
+     "Ozark/Ouachita-Appalachian Forests (8.4)"
+    ],
+    [
+     "EPA Level III ecoregion",
+     "Blue Ridge (66)"
+    ]
+   ]
+  },
+  {
+   "app": "EASI",
+   "info": {
+    "reachName": "",
+    "reachLengthFt": "2500",
+    "drainageAreaSqkm": null,
+    "nan": true,
+    "streamOrder": 2.7,
+    "regions": {
+     "l3": "999",
+     "l3_name": null,
+     "l2": null,
+     "l2_name": null,
+     "l1": null,
+     "l1_name": null,
+     "nars9": null,
+     "nars9_name": null
+    }
+   },
+   "rows": [
+    [
+     "Reach name",
+     "Unnamed"
+    ],
+    [
+     "Assessment tier",
+     "Screening"
+    ],
+    [
+     "Reach length",
+     "2,500 ft"
+    ],
+    [
+     "Drainage area",
+     "Not available"
+    ],
+    [
+     "Stream order (Strahler)",
+     "2"
+    ],
+    [
+     "NARS-9 region",
+     "Not available"
+    ],
+    [
+     "EPA Level I ecoregion",
+     "Not available"
+    ],
+    [
+     "EPA Level II ecoregion",
+     "Not available"
+    ],
+    [
+     "EPA Level III ecoregion",
+     "999"
+    ]
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "l3": "58",
+   "regions": {
+    "l3": "58",
+    "l3_name": "Northeastern Highlands",
+    "l2": "5.3",
+    "l2_name": "Atlantic Highlands",
+    "l1": "5",
+    "l1_name": "Northern Forests",
+    "nars9": "NAP",
+    "nars9_name": "Northern Appalachians"
+   }
+  },
+  {
+   "l3": "66.0",
+   "regions": {
+    "l3": "66",
+    "l3_name": "Blue Ridge",
+    "l2": "8.4",
+    "l2_name": "Ozark/Ouachita-Appalachian Forests",
+    "l1": "8",
+    "l1_name": "Eastern Temperate Forests",
+    "nars9": "SAP",
+    "nars9_name": "Southern Appalachians"
+   }
+  },
+  {
+   "l3": " 8 ",
+   "regions": {
+    "l3": "8",
+    "l3_name": "Southern California Mountains",
+    "l2": "11.1",
+    "l2_name": "Mediterranean California",
+    "l1": "11",
+    "l1_name": "Mediterranean California",
+    "nars9": "WMT",
+    "nars9_name": "Western Mountains"
+   }
+  },
+  {
+   "l3": null,
+   "regions": {
+    "l3": null,
+    "l3_name": null,
+    "l2": null,
+    "l2_name": null,
+    "l1": null,
+    "l1_name": null,
+    "nars9": null,
+    "nars9_name": null
+   }
+  },
+  {
+   "l3": "",
+   "regions": {
+    "l3": null,
+    "l3_name": null,
+    "l2": null,
+    "l2_name": null,
+    "l1": null,
+    "l1_name": null,
+    "nars9": null,
+    "nars9_name": null
+   }
+  },
+  {
+   "l3": "999",
+   "regions": {
+    "l3": "999",
+    "l3_name": null,
+    "l2": null,
+    "l2_name": null,
+    "l1": null,
+    "l1_name": null,
+    "nars9": null,
+    "nars9_name": null
+   }
+  }
+ ],
+ "sessions": {
+  "refusals": [
+   {
+    "tool": "sfari",
+    "text": "not json",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "sfari",
+    "text": "[1, 2]",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "sfari",
+    "text": "true",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"other\", \"tool\": \"SFARI\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"X\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\"}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 0}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1.0}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": true}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 2}",
+    "message": "it was saved by a newer version of STAF. Update this app to open it."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"DEEP\", \"formatVersion\": 1}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"delineation\": []}",
+    "message": "the saved delineation must be an object."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"delineation\": {\"siteAnchor\": 5}}",
+    "message": "the saved siteAnchor must be an object."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"toolData\": \"x\"}",
+    "message": "the saved tool data must be an object."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"scenarios\": []}",
+    "message": "the saved scenarios must be an object."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"metric_scores\": {}}",
+    "message": null
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"measured_values\": {}}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"method\": \"easi\"}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"method\": \" deep \"}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "sfari",
+    "text": "{}",
+    "message": null
+   },
+   {
+    "tool": "sfari",
+    "text": "﻿{\"format\": \"staf-assessment\", \"formatVersion\": 1, \"tool\": \"SFARI\", \"savedAt\": \"x\", \"delineation\": {}, \"toolData\": {}, \"scenarios\": null}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"schemaVersion\": \"x\", \"assessment\": {}}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {}, \"toolData\": {\"screening\": {\"report\": {}}}}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {}, \"toolData\": {\"screening\": {\"report\": {\"metricRows\": []}}}}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {\"a\": 1}, \"toolData\": {\"screening\": 5}}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "sfari",
+    "text": "{\"format\": \"staf-assessment\", \"formatVersion\": 1, \"tool\": \"SFARI\", \"savedAt\": \"x\", \"delineation\": {}, \"toolData\": {}, \"scenarios\": null}",
+    "message": null
+   },
+   {
+    "tool": "deep",
+    "text": "not json",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "deep",
+    "text": "[1, 2]",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "deep",
+    "text": "true",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"other\", \"tool\": \"SFARI\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"X\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\"}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 0}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1.0}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": true}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 2}",
+    "message": "it was saved by a newer version of STAF. Update this app to open it."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"DEEP\", \"formatVersion\": 1}",
+    "message": null
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"delineation\": []}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"delineation\": {\"siteAnchor\": 5}}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"toolData\": \"x\"}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"scenarios\": []}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"metric_scores\": {}}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"measured_values\": {}}",
+    "message": null
+   },
+   {
+    "tool": "deep",
+    "text": "{\"method\": \"easi\"}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"method\": \" deep \"}",
+    "message": null
+   },
+   {
+    "tool": "deep",
+    "text": "{}",
+    "message": null
+   },
+   {
+    "tool": "deep",
+    "text": "﻿{\"format\": \"staf-assessment\", \"formatVersion\": 1, \"tool\": \"SFARI\", \"savedAt\": \"x\", \"delineation\": {}, \"toolData\": {}, \"scenarios\": null}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"schemaVersion\": \"x\", \"assessment\": {}}",
+    "message": "the file has no valid schema version."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {}, \"toolData\": {\"screening\": {\"report\": {}}}}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {}, \"toolData\": {\"screening\": {\"report\": {\"metricRows\": []}}}}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {\"a\": 1}, \"toolData\": {\"screening\": 5}}",
+    "message": "this is an EASI assessment. Open it in EASI."
+   },
+   {
+    "tool": "deep",
+    "text": "{\"format\": \"staf-assessment\", \"formatVersion\": 1, \"tool\": \"SFARI\", \"savedAt\": \"x\", \"delineation\": {}, \"toolData\": {}, \"scenarios\": null}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "easi",
+    "text": "not json",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "[1, 2]",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "true",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"other\", \"tool\": \"SFARI\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"X\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\"}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 0}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1.0}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": true}",
+    "message": "the file has no valid format version."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 2}",
+    "message": "it was saved by a newer version of STAF. Update this app to open it."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1}",
+    "message": null
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"DEEP\", \"formatVersion\": 1}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"delineation\": []}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"delineation\": {\"siteAnchor\": 5}}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"toolData\": \"x\"}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"SFARI\", \"formatVersion\": 1, \"scenarios\": []}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"metric_scores\": {}}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"measured_values\": {}}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"method\": \"easi\"}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"method\": \" deep \"}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "easi",
+    "text": "{}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "﻿{\"format\": \"staf-assessment\", \"formatVersion\": 1, \"tool\": \"SFARI\", \"savedAt\": \"x\", \"delineation\": {}, \"toolData\": {}, \"scenarios\": null}",
+    "message": "this is not a STAF assessment file."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"schemaVersion\": \"x\", \"assessment\": {}}",
+    "message": "this is a DEEP assessment. Open it in DEEP."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {}, \"toolData\": {\"screening\": {\"report\": {}}}}",
+    "message": "the saved screening has no report."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {}, \"toolData\": {\"screening\": {\"report\": {\"metricRows\": []}}}}",
+    "message": "the saved screening has no delineation."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"tool\": \"EASI\", \"formatVersion\": 1, \"delineation\": {\"a\": 1}, \"toolData\": {\"screening\": 5}}",
+    "message": "the saved screening has no report."
+   },
+   {
+    "tool": "easi",
+    "text": "{\"format\": \"staf-assessment\", \"formatVersion\": 1, \"tool\": \"SFARI\", \"savedAt\": \"x\", \"delineation\": {}, \"toolData\": {}, \"scenarios\": null}",
+    "message": "this is a SFARI assessment. Open it in SFARI."
+   }
+  ],
+  "legacy": [
+   {
+    "tool": "sfari",
+    "text": "{\"schemaVersion\": 1, \"method\": \"SFARI\", \"delineation\": {\"delineation\": {\"comid\": 5}}, \"metric_scores\": {\"m\": {\"likert\": \"Agree\"}}, \"function_scores\": {\"f\": {\"score\": 7, \"na\": true}}, \"evidence\": {\"e\": {\"value\": 1.0}}, \"cross_section\": null, \"scenarios\": {\"version\": 1, \"active\": \"s2\", \"next\": 3, \"items\": [{\"id\": \"s2\", \"name\": \"Alt\", \"description\": \"d\", \"state\": {\"metric_scores\": {}, \"function_scores\": {\"g\": {\"score\": 1, \"na\": false}}}}]}}",
+    "loaded": {
+     "delineation": {
+      "delineation": {
+       "comid": 5
+      }
+     },
+     "evidence": {
+      "e": {
+       "value": 1.0
+      }
+     },
+     "cross_section": null,
+     "scenarios": {
+      "version": 1,
+      "active": "s2",
+      "next": 3,
+      "items": [
+       {
+        "id": "existing",
+        "name": "Existing Conditions",
+        "description": "",
+        "state": {
+         "metric_scores": {
+          "m": {
+           "likert": "Agree"
+          }
+         },
+         "function_scores": {
+          "f": {
+           "score": 7
+          }
+         }
+        }
+       },
+       {
+        "id": "s2",
+        "name": "Alt",
+        "description": "d",
+        "state": {
+         "metric_scores": {},
+         "function_scores": {
+          "g": {
+           "score": 1
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "tool": "deep",
+    "text": "{\"assessment\": {\"assessmentId\": \"x-y\", \"library\": {\"version\": 3, \"status\": \"Draft\"}, \"curves\": [1.0, 2.5]}, \"measured_values\": {\"m\": {\"value\": 2.0, \"origin\": \"field\"}}, \"delineation\": {\"a\": 1}}",
+    "loaded": {
+     "delineation": {
+      "a": 1
+     },
+     "assessment": {
+      "assessmentId": "x-y",
+      "library": {
+       "version": 3,
+       "status": "Draft"
+      },
+      "curves": [
+       1.0,
+       2.5
+      ]
+     },
+     "provenance": {
+      "assessmentId": "x-y",
+      "version": 3,
+      "lifecycle": "draft",
+      "contentDigest": "sha256:aaf2a746bbd8d1fd5233bf498b1c637da37a5f665fc9a62bae8d4d53850e931f",
+      "region": {
+       "level3": null,
+       "state": null
+      },
+      "completeness": null,
+      "resultState": null,
+      "migratedFrom": 1
+     },
+     "scenarios": {
+      "version": 1,
+      "active": "existing",
+      "next": 2,
+      "items": [
+       {
+        "id": "existing",
+        "name": "Existing Conditions",
+        "description": "",
+        "state": {
+         "measured_values": {
+          "m": {
+           "value": 2.0,
+           "origin": "field"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "tool": "deep",
+    "text": "{\"assessment\": {\"assessmentId\": \"x-y\", \"library\": {\"version\": 3, \"status\": \"Draft\"}, \"curves\": [1.0, 2.5]}, \"measured_values\": {\"m\": {\"value\": 2.0, \"origin\": \"field\"}}, \"delineation\": {\"a\": 1}, \"schemaVersion\": 1}",
+    "loaded": {
+     "delineation": {
+      "a": 1
+     },
+     "assessment": {
+      "assessmentId": "x-y",
+      "library": {
+       "version": 3,
+       "status": "Draft"
+      },
+      "curves": [
+       1.0,
+       2.5
+      ]
+     },
+     "provenance": {
+      "assessmentId": "x-y",
+      "version": 3,
+      "lifecycle": "draft",
+      "contentDigest": "sha256:aaf2a746bbd8d1fd5233bf498b1c637da37a5f665fc9a62bae8d4d53850e931f",
+      "region": {
+       "level3": null,
+       "state": null
+      },
+      "completeness": null,
+      "resultState": null,
+      "migratedFrom": 1
+     },
+     "scenarios": {
+      "version": 1,
+      "active": "existing",
+      "next": 2,
+      "items": [
+       {
+        "id": "existing",
+        "name": "Existing Conditions",
+        "description": "",
+        "state": {
+         "measured_values": {
+          "m": {
+           "value": 2.0,
+           "origin": "field"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "tool": "deep",
+    "text": "{\"assessment\": {\"assessmentId\": \"x-y\", \"library\": {\"version\": 3, \"status\": \"Draft\"}, \"curves\": [1.0, 2.5]}, \"measured_values\": {\"m\": {\"value\": 2.0, \"origin\": \"field\"}}, \"delineation\": {\"a\": 1}, \"schemaVersion\": 2, \"provenance\": {\"assessmentId\": \"x-y\", \"version\": 3}}",
+    "loaded": {
+     "delineation": {
+      "a": 1
+     },
+     "assessment": {
+      "assessmentId": "x-y",
+      "library": {
+       "version": 3,
+       "status": "Draft"
+      },
+      "curves": [
+       1.0,
+       2.5
+      ]
+     },
+     "provenance": {
+      "assessmentId": "x-y",
+      "version": 3
+     },
+     "scenarios": {
+      "version": 1,
+      "active": "existing",
+      "next": 2,
+      "items": [
+       {
+        "id": "existing",
+        "name": "Existing Conditions",
+        "description": "",
+        "state": {
+         "measured_values": {
+          "m": {
+           "value": 2.0,
+           "origin": "field"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "tool": "deep",
+    "text": "{\"assessment\": {\"assessmentId\": \"x-y\", \"library\": {\"version\": 3, \"status\": \"Draft\"}, \"curves\": [1.0, 2.5]}, \"measured_values\": {\"m\": {\"value\": 2.0, \"origin\": \"field\"}}, \"delineation\": {\"a\": 1}, \"schemaVersion\": \"2\"}",
+    "loaded": {
+     "delineation": {
+      "a": 1
+     },
+     "assessment": {
+      "assessmentId": "x-y",
+      "library": {
+       "version": 3,
+       "status": "Draft"
+      },
+      "curves": [
+       1.0,
+       2.5
+      ]
+     },
+     "provenance": {},
+     "scenarios": {
+      "version": 1,
+      "active": "existing",
+      "next": 2,
+      "items": [
+       {
+        "id": "existing",
+        "name": "Existing Conditions",
+        "description": "",
+        "state": {
+         "measured_values": {
+          "m": {
+           "value": 2.0,
+           "origin": "field"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "dumps": [
+   {
+    "tool": "sfari",
+    "delineation": {
+     "delineation": {
+      "snapped_lat": 43.5,
+      "reach_length_ft": 1000.0
+     }
+    },
+    "toolData": {
+     "x": [
+      1.0,
+      2,
+      null,
+      true,
+      "km²"
+     ]
+    },
+    "scenarios": {
+     "version": 1,
+     "active": "s2",
+     "next": 3,
+     "items": [
+      {
+       "id": "existing",
+       "name": "Existing Conditions",
+       "description": "As found.",
+       "state": {
+        "a": 1.0,
+        "b": [
+         2,
+         3.5
+        ]
+       }
+      },
+      {
+       "id": "s2",
+       "name": "Plan ✓",
+       "description": "",
+       "state": {
+        "a": 2
+       }
+      }
+     ]
+    },
+    "text": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"SFARI\",\n  \"savedAt\": \"2026-10-12T00:00:00Z\",\n  \"delineation\": {\"delineation\":{\"snapped_lat\":43.5,\"reach_length_ft\":1000.0}},\n  \"toolData\": {\"x\":[1.0,2,null,true,\"km²\"]},\n  \"scenarios\": {\"version\":1,\"active\":\"s2\",\"next\":3,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"As found.\",\"state\":{\"a\":1.0,\"b\":[2,3.5]}},{\"id\":\"s2\",\"name\":\"Plan ✓\",\"description\":\"\",\"state\":{\"a\":2}}]}\n}\n"
+   },
+   {
+    "tool": "sfari",
+    "delineation": null,
+    "toolData": null,
+    "scenarios": null,
+    "text": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"SFARI\",\n  \"savedAt\": \"2026-10-12T00:00:00Z\",\n  \"delineation\": {},\n  \"toolData\": {},\n  \"scenarios\": {\"version\":1,\"active\":\"existing\",\"next\":2,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"\",\"state\":null}]}\n}\n"
+   },
+   {
+    "tool": "deep",
+    "delineation": {
+     "delineation": {
+      "snapped_lat": 43.5,
+      "reach_length_ft": 1000.0
+     }
+    },
+    "toolData": {
+     "x": [
+      1.0,
+      2,
+      null,
+      true,
+      "km²"
+     ]
+    },
+    "scenarios": {
+     "version": 1,
+     "active": "s2",
+     "next": 3,
+     "items": [
+      {
+       "id": "existing",
+       "name": "Existing Conditions",
+       "description": "As found.",
+       "state": {
+        "a": 1.0,
+        "b": [
+         2,
+         3.5
+        ]
+       }
+      },
+      {
+       "id": "s2",
+       "name": "Plan ✓",
+       "description": "",
+       "state": {
+        "a": 2
+       }
+      }
+     ]
+    },
+    "text": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"DEEP\",\n  \"savedAt\": \"2026-10-12T00:00:00Z\",\n  \"delineation\": {\"delineation\":{\"snapped_lat\":43.5,\"reach_length_ft\":1000.0}},\n  \"toolData\": {\"x\":[1.0,2,null,true,\"km²\"]},\n  \"scenarios\": {\"version\":1,\"active\":\"s2\",\"next\":3,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"As found.\",\"state\":{\"a\":1.0,\"b\":[2,3.5]}},{\"id\":\"s2\",\"name\":\"Plan ✓\",\"description\":\"\",\"state\":{\"a\":2}}]}\n}\n"
+   },
+   {
+    "tool": "deep",
+    "delineation": null,
+    "toolData": null,
+    "scenarios": null,
+    "text": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"DEEP\",\n  \"savedAt\": \"2026-10-12T00:00:00Z\",\n  \"delineation\": {},\n  \"toolData\": {},\n  \"scenarios\": {\"version\":1,\"active\":\"existing\",\"next\":2,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"\",\"state\":null}]}\n}\n"
+   },
+   {
+    "tool": "easi",
+    "delineation": {
+     "delineation": {
+      "snapped_lat": 43.5,
+      "reach_length_ft": 1000.0
+     }
+    },
+    "toolData": {
+     "x": [
+      1.0,
+      2,
+      null,
+      true,
+      "km²"
+     ]
+    },
+    "scenarios": {
+     "version": 1,
+     "active": "s2",
+     "next": 3,
+     "items": [
+      {
+       "id": "existing",
+       "name": "Existing Conditions",
+       "description": "As found.",
+       "state": {
+        "a": 1.0,
+        "b": [
+         2,
+         3.5
+        ]
+       }
+      },
+      {
+       "id": "s2",
+       "name": "Plan ✓",
+       "description": "",
+       "state": {
+        "a": 2
+       }
+      }
+     ]
+    },
+    "text": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"EASI\",\n  \"savedAt\": \"2026-10-12T00:00:00Z\",\n  \"delineation\": {\"delineation\":{\"snapped_lat\":43.5,\"reach_length_ft\":1000.0}},\n  \"toolData\": {\"x\":[1.0,2,null,true,\"km²\"]},\n  \"scenarios\": {\"version\":1,\"active\":\"s2\",\"next\":3,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"As found.\",\"state\":{\"a\":1.0,\"b\":[2,3.5]}},{\"id\":\"s2\",\"name\":\"Plan ✓\",\"description\":\"\",\"state\":{\"a\":2}}]}\n}\n"
+   },
+   {
+    "tool": "easi",
+    "delineation": null,
+    "toolData": null,
+    "scenarios": null,
+    "text": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"EASI\",\n  \"savedAt\": \"2026-10-12T00:00:00Z\",\n  \"delineation\": {},\n  \"toolData\": {},\n  \"scenarios\": {\"version\":1,\"active\":\"existing\",\"next\":2,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"\",\"state\":null}]}\n}\n"
+   }
+  ],
+  "points": [
+   {
+    "tool": "sfari",
+    "d": {},
+    "anchor": null,
+    "point": null
+   },
+   {
+    "tool": "sfari",
+    "d": {
+     "siteAnchor": {
+      "scoredReach": {
+       "comid": 9327042
+      }
+     },
+     "delineation": {
+      "snapped_lat": 43.6,
+      "snapped_lon": -72.2,
+      "nhdplus_id": 1
+     }
+    },
+    "anchor": {
+     "scoredReach": {
+      "comid": 9327042
+     }
+    },
+    "point": [
+     43.6,
+     -72.2,
+     0.0,
+     1
+    ]
+   },
+   {
+    "tool": "sfari",
+    "d": {
+     "ctx_inputs": {
+      "comid": "123",
+      "lat": 30.0,
+      "lon": -90.0
+     }
+    },
+    "anchor": {
+     "anchorKind": "v2Direct",
+     "anchorSchemaVersion": 1,
+     "scoredReach": {
+      "network": "nhdplus-v2",
+      "comid": 123
+     },
+     "notes": []
+    },
+    "point": [
+     30.0,
+     -90.0,
+     0.0,
+     null
+    ]
+   },
+   {
+    "tool": "sfari",
+    "d": {
+     "delineation": {
+      "comid": 12.0,
+      "snapped_lat": "44.1",
+      "snapped_lon": "-71.5"
+     }
+    },
+    "anchor": {
+     "anchorKind": "v2Direct",
+     "anchorSchemaVersion": 1,
+     "scoredReach": {
+      "network": "nhdplus-v2",
+      "comid": 12
+     },
+     "notes": []
+    },
+    "point": [
+     44.1,
+     -71.5,
+     0.0,
+     null
+    ]
+   },
+   {
+    "tool": "sfari",
+    "d": {
+     "delineation": {
+      "comid": "012",
+      "snapped_lat": 60.0,
+      "snapped_lon": -72.0
+     },
+     "siteAnchor": {
+      "scoredReach": {
+       "comid": 0
+      },
+      "clickedStream": {
+       "snapLat": 43.0,
+       "snapLon": -72.0,
+       "nhdplusId": 7
+      }
+     }
+    },
+    "anchor": null,
+    "point": null
+   }
+  ],
+  "deep": {
+   "bundle": "{\"assessmentId\": \"a\", \"library\": {\"version\": 2}, \"z\": 1.0, \"a\": [3, 4.5, \"\\u00e9\"], \"lifecycle\": \"Certified\"}",
+   "contentDigest": "sha256:66e7bb5d32b794cba1dfca9cd3b0be1523ec2d6bac6d2e058c08d1241f37edde",
+   "bundleDigest": "sha256:66e7bb5d32b794cba1dfca9cd3b0be1523ec2d6bac6d2e058c08d1241f37edde",
+   "lifecycle": "certified",
+   "provenance": {
+    "assessmentId": "a",
+    "version": 2,
+    "lifecycle": "certified",
+    "contentDigest": "sha256:66e7bb5d32b794cba1dfca9cd3b0be1523ec2d6bac6d2e058c08d1241f37edde",
+    "region": {
+     "level3": {
+      "code": "58"
+     },
+     "state": null
+    },
+    "completeness": null,
+    "resultState": null
+   },
+   "digestPreferred": "sha256:abc",
+   "statusLabels": [
+    [
+     "draft",
+     "Draft"
+    ],
+    [
+     "certified",
+     "Final"
+    ],
+    [
+     "under_review",
+     "Under review"
+    ],
+    [
+     "weird_one",
+     "Weird_One"
+    ],
+    [
+     "",
+     "Preliminary"
+    ],
+    [
+     null,
+     "Preliminary"
+    ]
+   ],
+   "dump": "{\n  \"format\": \"staf-assessment\",\n  \"formatVersion\": 1,\n  \"tool\": \"DEEP\",\n  \"savedAt\": \"2026-10-12T20:19:24Z\",\n  \"delineation\": {\"delineation\":{\"snapped_lat\":1.0}},\n  \"toolData\": {\"assessment\":{\"assessmentId\":\"a\",\"library\":{\"version\":2},\"z\":1.0,\"a\":[3,4.5,\"é\"],\"lifecycle\":\"Certified\"},\"provenance\":{\"assessmentId\":\"a\",\"version\":2,\"lifecycle\":\"certified\",\"contentDigest\":\"sha256:66e7bb5d32b794cba1dfca9cd3b0be1523ec2d6bac6d2e058c08d1241f37edde\",\"region\":{\"level3\":null,\"state\":{\"code\":\"NH\",\"abbr\":\"NH\",\"name\":\"New Hampshire\"}},\"completeness\":null,\"resultState\":null}},\n  \"scenarios\": {\"version\":1,\"active\":\"existing\",\"next\":2,\"items\":[{\"id\":\"existing\",\"name\":\"Existing Conditions\",\"description\":\"\",\"state\":{\"measured_values\":{}}}]}\n}\n"
+  }
+ }
+}

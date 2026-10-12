@@ -46,6 +46,16 @@ export function reachName(anchor: Anchor): string {
   return name && String(name).trim() ? String(name).trim() : 'an unnamed reach'
 }
 
+/** reach_text: ``COMID 9327042 (this reach)``, ``Mink Brook (COMID 9327042), 199 ft downstream``, or
+ * ``none found``. */
+export function reachText(anchor: Anchor): string {
+  const c = comid(anchor)
+  if (c === null) return 'none found'
+  if (!isRouted(anchor)) return `COMID ${c} (this reach)`
+  const d = dist(anchor!)
+  return `${reachName(anchor)} (COMID ${c})` + (d ? `, ${d} downstream` : '')
+}
+
 /** describes: the reach a StreamCat value describes on a stream outside NHDPlus V2, empty on a
  * covered reach. */
 export function describes(anchor: Anchor): string {

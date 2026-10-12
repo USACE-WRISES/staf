@@ -7,6 +7,7 @@ import ecoregions from '../../app/content/shared/ecoregions.json'
 import { type Child, h, HTML, pyHtmlEscape, type Tag, TagList } from '../../app/htm'
 import { pyFixed, pyFixedComma, pyFloat } from '../../app/pyfmt'
 import { displaySimplify } from '../../engine/simplify'
+import type { SummaryInfo } from '../../shared/summary'
 import { info } from '../sfari/markup'
 import { criteriaBands } from './evaluator'
 import { cwaMapping, functions, metricCalculation, metricDefinition, metricsById, OUTCOMES, RATINGS, FUNCTION_SCORE_MAX } from './method'
@@ -18,74 +19,6 @@ type Obj = Record<string, any>
 const DISC_ORDER = ['Hydrology', 'Hydraulics', 'Geomorphology', 'Physicochemistry', 'Biology']
 const MAP_CODE: Record<string, [string, string]> = { D: ['D', 'Direct effect'], i: ['i', 'Indirect effect'], '-': ['–', 'No mapped effect'] }
 const pyStr = (v: any): string => (typeof v === 'number' ? (Number.isInteger(v) && !Object.is(v, -0) ? String(v) : pyFloat(v)) : String(v))
-
-// ---------------------------------------------------------------- the basin map (reportmap.py)
-
-const R = 6378137.0
-const PAD = 0.08
-const MIN_EXTENT_M = 1200.0
-const EXPORT_URL = 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export'
-
-function mercator(lon: number, lat: number): [number, number] {
-  const la = Math.max(-85.05112878, Math.min(85.05112878, lat))
-  return [R * (lon * Math.PI / 180), R * Math.log(Math.tan(Math.PI / 4 + (la * Math.PI / 180) / 2))]
-}
-
-function rings(gj: any): number[][][] {
-  const out: number[][][] = []
-  for (const ft of (gj || {}).features || []) {
-    const g = ft.geometry || {}
-    const c = g.coordinates
-    if (!c || !c.length) continue
-    if (g.type === 'Polygon') out.push(...c)
-    else if (g.type === 'MultiPolygon') for (const poly of c) out.push(...poly)
-    else if (g.type === 'LineString') out.push(c)
-    else if (g.type === 'MultiLineString') out.push(...c)
-  }
-  return out
-}
-
-/** reportmap.frame: the padded Mercator box of both inputs at the card's aspect, and the projection. */
-function frame(ws: any, reach: any, w: number, hgt: number) {
-  const pts = [...rings(ws), ...rings(reach)].flat()
-  if (!pts.length) return null
-  const xy = pts.map((p) => mercator(p[0], p[1]))
-  const xs = xy.map((p) => p[0])
-  const ys = xy.map((p) => p[1])
-  const minx = Math.min(...xs)
-  const maxx = Math.max(...xs)
-  const miny = Math.min(...ys)
-  const maxy = Math.max(...ys)
-  const cx = (minx + maxx) / 2
-  const cy = (miny + maxy) / 2
-  let bw = Math.max((maxx - minx) * (1 + PAD), MIN_EXTENT_M)
-  let bh = Math.max((maxy - miny) * (1 + PAD), MIN_EXTENT_M)
-  if (bw / bh < w / hgt) bw = bh * (w / hgt)
-  else bh = bw / (w / hgt)
-  const bbox = [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2]
-  const project = (lon: number, lat: number): [number, number] => {
-    const [x, y] = mercator(lon, lat)
-    return [(x - bbox[0]) / (bbox[2] - bbox[0]) * w, (bbox[3] - y) / (bbox[3] - bbox[1]) * hgt]
-  }
-  return { bbox, project }
-}
-
-/** reportmap.svg: the basin outline and the reach over the USGS topo basemap (one export request). */
-export function minimapSvg(ws: any, reach: any, w = 290, hgt = 180): string {
-  const fr = frame(ws, reach, w, hgt)
-  if (!fr) return ''
-  const box = fr.bbox.map((v) => pyFixed(Number(pyFixed(v, 1)), 2)).join(',')
-  const params = new URLSearchParams({ bbox: box, bboxSR: '3857', imageSR: '3857', size: `${w * 2},${hgt * 2}`, format: 'png', transparent: 'false', f: 'image' })
-  const parts = [`<svg viewBox="0 0 ${w} ${hgt}" xmlns="http://www.w3.org/2000/svg" class="sfari-minimap" style="width:${w}px;max-width:100%;">`,
-    `<image x="0" y="0" width="${w}" height="${hgt}" preserveAspectRatio="none" href="${EXPORT_URL}?${params.toString().replace(/&/g, '&amp;')}"/>`]
-  const pt = (p: number[]) => fr.project(p[0], p[1]).map((v) => pyFixed(v, 1)).join(',')
-  for (const ring of rings(ws)) {
-    parts.push(`<path d="M${ring.map(pt).join(' L')} Z" fill="#fdf24a" fill-opacity="0.35" stroke="#caa700" stroke-width="1"/>`)
-  }
-  for (const ring of rings(reach)) parts.push(`<path d="M${ring.map(pt).join(' L')}" fill="none" stroke="#d6453d" stroke-width="2.4"/>`)
-  parts.push('</svg>')
-  return parts.join('')
-}
 
 // ---------------------------------------------------------------- the summary (libs/staf_workbook)
 
@@ -151,6 +84,19 @@ export function siteIdentity(result: Obj): Obj {
   const coords = isNum(d.snapped_lat) && isNum(d.snapped_lon) ? `${pyFixed(Number(d.snapped_lat), 5)}, ${pyFixed(Number(d.snapped_lon), 5)}` : ''
   const label = [name || (reach ? 'Unnamed stream' : ''), reach].filter(Boolean).join(', ')
   return { name, reach, comid, coords, label }
+}
+
+/** workbook.summary_info: the site as the workbook's Summary tab reads it. */
+export function summaryInfo(result: Obj): SummaryInfo {
+  const d = result.delineation || {}
+  const report = result.report || {}
+  let order = d.stream_order
+  if (order === null || order === undefined) {
+    const hit = ((report.basin || {}).rows || []).find((row: any) => Array.isArray(row) && row.length === 2 && row[0] === 'Stream order')
+    order = hit ? hit[1] : null
+  }
+  return { app: 'EASI', reachName: siteIdentity(result).name || '(unnamed stream)', reachLengthFt: d.reach_length_ft,
+    drainageAreaSqkm: d.drainage_area_sqkm, streamOrder: order, regions: regions(report.strata || {}) }
 }
 
 /** workbook.summary_info(...).rows() */
@@ -424,11 +370,9 @@ function headerWithMap(d: Obj, rep: Obj, minimap: string): Child {
 export type XsBlock = (rep: Obj) => Child
 
 /** _report_body */
-export function reportBody(res: Obj, notes: Obj, summary: Child, xs: XsBlock = () => null): Tag {
+export function reportBody(res: Obj, notes: Obj, summary: Child, xs: XsBlock = () => null, minimap = ''): Tag {
   const d = res.delineation
   const rep = res.report || {}
-  const watershed = res.watershed_geojson ? displaySimplify(res.watershed_geojson, 700) : null
-  const minimap = minimapSvg(watershed, res.reach_geojson)
   return h.div(
     anchorBanner(res.siteAnchor, d),
     headerWithMap(d, rep, minimap),

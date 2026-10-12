@@ -1,0 +1,182 @@
+{
+ "dialogs": [
+  {
+   "name": "one",
+   "selected": null,
+   "covering": [
+    {
+     "assessmentId": "neh",
+     "assessmentName": "Northeastern Highlands",
+     "regionName": "Northeastern Highlands",
+     "defaultRef": "neh@v1",
+     "refs": [
+      "neh@v1"
+     ],
+     "lifecycleByRef": {
+      "neh@v1": "preliminary"
+     },
+     "versionByRef": {
+      "neh@v1": 1
+     },
+     "referenceTierByRef": {
+      "neh@v1": "least_disturbed"
+     },
+     "hasCertified": false
+    }
+   ],
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Choose a detailed assessment</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"deep-assess-cards\">\n          <div class=\"deep-assess-card\">\n            <div class=\"deep-card-head\">\n              <span class=\"deep-card-name\">Northeastern Highlands</span><span class=\"deep-card-badge deep-badge-prelim\">Preliminary</span>\n            </div>\n            <div class=\"deep-card-region\">Northeastern Highlands</div>\n            <div class=\"deep-card-tierrow\">\n              <span class=\"deep-card-verlabel\">Reference tier</span><span class=\"deep-card-tier\"> Least disturbed</span>\n            </div>\n            <div class=\"deep-card-verrow\">\n              <span class=\"deep-card-verlabel\">Version</span>\n              <div class=\"form-group shiny-input-container\" style=\"width:200px;\">\n                <label class=\"control-label shiny-label-null\" id=\"deep-assess_ver_0-label\" for=\"deep-assess_ver_0\"></label>\n                <div>\n                  <select class=\"shiny-input-select form-select\" id=\"deep-assess_ver_0\">                    <option value=\"neh@v1\" selected=\"\">v1 (Preliminary)</option></select>\n                </div>\n              </div>\n            </div>\n            <button class=\"btn btn-default action-button btn btn-sm btn-outline-primary\" id=\"deep-assess_pick_0\" type=\"button\">\n              <span class=\"action-label\">Select this assessment</span>\n            </button>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "one",
+   "selected": "neh@v1",
+   "covering": [
+    {
+     "assessmentId": "neh",
+     "assessmentName": "Northeastern Highlands",
+     "regionName": "Northeastern Highlands",
+     "defaultRef": "neh@v1",
+     "refs": [
+      "neh@v1"
+     ],
+     "lifecycleByRef": {
+      "neh@v1": "preliminary"
+     },
+     "versionByRef": {
+      "neh@v1": 1
+     },
+     "referenceTierByRef": {
+      "neh@v1": "least_disturbed"
+     },
+     "hasCertified": false
+    }
+   ],
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Choose a detailed assessment</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"deep-assess-cards\">\n          <div class=\"deep-assess-card is-selected\">\n            <div class=\"deep-card-head\">\n              <span class=\"deep-card-name\">Northeastern Highlands</span><span class=\"deep-card-badge deep-badge-prelim\">Preliminary</span>\n            </div>\n            <div class=\"deep-card-region\">Northeastern Highlands</div>\n            <div class=\"deep-card-tierrow\">\n              <span class=\"deep-card-verlabel\">Reference tier</span><span class=\"deep-card-tier\"> Least disturbed</span>\n            </div>\n            <div class=\"deep-card-verrow\">\n              <span class=\"deep-card-verlabel\">Version</span>\n              <div class=\"form-group shiny-input-container\" style=\"width:200px;\">\n                <label class=\"control-label shiny-label-null\" id=\"deep-assess_ver_0-label\" for=\"deep-assess_ver_0\"></label>\n                <div>\n                  <select class=\"shiny-input-select form-select\" id=\"deep-assess_ver_0\">                    <option value=\"neh@v1\" selected=\"\">v1 (Preliminary)</option></select>\n                </div>\n              </div>\n            </div>\n            <button class=\"btn btn-default action-button btn btn-sm btn-primary\" id=\"deep-assess_pick_0\" type=\"button\">\n              <span class=\"action-label\">✓ Selected</span>\n            </button>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "many",
+   "selected": null,
+   "covering": [
+    {
+     "assessmentId": "neh",
+     "assessmentName": "Northeastern Highlands & co",
+     "regionName": "Region <1>",
+     "defaultRef": "neh@v3",
+     "refs": [
+      "neh@v3",
+      "neh@v2",
+      "neh@v1"
+     ],
+     "lifecycleByRef": {
+      "neh@v3": "certified",
+      "neh@v2": "preliminary",
+      "neh@v1": "draft"
+     },
+     "versionByRef": {
+      "neh@v3": 3,
+      "neh@v2": 2,
+      "neh@v1": 1
+     },
+     "referenceTierByRef": {
+      "neh@v3": "best_available",
+      "neh@v2": "least_disturbed",
+      "neh@v1": null
+     },
+     "hasCertified": true
+    },
+    {
+     "assessmentId": "ecbp",
+     "assessmentName": "Eastern Corn Belt Plains",
+     "regionName": "",
+     "defaultRef": "ecbp@v2",
+     "refs": [
+      "ecbp@v2",
+      "ecbp@v1"
+     ],
+     "lifecycleByRef": {
+      "ecbp@v1": "draft",
+      "ecbp@v2": "weird_status"
+     },
+     "versionByRef": {
+      "ecbp@v1": 1,
+      "ecbp@v2": 2
+     },
+     "referenceTierByRef": {
+      "ecbp@v1": "minimally_disturbed",
+      "ecbp@v2": "odd_tier"
+     },
+     "hasCertified": false
+    }
+   ],
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Choose a detailed assessment</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"deep-assess-cards\">\n          <div class=\"deep-assess-card\">\n            <div class=\"deep-card-head\">\n              <span class=\"deep-card-name\">Northeastern Highlands &amp; co</span><span class=\"deep-card-badge deep-badge-cert\">Final</span>\n            </div>\n            <div class=\"deep-card-region\">Region &lt;1&gt;</div>\n            <div class=\"deep-card-tierrow\">\n              <span class=\"deep-card-verlabel\">Reference tier</span><span class=\"deep-card-tier\"> Best available (fallback)</span>\n            </div>\n            <div class=\"deep-card-verrow\">\n              <span class=\"deep-card-verlabel\">Version</span>\n              <div class=\"form-group shiny-input-container\" style=\"width:200px;\">\n                <label class=\"control-label shiny-label-null\" id=\"deep-assess_ver_0-label\" for=\"deep-assess_ver_0\"></label>\n                <div>\n                  <select class=\"shiny-input-select form-select\" id=\"deep-assess_ver_0\">                    <option value=\"neh@v3\" selected=\"\">v3 (Final)</option>\n                    <option value=\"neh@v2\">v2 (Preliminary)</option>\n                    <option value=\"neh@v1\">v1 (Draft)</option></select>\n                </div>\n              </div>\n            </div>\n            <button class=\"btn btn-default action-button btn btn-sm btn-outline-primary\" id=\"deep-assess_pick_0\" type=\"button\">\n              <span class=\"action-label\">Select this assessment</span>\n            </button>\n          </div>\n          <div class=\"deep-assess-card\">\n            <div class=\"deep-card-head\">\n              <span class=\"deep-card-name\">Eastern Corn Belt Plains</span><span class=\"deep-card-badge deep-badge-prelim\">Weird_Status</span>\n            </div>\n            <div class=\"deep-card-region\"></div>\n            <div class=\"deep-card-tierrow\">\n              <span class=\"deep-card-verlabel\">Reference tier</span><span class=\"deep-card-tier\"> odd tier</span>\n            </div>\n            <div class=\"deep-card-verrow\">\n              <span class=\"deep-card-verlabel\">Version</span>\n              <div class=\"form-group shiny-input-container\" style=\"width:200px;\">\n                <label class=\"control-label shiny-label-null\" id=\"deep-assess_ver_1-label\" for=\"deep-assess_ver_1\"></label>\n                <div>\n                  <select class=\"shiny-input-select form-select\" id=\"deep-assess_ver_1\">                    <option value=\"ecbp@v2\" selected=\"\">v2 (Weird_Status)</option>\n                    <option value=\"ecbp@v1\">v1 (Draft)</option></select>\n                </div>\n              </div>\n            </div>\n            <button class=\"btn btn-default action-button btn btn-sm btn-outline-primary\" id=\"deep-assess_pick_1\" type=\"button\">\n              <span class=\"action-label\">Select this assessment</span>\n            </button>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "many",
+   "selected": "neh@v1",
+   "covering": [
+    {
+     "assessmentId": "neh",
+     "assessmentName": "Northeastern Highlands & co",
+     "regionName": "Region <1>",
+     "defaultRef": "neh@v3",
+     "refs": [
+      "neh@v3",
+      "neh@v2",
+      "neh@v1"
+     ],
+     "lifecycleByRef": {
+      "neh@v3": "certified",
+      "neh@v2": "preliminary",
+      "neh@v1": "draft"
+     },
+     "versionByRef": {
+      "neh@v3": 3,
+      "neh@v2": 2,
+      "neh@v1": 1
+     },
+     "referenceTierByRef": {
+      "neh@v3": "best_available",
+      "neh@v2": "least_disturbed",
+      "neh@v1": null
+     },
+     "hasCertified": true
+    },
+    {
+     "assessmentId": "ecbp",
+     "assessmentName": "Eastern Corn Belt Plains",
+     "regionName": "",
+     "defaultRef": "ecbp@v2",
+     "refs": [
+      "ecbp@v2",
+      "ecbp@v1"
+     ],
+     "lifecycleByRef": {
+      "ecbp@v1": "draft",
+      "ecbp@v2": "weird_status"
+     },
+     "versionByRef": {
+      "ecbp@v1": 1,
+      "ecbp@v2": 2
+     },
+     "referenceTierByRef": {
+      "ecbp@v1": "minimally_disturbed",
+      "ecbp@v2": "odd_tier"
+     },
+     "hasCertified": false
+    }
+   ],
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Choose a detailed assessment</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"deep-assess-cards\">\n          <div class=\"deep-assess-card is-selected\">\n            <div class=\"deep-card-head\">\n              <span class=\"deep-card-name\">Northeastern Highlands &amp; co</span><span class=\"deep-card-badge deep-badge-cert\">Final</span>\n            </div>\n            <div class=\"deep-card-region\">Region &lt;1&gt;</div>\n            <div class=\"deep-card-tierrow\">\n              <span class=\"deep-card-verlabel\">Reference tier</span><span class=\"deep-card-tier\"> Best available (fallback)</span>\n            </div>\n            <div class=\"deep-card-verrow\">\n              <span class=\"deep-card-verlabel\">Version</span>\n              <div class=\"form-group shiny-input-container\" style=\"width:200px;\">\n                <label class=\"control-label shiny-label-null\" id=\"deep-assess_ver_0-label\" for=\"deep-assess_ver_0\"></label>\n                <div>\n                  <select class=\"shiny-input-select form-select\" id=\"deep-assess_ver_0\">                    <option value=\"neh@v3\" selected=\"\">v3 (Final)</option>\n                    <option value=\"neh@v2\">v2 (Preliminary)</option>\n                    <option value=\"neh@v1\">v1 (Draft)</option></select>\n                </div>\n              </div>\n            </div>\n            <button class=\"btn btn-default action-button btn btn-sm btn-primary\" id=\"deep-assess_pick_0\" type=\"button\">\n              <span class=\"action-label\">✓ Selected</span>\n            </button>\n          </div>\n          <div class=\"deep-assess-card\">\n            <div class=\"deep-card-head\">\n              <span class=\"deep-card-name\">Eastern Corn Belt Plains</span><span class=\"deep-card-badge deep-badge-prelim\">Weird_Status</span>\n            </div>\n            <div class=\"deep-card-region\"></div>\n            <div class=\"deep-card-tierrow\">\n              <span class=\"deep-card-verlabel\">Reference tier</span><span class=\"deep-card-tier\"> odd tier</span>\n            </div>\n            <div class=\"deep-card-verrow\">\n              <span class=\"deep-card-verlabel\">Version</span>\n              <div class=\"form-group shiny-input-container\" style=\"width:200px;\">\n                <label class=\"control-label shiny-label-null\" id=\"deep-assess_ver_1-label\" for=\"deep-assess_ver_1\"></label>\n                <div>\n                  <select class=\"shiny-input-select form-select\" id=\"deep-assess_ver_1\">                    <option value=\"ecbp@v2\" selected=\"\">v2 (Weird_Status)</option>\n                    <option value=\"ecbp@v1\">v1 (Draft)</option></select>\n                </div>\n              </div>\n            </div>\n            <button class=\"btn btn-default action-button btn btn-sm btn-outline-primary\" id=\"deep-assess_pick_1\" type=\"button\">\n              <span class=\"action-label\">Select this assessment</span>\n            </button>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "none",
+   "selected": null,
+   "covering": [],
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Choose a detailed assessment</h4>\n      </div>\n      <div class=\"modal-body\">\n        <p>No assessment covers this point.</p>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "none",
+   "selected": null,
+   "covering": [],
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Choose a detailed assessment</h4>\n      </div>\n      <div class=\"modal-body\">\n        <p>No assessment covers this point.</p>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  }
+ ]
+}

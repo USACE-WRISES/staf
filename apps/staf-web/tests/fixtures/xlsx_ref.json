@@ -1,0 +1,8254 @@
+{
+ "repack": {
+  "repack": "c5795f9e6e12160ae8a3377fbc96eebaa33a445006b835dbae1baaad17aa3b70",
+  "package": "c5795f9e6e12160ae8a3377fbc96eebaa33a445006b835dbae1baaad17aa3b70"
+ },
+ "formulas": [
+  {
+   "formula": "\"Both,Left,Right\"",
+   "spans": [],
+   "rewrite": "\"Both,Left,Right\"",
+   "identifiers": []
+  },
+  {
+   "formula": "$Q$14:$Q$19",
+   "spans": [],
+   "rewrite": "$Q$14:$Q$19",
+   "identifiers": [
+    "q"
+   ]
+  },
+  {
+   "formula": "$R$1:$R$6",
+   "spans": [],
+   "rewrite": "$R$1:$R$6",
+   "identifiers": [
+    "r"
+   ]
+  },
+  {
+   "formula": "'SFARI Score'!AH28",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!AH28",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!AI28",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!AI28",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!AJ28",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!AJ28",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!B56",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!B56",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!B72",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!B72",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!B8",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!B8",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!C56",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!C56",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!C72",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!C72",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!C8",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!C8",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F12",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F12",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F16",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F16",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F20",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F20",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F24",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F24",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F28",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F28",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F32",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F32",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F36",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F36",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F40",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F40",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F44",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F44",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F48",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F48",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F52",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F52",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F56",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F56",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F60",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F60",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F64",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F64",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F68",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F68",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F72",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F72",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F76",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F76",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F8",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F8",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F80",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F80",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!F84",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!F84",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H12",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H12",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H16",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H16",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H20",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H20",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H24",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H24",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H28",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H28",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H32",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H32",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H36",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H36",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H40",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H40",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H44",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H44",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H48",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H48",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H52",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H52",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H56",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H56",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H60",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H60",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H64",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H64",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H68",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H68",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H72",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H72",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H76",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H76",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H8",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H8",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H80",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H80",
+   "identifiers": []
+  },
+  {
+   "formula": "'SFARI Score'!H84",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!H84",
+   "identifiers": []
+  },
+  {
+   "formula": "(E46*0.75)+(E54*0.25)",
+   "spans": [],
+   "rewrite": "(E46*0.75)+(E54*0.25)",
+   "identifiers": [
+    "e46",
+    "e54"
+   ]
+  },
+  {
+   "formula": "0",
+   "spans": [],
+   "rewrite": "0",
+   "identifiers": []
+  },
+  {
+   "formula": "1",
+   "spans": [],
+   "rewrite": "1",
+   "identifiers": []
+  },
+  {
+   "formula": "AA28",
+   "spans": [],
+   "rewrite": "AA28",
+   "identifiers": [
+    "aa28"
+   ]
+  },
+  {
+   "formula": "AB28",
+   "spans": [],
+   "rewrite": "AB28",
+   "identifiers": [
+    "ab28"
+   ]
+  },
+  {
+   "formula": "AVERAGE(C22:C56)",
+   "spans": [],
+   "rewrite": "AVERAGE(C22:C56)",
+   "identifiers": [
+    "c22",
+    "c56"
+   ]
+  },
+  {
+   "formula": "AVERAGE(C8:C87)",
+   "spans": [],
+   "rewrite": "AVERAGE(C8:C87)",
+   "identifiers": [
+    "c8",
+    "c87"
+   ]
+  },
+  {
+   "formula": "AVERAGE(E22:E40)",
+   "spans": [],
+   "rewrite": "AVERAGE(E22:E40)",
+   "identifiers": [
+    "e22",
+    "e40"
+   ]
+  },
+  {
+   "formula": "AVERAGE(E41:E45)",
+   "spans": [],
+   "rewrite": "AVERAGE(E41:E45)",
+   "identifiers": [
+    "e41",
+    "e45"
+   ]
+  },
+  {
+   "formula": "AVERAGE(G22:G33)",
+   "spans": [],
+   "rewrite": "AVERAGE(G22:G33)",
+   "identifiers": [
+    "g22",
+    "g33"
+   ]
+  },
+  {
+   "formula": "AVERAGE(G34:G40)",
+   "spans": [],
+   "rewrite": "AVERAGE(G34:G40)",
+   "identifiers": [
+    "g34",
+    "g40"
+   ]
+  },
+  {
+   "formula": "AVERAGE(G41:G43)",
+   "spans": [],
+   "rewrite": "AVERAGE(G41:G43)",
+   "identifiers": [
+    "g41",
+    "g43"
+   ]
+  },
+  {
+   "formula": "AVERAGE(G44:G45)",
+   "spans": [],
+   "rewrite": "AVERAGE(G44:G45)",
+   "identifiers": [
+    "g44",
+    "g45"
+   ]
+  },
+  {
+   "formula": "AVERAGE(G54:G56)",
+   "spans": [],
+   "rewrite": "AVERAGE(G54:G56)",
+   "identifiers": [
+    "g54",
+    "g56"
+   ]
+  },
+  {
+   "formula": "AVERAGE(Z28:AB28)",
+   "spans": [],
+   "rewrite": "AVERAGE(Z28:AB28)",
+   "identifiers": [
+    "ab28",
+    "z28"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(G46:G53,\"<>#N/A\")/15",
+   "spans": [],
+   "rewrite": "AVERAGEIF(G46:G53,\"<>#N/A\")/15",
+   "identifiers": [
+    "g46",
+    "g53"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O22:O25,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O22:O25,\"<>#N/A\")",
+   "identifiers": [
+    "o22",
+    "o25"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O26:O29,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O26:O29,\"<>#N/A\")",
+   "identifiers": [
+    "o26",
+    "o29"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O30:O33,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O30:O33,\"<>#N/A\")",
+   "identifiers": [
+    "o30",
+    "o33"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O34:O37,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O34:O37,\"<>#N/A\")",
+   "identifiers": [
+    "o34",
+    "o37"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O38:O40,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O38:O40,\"<>#N/A\")",
+   "identifiers": [
+    "o38",
+    "o40"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O41:O43,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O41:O43,\"<>#N/A\")",
+   "identifiers": [
+    "o41",
+    "o43"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O44:O45,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O44:O45,\"<>#N/A\")",
+   "identifiers": [
+    "o44",
+    "o45"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O46:O47,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O46:O47,\"<>#N/A\")",
+   "identifiers": [
+    "o46",
+    "o47"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O48:O49,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O48:O49,\"<>#N/A\")",
+   "identifiers": [
+    "o48",
+    "o49"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O50:O51,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O50:O51,\"<>#N/A\")",
+   "identifiers": [
+    "o50",
+    "o51"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O52:O53,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O52:O53,\"<>#N/A\")",
+   "identifiers": [
+    "o52",
+    "o53"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(O54:O56,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(O54:O56,\"<>#N/A\")",
+   "identifiers": [
+    "o54",
+    "o56"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P12:P15,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P12:P15,\"<>#N/A\")",
+   "identifiers": [
+    "p12",
+    "p15"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P16:P19,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P16:P19,\"<>#N/A\")",
+   "identifiers": [
+    "p16",
+    "p19"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P20:P23,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P20:P23,\"<>#N/A\")",
+   "identifiers": [
+    "p20",
+    "p23"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P24:P27,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P24:P27,\"<>#N/A\")",
+   "identifiers": [
+    "p24",
+    "p27"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P28:P31,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P28:P31,\"<>#N/A\")",
+   "identifiers": [
+    "p28",
+    "p31"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P32:P35,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P32:P35,\"<>#N/A\")",
+   "identifiers": [
+    "p32",
+    "p35"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P36:P39,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P36:P39,\"<>#N/A\")",
+   "identifiers": [
+    "p36",
+    "p39"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P40:P43,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P40:P43,\"<>#N/A\")",
+   "identifiers": [
+    "p40",
+    "p43"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P44:P47,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P44:P47,\"<>#N/A\")",
+   "identifiers": [
+    "p44",
+    "p47"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P48:P51,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P48:P51,\"<>#N/A\")",
+   "identifiers": [
+    "p48",
+    "p51"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P52:P55,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P52:P55,\"<>#N/A\")",
+   "identifiers": [
+    "p52",
+    "p55"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P56:P59,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P56:P59,\"<>#N/A\")",
+   "identifiers": [
+    "p56",
+    "p59"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P60:P63,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P60:P63,\"<>#N/A\")",
+   "identifiers": [
+    "p60",
+    "p63"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P64:P67,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P64:P67,\"<>#N/A\")",
+   "identifiers": [
+    "p64",
+    "p67"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P68:P71,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P68:P71,\"<>#N/A\")",
+   "identifiers": [
+    "p68",
+    "p71"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P72:P75,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P72:P75,\"<>#N/A\")",
+   "identifiers": [
+    "p72",
+    "p75"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P76:P79,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P76:P79,\"<>#N/A\")",
+   "identifiers": [
+    "p76",
+    "p79"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P80:P83,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P80:P83,\"<>#N/A\")",
+   "identifiers": [
+    "p80",
+    "p83"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P84:P87,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P84:P87,\"<>#N/A\")",
+   "identifiers": [
+    "p84",
+    "p87"
+   ]
+  },
+  {
+   "formula": "AVERAGEIF(P8:P11,\"<>#N/A\")",
+   "spans": [],
+   "rewrite": "AVERAGEIF(P8:P11,\"<>#N/A\")",
+   "identifiers": [
+    "p11",
+    "p8"
+   ]
+  },
+  {
+   "formula": "H12",
+   "spans": [],
+   "rewrite": "H12",
+   "identifiers": [
+    "h12"
+   ]
+  },
+  {
+   "formula": "H16",
+   "spans": [],
+   "rewrite": "H16",
+   "identifiers": [
+    "h16"
+   ]
+  },
+  {
+   "formula": "H20",
+   "spans": [],
+   "rewrite": "H20",
+   "identifiers": [
+    "h20"
+   ]
+  },
+  {
+   "formula": "H24",
+   "spans": [],
+   "rewrite": "H24",
+   "identifiers": [
+    "h24"
+   ]
+  },
+  {
+   "formula": "H28",
+   "spans": [],
+   "rewrite": "H28",
+   "identifiers": [
+    "h28"
+   ]
+  },
+  {
+   "formula": "H32",
+   "spans": [],
+   "rewrite": "H32",
+   "identifiers": [
+    "h32"
+   ]
+  },
+  {
+   "formula": "H36",
+   "spans": [],
+   "rewrite": "H36",
+   "identifiers": [
+    "h36"
+   ]
+  },
+  {
+   "formula": "H40",
+   "spans": [],
+   "rewrite": "H40",
+   "identifiers": [
+    "h40"
+   ]
+  },
+  {
+   "formula": "H44",
+   "spans": [],
+   "rewrite": "H44",
+   "identifiers": [
+    "h44"
+   ]
+  },
+  {
+   "formula": "H48",
+   "spans": [],
+   "rewrite": "H48",
+   "identifiers": [
+    "h48"
+   ]
+  },
+  {
+   "formula": "H52",
+   "spans": [],
+   "rewrite": "H52",
+   "identifiers": [
+    "h52"
+   ]
+  },
+  {
+   "formula": "H56",
+   "spans": [],
+   "rewrite": "H56",
+   "identifiers": [
+    "h56"
+   ]
+  },
+  {
+   "formula": "H60",
+   "spans": [],
+   "rewrite": "H60",
+   "identifiers": [
+    "h60"
+   ]
+  },
+  {
+   "formula": "H64",
+   "spans": [],
+   "rewrite": "H64",
+   "identifiers": [
+    "h64"
+   ]
+  },
+  {
+   "formula": "H68",
+   "spans": [],
+   "rewrite": "H68",
+   "identifiers": [
+    "h68"
+   ]
+  },
+  {
+   "formula": "H72",
+   "spans": [],
+   "rewrite": "H72",
+   "identifiers": [
+    "h72"
+   ]
+  },
+  {
+   "formula": "H76",
+   "spans": [],
+   "rewrite": "H76",
+   "identifiers": [
+    "h76"
+   ]
+  },
+  {
+   "formula": "H8",
+   "spans": [],
+   "rewrite": "H8",
+   "identifiers": [
+    "h8"
+   ]
+  },
+  {
+   "formula": "H80",
+   "spans": [],
+   "rewrite": "H80",
+   "identifiers": [
+    "h80"
+   ]
+  },
+  {
+   "formula": "H84",
+   "spans": [],
+   "rewrite": "H84",
+   "identifiers": [
+    "h84"
+   ]
+  },
+  {
+   "formula": "IF($Q22>=1,$Q22,NA())",
+   "spans": [],
+   "rewrite": "IF($Q22>=1,$Q22,NA())",
+   "identifiers": [
+    "q22"
+   ]
+  },
+  {
+   "formula": "IF($Q23>=1,$Q23,NA())",
+   "spans": [],
+   "rewrite": "IF($Q23>=1,$Q23,NA())",
+   "identifiers": [
+    "q23"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA10=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA10=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA10=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA10=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA11=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA11=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA11=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA11=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA12=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA12=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA12=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA12=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA13=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA13=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA13=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA13=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA14=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA14=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA14=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA14=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA15=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA15=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA15=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA15=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA16=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA16=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA16=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA16=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA17=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA17=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA17=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA17=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA18=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA18=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA18=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA18=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA19=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA19=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA19=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA19=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA20=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA20=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA20=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA20=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA21=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA21=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA21=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA21=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA22=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA22=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA22=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA22=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA23=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA23=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA23=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA23=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA24=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA24=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA24=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA24=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA25=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA25=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA25=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA25=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA26=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA26=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA26=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA26=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA27=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA27=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA27=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA27=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA8=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA8=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA8=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA8=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AA9=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AA9=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AA9=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AA9=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB10=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB10=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB10=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB10=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB11=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB11=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB11=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB11=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB12=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB12=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB12=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB12=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB13=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB13=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB13=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB13=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB14=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB14=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB14=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB14=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB15=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB15=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB15=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB15=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB16=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB16=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB16=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB16=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB17=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB17=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB17=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB17=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB18=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB18=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB18=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB18=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB19=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB19=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB19=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB19=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB20=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB20=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB20=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB20=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB21=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB21=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB21=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB21=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB22=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB22=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB22=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB22=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB23=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB23=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB23=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB23=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB24=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB24=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB24=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB24=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB25=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB25=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB25=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB25=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB26=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB26=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB26=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB26=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB27=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB27=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     26,
+     40,
+     "SFARI Score",
+     true
+    ],
+    [
+     49,
+     63,
+     "SFARI Score",
+     true
+    ],
+    [
+     72,
+     86,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB27=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB27=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB8=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB8=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB8=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB8=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!AB9=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!AB9=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!AB9=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!AB9=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z10=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z10=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z10=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z10=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z11=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z11=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z11=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z11=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z12=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z12=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z12=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z12=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z13=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z13=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z13=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z13=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z14=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z14=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z14=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z14=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z15=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z15=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z15=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z15=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z16=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z16=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z16=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z16=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z17=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z17=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z17=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z17=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z18=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z18=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z18=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z18=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z19=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z19=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z19=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z19=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z20=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z20=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z20=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z20=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z21=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z21=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z21=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z21=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z22=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z22=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z22=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z22=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z23=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z23=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z23=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z23=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z24=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z24=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z24=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z24=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z25=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z25=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z25=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z25=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z26=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z26=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z26=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z26=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z27=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z27=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     25,
+     39,
+     "SFARI Score",
+     true
+    ],
+    [
+     48,
+     62,
+     "SFARI Score",
+     true
+    ],
+    [
+     70,
+     84,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z27=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z27=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z8=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z8=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     24,
+     38,
+     "SFARI Score",
+     true
+    ],
+    [
+     47,
+     61,
+     "SFARI Score",
+     true
+    ],
+    [
+     68,
+     82,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z8=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z8=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF('SFARI Score'!Z9=\"D\",'SFARI Score'!$AO$8,IF('SFARI Score'!Z9=\"I\",'SFARI Score'!$AP$8,0))",
+   "spans": [
+    [
+     3,
+     17,
+     "SFARI Score",
+     true
+    ],
+    [
+     24,
+     38,
+     "SFARI Score",
+     true
+    ],
+    [
+     47,
+     61,
+     "SFARI Score",
+     true
+    ],
+    [
+     68,
+     82,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF('Existing Conditions'!Z9=\"D\",'Existing Conditions'!$AO$8,IF('Existing Conditions'!Z9=\"I\",'Existing Conditions'!$AP$8,0))",
+   "identifiers": [
+    "ao",
+    "ap"
+   ]
+  },
+  {
+   "formula": "IF(AVERAGE(H24:H39)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H24:H39)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "spans": [],
+   "rewrite": "IF(AVERAGE(H24:H39)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H24:H39)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "identifiers": [
+    "h24",
+    "h39"
+   ]
+  },
+  {
+   "formula": "IF(AVERAGE(H40:H55)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H40:H55)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "spans": [],
+   "rewrite": "IF(AVERAGE(H40:H55)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H40:H55)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "identifiers": [
+    "h40",
+    "h55"
+   ]
+  },
+  {
+   "formula": "IF(AVERAGE(H56:H71)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H56:H71)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "spans": [],
+   "rewrite": "IF(AVERAGE(H56:H71)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H56:H71)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "identifiers": [
+    "h56",
+    "h71"
+   ]
+  },
+  {
+   "formula": "IF(AVERAGE(H72:H87)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H72:H87)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "spans": [],
+   "rewrite": "IF(AVERAGE(H72:H87)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H72:H87)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "identifiers": [
+    "h72",
+    "h87"
+   ]
+  },
+  {
+   "formula": "IF(AVERAGE(H8:H23)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H8:H23)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "spans": [],
+   "rewrite": "IF(AVERAGE(H8:H23)/15<0.4, \"Non-Functioning\", IF(AVERAGE(H8:H23)/15<0.7, \"Functioning At-Risk\", \"Functioning\"))",
+   "identifiers": [
+    "h23",
+    "h8"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$10), 0, AE10*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$10), 0, AE10*15)",
+   "identifiers": [
+    "ae10",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$10), 0, AF10*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$10), 0, AF10*15)",
+   "identifiers": [
+    "af10",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$10), 0, AG10*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$10), 0, AG10*15)",
+   "identifiers": [
+    "ag10",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$11), 0, AE11*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$11), 0, AE11*15)",
+   "identifiers": [
+    "ae11",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$11), 0, AF11*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$11), 0, AF11*15)",
+   "identifiers": [
+    "af11",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$11), 0, AG11*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$11), 0, AG11*15)",
+   "identifiers": [
+    "ag11",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$12), 0, AE12*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$12), 0, AE12*15)",
+   "identifiers": [
+    "ae12",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$12), 0, AF12*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$12), 0, AF12*15)",
+   "identifiers": [
+    "af12",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$12), 0, AG12*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$12), 0, AG12*15)",
+   "identifiers": [
+    "ag12",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$13), 0, AE13*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$13), 0, AE13*15)",
+   "identifiers": [
+    "ae13",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$13), 0, AF13*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$13), 0, AF13*15)",
+   "identifiers": [
+    "af13",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$13), 0, AG13*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$13), 0, AG13*15)",
+   "identifiers": [
+    "ag13",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$14), 0, AE14*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$14), 0, AE14*15)",
+   "identifiers": [
+    "ae14",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$14), 0, AF14*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$14), 0, AF14*15)",
+   "identifiers": [
+    "af14",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$14), 0, AG14*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$14), 0, AG14*15)",
+   "identifiers": [
+    "ag14",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$15), 0, AE15*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$15), 0, AE15*15)",
+   "identifiers": [
+    "ae15",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$15), 0, AF15*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$15), 0, AF15*15)",
+   "identifiers": [
+    "af15",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$15), 0, AG15*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$15), 0, AG15*15)",
+   "identifiers": [
+    "ag15",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$16), 0, AE16*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$16), 0, AE16*15)",
+   "identifiers": [
+    "ae16",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$16), 0, AF16*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$16), 0, AF16*15)",
+   "identifiers": [
+    "af16",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$16), 0, AG16*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$16), 0, AG16*15)",
+   "identifiers": [
+    "ag16",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$17), 0, AE17*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$17), 0, AE17*15)",
+   "identifiers": [
+    "ae17",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$17), 0, AF17*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$17), 0, AF17*15)",
+   "identifiers": [
+    "af17",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$17), 0, AG17*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$17), 0, AG17*15)",
+   "identifiers": [
+    "ag17",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$18), 0, AE18*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$18), 0, AE18*15)",
+   "identifiers": [
+    "ae18",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$18), 0, AF18*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$18), 0, AF18*15)",
+   "identifiers": [
+    "af18",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$18), 0, AG18*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$18), 0, AG18*15)",
+   "identifiers": [
+    "ag18",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$19), 0, AE19*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$19), 0, AE19*15)",
+   "identifiers": [
+    "ae19",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$19), 0, AF19*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$19), 0, AF19*15)",
+   "identifiers": [
+    "af19",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$19), 0, AG19*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$19), 0, AG19*15)",
+   "identifiers": [
+    "ag19",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$20), 0, AE20*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$20), 0, AE20*15)",
+   "identifiers": [
+    "ae20",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$20), 0, AF20*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$20), 0, AF20*15)",
+   "identifiers": [
+    "af20",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$20), 0, AG20*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$20), 0, AG20*15)",
+   "identifiers": [
+    "ag20",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$21), 0, AE21*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$21), 0, AE21*15)",
+   "identifiers": [
+    "ae21",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$21), 0, AF21*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$21), 0, AF21*15)",
+   "identifiers": [
+    "af21",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$21), 0, AG21*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$21), 0, AG21*15)",
+   "identifiers": [
+    "ag21",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$22), 0, AE22*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$22), 0, AE22*15)",
+   "identifiers": [
+    "ae22",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$22), 0, AF22*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$22), 0, AF22*15)",
+   "identifiers": [
+    "af22",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$22), 0, AG22*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$22), 0, AG22*15)",
+   "identifiers": [
+    "ag22",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$23), 0, AE23*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$23), 0, AE23*15)",
+   "identifiers": [
+    "ae23",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$23), 0, AF23*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$23), 0, AF23*15)",
+   "identifiers": [
+    "af23",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$23), 0, AG23*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$23), 0, AG23*15)",
+   "identifiers": [
+    "ag23",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$24), 0, AE24*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$24), 0, AE24*15)",
+   "identifiers": [
+    "ae24",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$24), 0, AF24*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$24), 0, AF24*15)",
+   "identifiers": [
+    "af24",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$24), 0, AG24*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$24), 0, AG24*15)",
+   "identifiers": [
+    "ag24",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$25), 0, AE25*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$25), 0, AE25*15)",
+   "identifiers": [
+    "ae25",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$25), 0, AF25*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$25), 0, AF25*15)",
+   "identifiers": [
+    "af25",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$25), 0, AG25*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$25), 0, AG25*15)",
+   "identifiers": [
+    "ag25",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$26), 0, AE26*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$26), 0, AE26*15)",
+   "identifiers": [
+    "ae26",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$26), 0, AF26*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$26), 0, AF26*15)",
+   "identifiers": [
+    "af26",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$26), 0, AG26*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$26), 0, AG26*15)",
+   "identifiers": [
+    "ag26",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$27), 0, AE27*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$27), 0, AE27*15)",
+   "identifiers": [
+    "ae27",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$27), 0, AF27*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$27), 0, AF27*15)",
+   "identifiers": [
+    "af27",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$27), 0, AG27*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$27), 0, AG27*15)",
+   "identifiers": [
+    "ag27",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$8), 0, AE8*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$8), 0, AE8*15)",
+   "identifiers": [
+    "ae8",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$8), 0, AF8*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$8), 0, AF8*15)",
+   "identifiers": [
+    "af8",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$8), 0, AG8*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$8), 0, AG8*15)",
+   "identifiers": [
+    "ag8",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$9), 0, AE9*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$9), 0, AE9*15)",
+   "identifiers": [
+    "ae9",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$9), 0, AF9*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$9), 0, AF9*15)",
+   "identifiers": [
+    "af9",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(ISBLANK('SFARI Score'!$Y$9), 0, AG9*15)",
+   "spans": [
+    [
+     11,
+     25,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(ISBLANK('Existing Conditions'!$Y$9), 0, AG9*15)",
+   "identifiers": [
+    "ag9",
+    "y"
+   ]
+  },
+  {
+   "formula": "IF(M14/15<=0.39, M14, IF(M14/15<=0.69, NA(), NA()))",
+   "spans": [],
+   "rewrite": "IF(M14/15<=0.39, M14, IF(M14/15<=0.69, NA(), NA()))",
+   "identifiers": [
+    "m14"
+   ]
+  },
+  {
+   "formula": "IF(M14/15<=0.39, NA(), IF(M14/15<=0.69, M14,NA()))",
+   "spans": [],
+   "rewrite": "IF(M14/15<=0.39, NA(), IF(M14/15<=0.69, M14,NA()))",
+   "identifiers": [
+    "m14"
+   ]
+  },
+  {
+   "formula": "IF(M14/15<=0.39, NA(), IF(M14/15<=0.69, NA(), M14))",
+   "spans": [],
+   "rewrite": "IF(M14/15<=0.39, NA(), IF(M14/15<=0.69, NA(), M14))",
+   "identifiers": [
+    "m14"
+   ]
+  },
+  {
+   "formula": "IF(M25<=0.39, M25, IF(M25<=0.69, NA(), NA()))",
+   "spans": [],
+   "rewrite": "IF(M25<=0.39, M25, IF(M25<=0.69, NA(), NA()))",
+   "identifiers": [
+    "m25"
+   ]
+  },
+  {
+   "formula": "IF(M25<=0.39, NA(), IF(M25<=0.69, M25,NA()))",
+   "spans": [],
+   "rewrite": "IF(M25<=0.39, NA(), IF(M25<=0.69, M25,NA()))",
+   "identifiers": [
+    "m25"
+   ]
+  },
+  {
+   "formula": "IF(M25<=0.39, NA(), IF(M25<=0.69, NA(), M25))",
+   "spans": [],
+   "rewrite": "IF(M25<=0.39, NA(), IF(M25<=0.69, NA(), M25))",
+   "identifiers": [
+    "m25"
+   ]
+  },
+  {
+   "formula": "IF(M26<=0.39, M26, IF(M26<=0.69, NA(), NA()))",
+   "spans": [],
+   "rewrite": "IF(M26<=0.39, M26, IF(M26<=0.69, NA(), NA()))",
+   "identifiers": [
+    "m26"
+   ]
+  },
+  {
+   "formula": "IF(M26<=0.39, NA(), IF(M26<=0.69, M26,NA()))",
+   "spans": [],
+   "rewrite": "IF(M26<=0.39, NA(), IF(M26<=0.69, M26,NA()))",
+   "identifiers": [
+    "m26"
+   ]
+  },
+  {
+   "formula": "IF(M26<=0.39, NA(), IF(M26<=0.69, NA(), M26))",
+   "spans": [],
+   "rewrite": "IF(M26<=0.39, NA(), IF(M26<=0.69, NA(), M26))",
+   "identifiers": [
+    "m26"
+   ]
+  },
+  {
+   "formula": "IF(M27<=0.39, M27, IF(M27<=0.69, NA(), NA()))",
+   "spans": [],
+   "rewrite": "IF(M27<=0.39, M27, IF(M27<=0.69, NA(), NA()))",
+   "identifiers": [
+    "m27"
+   ]
+  },
+  {
+   "formula": "IF(M27<=0.39, NA(), IF(M27<=0.69, M27,NA()))",
+   "spans": [],
+   "rewrite": "IF(M27<=0.39, NA(), IF(M27<=0.69, M27,NA()))",
+   "identifiers": [
+    "m27"
+   ]
+  },
+  {
+   "formula": "IF(M27<=0.39, NA(), IF(M27<=0.69, NA(), M27))",
+   "spans": [],
+   "rewrite": "IF(M27<=0.39, NA(), IF(M27<=0.69, NA(), M27))",
+   "identifiers": [
+    "m27"
+   ]
+  },
+  {
+   "formula": "IF(M4/15<=0.39, M4, IF(M4/15<=0.69, NA(), NA()))",
+   "spans": [],
+   "rewrite": "IF(M4/15<=0.39, M4, IF(M4/15<=0.69, NA(), NA()))",
+   "identifiers": [
+    "m4"
+   ]
+  },
+  {
+   "formula": "IF(M4/15<=0.39, NA(), IF(M4/15<=0.69, M4,NA()))",
+   "spans": [],
+   "rewrite": "IF(M4/15<=0.39, NA(), IF(M4/15<=0.69, M4,NA()))",
+   "identifiers": [
+    "m4"
+   ]
+  },
+  {
+   "formula": "IF(M4/15<=0.39, NA(), IF(M4/15<=0.69, NA(), M4))",
+   "spans": [],
+   "rewrite": "IF(M4/15<=0.39, NA(), IF(M4/15<=0.69, NA(), M4))",
+   "identifiers": [
+    "m4"
+   ]
+  },
+  {
+   "formula": "IF(NOT($I$18:$L$18=0),$I$18:$L$18*(VLOOKUP($I$17:$L$17,$S$14:$T$16,2,FALSE)),NA())",
+   "spans": [],
+   "rewrite": "IF(NOT($I$18:$L$18=0),$I$18:$L$18*(VLOOKUP($I$17:$L$17,$S$14:$T$16,2,FALSE)),NA())",
+   "identifiers": [
+    "false",
+    "i",
+    "l",
+    "s",
+    "t"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA10),ISBLANK('SFARI Score'!Y10)),NA(),'SFARI Score'!$Y10)*AF10",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA10),ISBLANK('Existing Conditions'!Y10)),NA(),'Existing Conditions'!$Y10)*AF10",
+   "identifiers": [
+    "af10",
+    "y10"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA11),ISBLANK('SFARI Score'!Y11)),NA(),'SFARI Score'!$Y11)*AF11",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA11),ISBLANK('Existing Conditions'!Y11)),NA(),'Existing Conditions'!$Y11)*AF11",
+   "identifiers": [
+    "af11",
+    "y11"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA12),ISBLANK('SFARI Score'!Y12)),NA(),'SFARI Score'!$Y12)*AF12",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA12),ISBLANK('Existing Conditions'!Y12)),NA(),'Existing Conditions'!$Y12)*AF12",
+   "identifiers": [
+    "af12",
+    "y12"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA13),ISBLANK('SFARI Score'!Y13)),NA(),'SFARI Score'!$Y13)*AF13",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA13),ISBLANK('Existing Conditions'!Y13)),NA(),'Existing Conditions'!$Y13)*AF13",
+   "identifiers": [
+    "af13",
+    "y13"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA14),ISBLANK('SFARI Score'!Y14)),NA(),'SFARI Score'!$Y14)*AF14",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA14),ISBLANK('Existing Conditions'!Y14)),NA(),'Existing Conditions'!$Y14)*AF14",
+   "identifiers": [
+    "af14",
+    "y14"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA15),ISBLANK('SFARI Score'!Y15)),NA(),'SFARI Score'!$Y15)*AF15",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA15),ISBLANK('Existing Conditions'!Y15)),NA(),'Existing Conditions'!$Y15)*AF15",
+   "identifiers": [
+    "af15",
+    "y15"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA16),ISBLANK('SFARI Score'!Y16)),NA(),'SFARI Score'!$Y16)*AF16",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA16),ISBLANK('Existing Conditions'!Y16)),NA(),'Existing Conditions'!$Y16)*AF16",
+   "identifiers": [
+    "af16",
+    "y16"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA17),ISBLANK('SFARI Score'!Y17)),NA(),'SFARI Score'!$Y17)*AF17",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA17),ISBLANK('Existing Conditions'!Y17)),NA(),'Existing Conditions'!$Y17)*AF17",
+   "identifiers": [
+    "af17",
+    "y17"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA18),ISBLANK('SFARI Score'!Y18)),NA(),'SFARI Score'!$Y18)*AF18",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA18),ISBLANK('Existing Conditions'!Y18)),NA(),'Existing Conditions'!$Y18)*AF18",
+   "identifiers": [
+    "af18",
+    "y18"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA19),ISBLANK('SFARI Score'!Y19)),NA(),'SFARI Score'!$Y19)*AF19",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA19),ISBLANK('Existing Conditions'!Y19)),NA(),'Existing Conditions'!$Y19)*AF19",
+   "identifiers": [
+    "af19",
+    "y19"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA20),ISBLANK('SFARI Score'!Y20)),NA(),'SFARI Score'!$Y20)*AF20",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA20),ISBLANK('Existing Conditions'!Y20)),NA(),'Existing Conditions'!$Y20)*AF20",
+   "identifiers": [
+    "af20",
+    "y20"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA21),ISBLANK('SFARI Score'!Y21)),NA(),'SFARI Score'!$Y21)*AF21",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA21),ISBLANK('Existing Conditions'!Y21)),NA(),'Existing Conditions'!$Y21)*AF21",
+   "identifiers": [
+    "af21",
+    "y21"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA22),ISBLANK('SFARI Score'!Y22)),NA(),'SFARI Score'!$Y22)*AF22",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA22),ISBLANK('Existing Conditions'!Y22)),NA(),'Existing Conditions'!$Y22)*AF22",
+   "identifiers": [
+    "af22",
+    "y22"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA23),ISBLANK('SFARI Score'!Y23)),NA(),'SFARI Score'!$Y23)*AF23",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA23),ISBLANK('Existing Conditions'!Y23)),NA(),'Existing Conditions'!$Y23)*AF23",
+   "identifiers": [
+    "af23",
+    "y23"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA24),ISBLANK('SFARI Score'!Y24)),NA(),'SFARI Score'!$Y24)*AF24",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA24),ISBLANK('Existing Conditions'!Y24)),NA(),'Existing Conditions'!$Y24)*AF24",
+   "identifiers": [
+    "af24",
+    "y24"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA25),ISBLANK('SFARI Score'!Y25)),NA(),'SFARI Score'!$Y25)*AF25",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA25),ISBLANK('Existing Conditions'!Y25)),NA(),'Existing Conditions'!$Y25)*AF25",
+   "identifiers": [
+    "af25",
+    "y25"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA26),ISBLANK('SFARI Score'!Y26)),NA(),'SFARI Score'!$Y26)*AF26",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA26),ISBLANK('Existing Conditions'!Y26)),NA(),'Existing Conditions'!$Y26)*AF26",
+   "identifiers": [
+    "af26",
+    "y26"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA27),ISBLANK('SFARI Score'!Y27)),NA(),'SFARI Score'!$Y27)*AF27",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA27),ISBLANK('Existing Conditions'!Y27)),NA(),'Existing Conditions'!$Y27)*AF27",
+   "identifiers": [
+    "af27",
+    "y27"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA8),ISBLANK('SFARI Score'!Y8)),NA(),'SFARI Score'!$Y8)*AF8",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     65,
+     79,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA8),ISBLANK('Existing Conditions'!Y8)),NA(),'Existing Conditions'!$Y8)*AF8",
+   "identifiers": [
+    "af8",
+    "y8"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AA9),ISBLANK('SFARI Score'!Y9)),NA(),'SFARI Score'!$Y9)*AF9",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     65,
+     79,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AA9),ISBLANK('Existing Conditions'!Y9)),NA(),'Existing Conditions'!$Y9)*AF9",
+   "identifiers": [
+    "af9",
+    "y9"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB10),ISBLANK('SFARI Score'!Y10)),NA(),'SFARI Score'!$Y10)*AG10",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB10),ISBLANK('Existing Conditions'!Y10)),NA(),'Existing Conditions'!$Y10)*AG10",
+   "identifiers": [
+    "ag10",
+    "y10"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB11),ISBLANK('SFARI Score'!Y11)),NA(),'SFARI Score'!$Y11)*AG11",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB11),ISBLANK('Existing Conditions'!Y11)),NA(),'Existing Conditions'!$Y11)*AG11",
+   "identifiers": [
+    "ag11",
+    "y11"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB12),ISBLANK('SFARI Score'!Y12)),NA(),'SFARI Score'!$Y12)*AG12",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB12),ISBLANK('Existing Conditions'!Y12)),NA(),'Existing Conditions'!$Y12)*AG12",
+   "identifiers": [
+    "ag12",
+    "y12"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB13),ISBLANK('SFARI Score'!Y13)),NA(),'SFARI Score'!$Y13)*AG13",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB13),ISBLANK('Existing Conditions'!Y13)),NA(),'Existing Conditions'!$Y13)*AG13",
+   "identifiers": [
+    "ag13",
+    "y13"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB14),ISBLANK('SFARI Score'!Y14)),NA(),'SFARI Score'!$Y14)*AG14",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB14),ISBLANK('Existing Conditions'!Y14)),NA(),'Existing Conditions'!$Y14)*AG14",
+   "identifiers": [
+    "ag14",
+    "y14"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB15),ISBLANK('SFARI Score'!Y15)),NA(),'SFARI Score'!$Y15)*AG15",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB15),ISBLANK('Existing Conditions'!Y15)),NA(),'Existing Conditions'!$Y15)*AG15",
+   "identifiers": [
+    "ag15",
+    "y15"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB16),ISBLANK('SFARI Score'!Y16)),NA(),'SFARI Score'!$Y16)*AG16",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB16),ISBLANK('Existing Conditions'!Y16)),NA(),'Existing Conditions'!$Y16)*AG16",
+   "identifiers": [
+    "ag16",
+    "y16"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB17),ISBLANK('SFARI Score'!Y17)),NA(),'SFARI Score'!$Y17)*AG17",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB17),ISBLANK('Existing Conditions'!Y17)),NA(),'Existing Conditions'!$Y17)*AG17",
+   "identifiers": [
+    "ag17",
+    "y17"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB18),ISBLANK('SFARI Score'!Y18)),NA(),'SFARI Score'!$Y18)*AG18",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB18),ISBLANK('Existing Conditions'!Y18)),NA(),'Existing Conditions'!$Y18)*AG18",
+   "identifiers": [
+    "ag18",
+    "y18"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB19),ISBLANK('SFARI Score'!Y19)),NA(),'SFARI Score'!$Y19)*AG19",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB19),ISBLANK('Existing Conditions'!Y19)),NA(),'Existing Conditions'!$Y19)*AG19",
+   "identifiers": [
+    "ag19",
+    "y19"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB20),ISBLANK('SFARI Score'!Y20)),NA(),'SFARI Score'!$Y20)*AG20",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB20),ISBLANK('Existing Conditions'!Y20)),NA(),'Existing Conditions'!$Y20)*AG20",
+   "identifiers": [
+    "ag20",
+    "y20"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB21),ISBLANK('SFARI Score'!Y21)),NA(),'SFARI Score'!$Y21)*AG21",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB21),ISBLANK('Existing Conditions'!Y21)),NA(),'Existing Conditions'!$Y21)*AG21",
+   "identifiers": [
+    "ag21",
+    "y21"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB22),ISBLANK('SFARI Score'!Y22)),NA(),'SFARI Score'!$Y22)*AG22",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB22),ISBLANK('Existing Conditions'!Y22)),NA(),'Existing Conditions'!$Y22)*AG22",
+   "identifiers": [
+    "ag22",
+    "y22"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB23),ISBLANK('SFARI Score'!Y23)),NA(),'SFARI Score'!$Y23)*AG23",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB23),ISBLANK('Existing Conditions'!Y23)),NA(),'Existing Conditions'!$Y23)*AG23",
+   "identifiers": [
+    "ag23",
+    "y23"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB24),ISBLANK('SFARI Score'!Y24)),NA(),'SFARI Score'!$Y24)*AG24",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB24),ISBLANK('Existing Conditions'!Y24)),NA(),'Existing Conditions'!$Y24)*AG24",
+   "identifiers": [
+    "ag24",
+    "y24"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB25),ISBLANK('SFARI Score'!Y25)),NA(),'SFARI Score'!$Y25)*AG25",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB25),ISBLANK('Existing Conditions'!Y25)),NA(),'Existing Conditions'!$Y25)*AG25",
+   "identifiers": [
+    "ag25",
+    "y25"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB26),ISBLANK('SFARI Score'!Y26)),NA(),'SFARI Score'!$Y26)*AG26",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB26),ISBLANK('Existing Conditions'!Y26)),NA(),'Existing Conditions'!$Y26)*AG26",
+   "identifiers": [
+    "ag26",
+    "y26"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB27),ISBLANK('SFARI Score'!Y27)),NA(),'SFARI Score'!$Y27)*AG27",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     42,
+     56,
+     "SFARI Score",
+     true
+    ],
+    [
+     67,
+     81,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB27),ISBLANK('Existing Conditions'!Y27)),NA(),'Existing Conditions'!$Y27)*AG27",
+   "identifiers": [
+    "ag27",
+    "y27"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB8),ISBLANK('SFARI Score'!Y8)),NA(),'SFARI Score'!$Y8)*AG8",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     65,
+     79,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB8),ISBLANK('Existing Conditions'!Y8)),NA(),'Existing Conditions'!$Y8)*AG8",
+   "identifiers": [
+    "ag8",
+    "y8"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!AB9),ISBLANK('SFARI Score'!Y9)),NA(),'SFARI Score'!$Y9)*AG9",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     65,
+     79,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!AB9),ISBLANK('Existing Conditions'!Y9)),NA(),'Existing Conditions'!$Y9)*AG9",
+   "identifiers": [
+    "ag9",
+    "y9"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z10),ISBLANK('SFARI Score'!Y10)),NA(),'SFARI Score'!$Y10)*AE10",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z10),ISBLANK('Existing Conditions'!Y10)),NA(),'Existing Conditions'!$Y10)*AE10",
+   "identifiers": [
+    "ae10",
+    "y10"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z11),ISBLANK('SFARI Score'!Y11)),NA(),'SFARI Score'!$Y11)*AE11",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z11),ISBLANK('Existing Conditions'!Y11)),NA(),'Existing Conditions'!$Y11)*AE11",
+   "identifiers": [
+    "ae11",
+    "y11"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z12),ISBLANK('SFARI Score'!Y12)),NA(),'SFARI Score'!$Y12)*AE12",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z12),ISBLANK('Existing Conditions'!Y12)),NA(),'Existing Conditions'!$Y12)*AE12",
+   "identifiers": [
+    "ae12",
+    "y12"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z13),ISBLANK('SFARI Score'!Y13)),NA(),'SFARI Score'!$Y13)*AE13",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z13),ISBLANK('Existing Conditions'!Y13)),NA(),'Existing Conditions'!$Y13)*AE13",
+   "identifiers": [
+    "ae13",
+    "y13"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z14),ISBLANK('SFARI Score'!Y14)),NA(),'SFARI Score'!$Y14)*AE14",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z14),ISBLANK('Existing Conditions'!Y14)),NA(),'Existing Conditions'!$Y14)*AE14",
+   "identifiers": [
+    "ae14",
+    "y14"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z15),ISBLANK('SFARI Score'!Y15)),NA(),'SFARI Score'!$Y15)*AE15",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z15),ISBLANK('Existing Conditions'!Y15)),NA(),'Existing Conditions'!$Y15)*AE15",
+   "identifiers": [
+    "ae15",
+    "y15"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z16),ISBLANK('SFARI Score'!Y16)),NA(),'SFARI Score'!$Y16)*AE16",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z16),ISBLANK('Existing Conditions'!Y16)),NA(),'Existing Conditions'!$Y16)*AE16",
+   "identifiers": [
+    "ae16",
+    "y16"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z17),ISBLANK('SFARI Score'!Y17)),NA(),'SFARI Score'!$Y17)*AE17",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z17),ISBLANK('Existing Conditions'!Y17)),NA(),'Existing Conditions'!$Y17)*AE17",
+   "identifiers": [
+    "ae17",
+    "y17"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z18),ISBLANK('SFARI Score'!Y18)),NA(),'SFARI Score'!$Y18)*AE18",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z18),ISBLANK('Existing Conditions'!Y18)),NA(),'Existing Conditions'!$Y18)*AE18",
+   "identifiers": [
+    "ae18",
+    "y18"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z19),ISBLANK('SFARI Score'!Y19)),NA(),'SFARI Score'!$Y19)*AE19",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z19),ISBLANK('Existing Conditions'!Y19)),NA(),'Existing Conditions'!$Y19)*AE19",
+   "identifiers": [
+    "ae19",
+    "y19"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z20),ISBLANK('SFARI Score'!Y20)),NA(),'SFARI Score'!$Y20)*AE20",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z20),ISBLANK('Existing Conditions'!Y20)),NA(),'Existing Conditions'!$Y20)*AE20",
+   "identifiers": [
+    "ae20",
+    "y20"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z21),ISBLANK('SFARI Score'!Y21)),NA(),'SFARI Score'!$Y21)*AE21",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z21),ISBLANK('Existing Conditions'!Y21)),NA(),'Existing Conditions'!$Y21)*AE21",
+   "identifiers": [
+    "ae21",
+    "y21"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z22),ISBLANK('SFARI Score'!Y22)),NA(),'SFARI Score'!$Y22)*AE22",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z22),ISBLANK('Existing Conditions'!Y22)),NA(),'Existing Conditions'!$Y22)*AE22",
+   "identifiers": [
+    "ae22",
+    "y22"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z23),ISBLANK('SFARI Score'!Y23)),NA(),'SFARI Score'!$Y23)*AE23",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z23),ISBLANK('Existing Conditions'!Y23)),NA(),'Existing Conditions'!$Y23)*AE23",
+   "identifiers": [
+    "ae23",
+    "y23"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z24),ISBLANK('SFARI Score'!Y24)),NA(),'SFARI Score'!$Y24)*AE24",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z24),ISBLANK('Existing Conditions'!Y24)),NA(),'Existing Conditions'!$Y24)*AE24",
+   "identifiers": [
+    "ae24",
+    "y24"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z25),ISBLANK('SFARI Score'!Y25)),NA(),'SFARI Score'!$Y25)*AE25",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z25),ISBLANK('Existing Conditions'!Y25)),NA(),'Existing Conditions'!$Y25)*AE25",
+   "identifiers": [
+    "ae25",
+    "y25"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z26),ISBLANK('SFARI Score'!Y26)),NA(),'SFARI Score'!$Y26)*AE26",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z26),ISBLANK('Existing Conditions'!Y26)),NA(),'Existing Conditions'!$Y26)*AE26",
+   "identifiers": [
+    "ae26",
+    "y26"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z27),ISBLANK('SFARI Score'!Y27)),NA(),'SFARI Score'!$Y27)*AE27",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     41,
+     55,
+     "SFARI Score",
+     true
+    ],
+    [
+     66,
+     80,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z27),ISBLANK('Existing Conditions'!Y27)),NA(),'Existing Conditions'!$Y27)*AE27",
+   "identifiers": [
+    "ae27",
+    "y27"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z8),ISBLANK('SFARI Score'!Y8)),NA(),'SFARI Score'!$Y8)*AE8",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     40,
+     54,
+     "SFARI Score",
+     true
+    ],
+    [
+     64,
+     78,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z8),ISBLANK('Existing Conditions'!Y8)),NA(),'Existing Conditions'!$Y8)*AE8",
+   "identifiers": [
+    "ae8",
+    "y8"
+   ]
+  },
+  {
+   "formula": "IF(OR(ISBLANK('SFARI Score'!Z9),ISBLANK('SFARI Score'!Y9)),NA(),'SFARI Score'!$Y9)*AE9",
+   "spans": [
+    [
+     14,
+     28,
+     "SFARI Score",
+     true
+    ],
+    [
+     40,
+     54,
+     "SFARI Score",
+     true
+    ],
+    [
+     64,
+     78,
+     "SFARI Score",
+     true
+    ]
+   ],
+   "rewrite": "IF(OR(ISBLANK('Existing Conditions'!Z9),ISBLANK('Existing Conditions'!Y9)),NA(),'Existing Conditions'!$Y9)*AE9",
+   "identifiers": [
+    "ae9",
+    "y9"
+   ]
+  },
+  {
+   "formula": "IFERROR(SUMIF(_xlfn.ANCHORARRAY(R20),\"<>#N/A\"),NA())",
+   "spans": [],
+   "rewrite": "IFERROR(SUMIF(_xlfn.ANCHORARRAY(R20),\"<>#N/A\"),NA())",
+   "identifiers": [
+    "r20"
+   ]
+  },
+  {
+   "formula": "IFERROR(SUMIF(_xlfn.ANCHORARRAY(R22),\"<>#N/A\"),NA())",
+   "spans": [],
+   "rewrite": "IFERROR(SUMIF(_xlfn.ANCHORARRAY(R22),\"<>#N/A\"),NA())",
+   "identifiers": [
+    "r22"
+   ]
+  },
+  {
+   "formula": "IFERROR(SUMIF(_xlfn.ANCHORARRAY(R23),\"<>#N/A\"),NA())",
+   "spans": [],
+   "rewrite": "IFERROR(SUMIF(_xlfn.ANCHORARRAY(R23),\"<>#N/A\"),NA())",
+   "identifiers": [
+    "r23"
+   ]
+  },
+  {
+   "formula": "Instructions!$L$25:$L$27",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$L$25:$L$27",
+   "identifiers": [
+    "l"
+   ]
+  },
+  {
+   "formula": "Instructions!$L$4:$L$23",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$L$4:$L$23",
+   "identifiers": [
+    "l"
+   ]
+  },
+  {
+   "formula": "Instructions!$N$25:$N$27",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$N$25:$N$27",
+   "identifiers": [
+    "n"
+   ]
+  },
+  {
+   "formula": "Instructions!$N$4:$N$23",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$N$4:$N$23",
+   "identifiers": [
+    "n"
+   ]
+  },
+  {
+   "formula": "Instructions!$O$25:$O$27",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$O$25:$O$27",
+   "identifiers": [
+    "o"
+   ]
+  },
+  {
+   "formula": "Instructions!$O$4:$O$23",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$O$4:$O$23",
+   "identifiers": [
+    "o"
+   ]
+  },
+  {
+   "formula": "Instructions!$P$25:$P$27",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$P$25:$P$27",
+   "identifiers": [
+    "p"
+   ]
+  },
+  {
+   "formula": "Instructions!$P$4:$P$23",
+   "spans": [
+    [
+     0,
+     13,
+     "Instructions",
+     false
+    ]
+   ],
+   "rewrite": "Instructions!$P$4:$P$23",
+   "identifiers": [
+    "p"
+   ]
+  },
+  {
+   "formula": "NA()",
+   "spans": [],
+   "rewrite": "NA()",
+   "identifiers": []
+  },
+  {
+   "formula": "SUM(AE8:AE27)",
+   "spans": [],
+   "rewrite": "SUM(AE8:AE27)",
+   "identifiers": [
+    "ae27",
+    "ae8"
+   ]
+  },
+  {
+   "formula": "SUM(AF8:AF27)",
+   "spans": [],
+   "rewrite": "SUM(AF8:AF27)",
+   "identifiers": [
+    "af27",
+    "af8"
+   ]
+  },
+  {
+   "formula": "SUM(AG8:AG27)",
+   "spans": [],
+   "rewrite": "SUM(AG8:AG27)",
+   "identifiers": [
+    "ag27",
+    "ag8"
+   ]
+  },
+  {
+   "formula": "SUM(AK8:AK27)",
+   "spans": [],
+   "rewrite": "SUM(AK8:AK27)",
+   "identifiers": [
+    "ak27",
+    "ak8"
+   ]
+  },
+  {
+   "formula": "SUM(AL8:AL27)",
+   "spans": [],
+   "rewrite": "SUM(AL8:AL27)",
+   "identifiers": [
+    "al27",
+    "al8"
+   ]
+  },
+  {
+   "formula": "SUM(AM8:AM27)",
+   "spans": [],
+   "rewrite": "SUM(AM8:AM27)",
+   "identifiers": [
+    "am27",
+    "am8"
+   ]
+  },
+  {
+   "formula": "SUMIF(AH8:AH27,\"<>#N/A\")/AK28",
+   "spans": [],
+   "rewrite": "SUMIF(AH8:AH27,\"<>#N/A\")/AK28",
+   "identifiers": [
+    "ah27",
+    "ah8",
+    "ak28"
+   ]
+  },
+  {
+   "formula": "SUMIF(AI8:AI27,\"<>#N/A\")/AL28",
+   "spans": [],
+   "rewrite": "SUMIF(AI8:AI27,\"<>#N/A\")/AL28",
+   "identifiers": [
+    "ai27",
+    "ai8",
+    "al28"
+   ]
+  },
+  {
+   "formula": "SUMIF(AJ8:AJ27,\"<>#N/A\")/AM28",
+   "spans": [],
+   "rewrite": "SUMIF(AJ8:AJ27,\"<>#N/A\")/AM28",
+   "identifiers": [
+    "aj27",
+    "aj8",
+    "am28"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I22:$L22,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I22:$L22,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i22",
+    "l22",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I23:$L23,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I23:$L23,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i23",
+    "l23",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I25:$L25,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I25:$L25,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i25",
+    "l25",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I26:$L26,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I26:$L26,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i26",
+    "l26",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I27:$L27,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I27:$L27,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i27",
+    "l27",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I29:$L29,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I29:$L29,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i29",
+    "l29",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I30:$L30,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I30:$L30,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i30",
+    "l30",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I31:$L31,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I31:$L31,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i31",
+    "l31",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I33:$L33,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I33:$L33,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i33",
+    "l33",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I34:$L34,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I34:$L34,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i34",
+    "l34",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I35:$L35,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I35:$L35,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i35",
+    "l35",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I37:$L37,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I37:$L37,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i37",
+    "l37",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I38:$L38,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I38:$L38,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i38",
+    "l38",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I39:$L39,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I39:$L39,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i39",
+    "l39",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I40:$L40,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I40:$L40,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i40",
+    "l40",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I41:$L41,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I41:$L41,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i41",
+    "l41",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I42:$L42,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I42:$L42,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i42",
+    "l42",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I43:$L43,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I43:$L43,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i43",
+    "l43",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I44:$L44,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I44:$L44,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i44",
+    "l44",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I45:$L45,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I45:$L45,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i45",
+    "l45",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I46:$L46,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I46:$L46,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i46",
+    "l46",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I47:$L47,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I47:$L47,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i47",
+    "l47",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I48:$L48,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I48:$L48,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i48",
+    "l48",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I49:$L49,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I49:$L49,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i49",
+    "l49",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I50:$L50,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I50:$L50,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i50",
+    "l50",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I51:$L51,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I51:$L51,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i51",
+    "l51",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I52:$L52,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I52:$L52,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i52",
+    "l52",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I53:$L53,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I53:$L53,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i53",
+    "l53",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I54:$L54,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I54:$L54,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i54",
+    "l54",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I55:$L55,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I55:$L55,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i55",
+    "l55",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($I56:$L56,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "spans": [],
+   "rewrite": "VLOOKUP($I56:$L56,$N$15:$O$19,2,FALSE)*(_xlfn.ANCHORARRAY($R$20)/$T$18)",
+   "identifiers": [
+    "false",
+    "i56",
+    "l56",
+    "n",
+    "o",
+    "r",
+    "t"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J10:$J10,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J10:$J10,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j10",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J11:$J11,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J11:$J11,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j11",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J12:$J12,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J12:$J12,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j12",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J13:$J13,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J13:$J13,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j13",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J14:$J14,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J14:$J14,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j14",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J15:$J15,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J15:$J15,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j15",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J16:$J16,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J16:$J16,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j16",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J17:$J17,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J17:$J17,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j17",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J18:$J18,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J18:$J18,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j18",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J19:$J19,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J19:$J19,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j19",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J20:$J20,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J20:$J20,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j20",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J21:$J21,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J21:$J21,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j21",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J22:$J22,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J22:$J22,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j22",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J23:$J23,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J23:$J23,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j23",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J24:$J24,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J24:$J24,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j24",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J25:$J25,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J25:$J25,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j25",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J26:$J26,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J26:$J26,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j26",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J27:$J27,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J27:$J27,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j27",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J28:$J28,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J28:$J28,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j28",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J29:$J29,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J29:$J29,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j29",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J30:$J30,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J30:$J30,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j30",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J31:$J31,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J31:$J31,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j31",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J32:$J32,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J32:$J32,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j32",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J33:$J33,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J33:$J33,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j33",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J34:$J34,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J34:$J34,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j34",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J35:$J35,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J35:$J35,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j35",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J36:$J36,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J36:$J36,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j36",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J37:$J37,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J37:$J37,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j37",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J38:$J38,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J38:$J38,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j38",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J39:$J39,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J39:$J39,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j39",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J40:$J40,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J40:$J40,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j40",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J41:$J41,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J41:$J41,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j41",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J42:$J42,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J42:$J42,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j42",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J43:$J43,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J43:$J43,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j43",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J44:$J44,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J44:$J44,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j44",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J45:$J45,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J45:$J45,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j45",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J46:$J46,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J46:$J46,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j46",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J47:$J47,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J47:$J47,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j47",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J48:$J48,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J48:$J48,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j48",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J49:$J49,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J49:$J49,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j49",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J50:$J50,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J50:$J50,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j50",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J51:$J51,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J51:$J51,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j51",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J52:$J52,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J52:$J52,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j52",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J53:$J53,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J53:$J53,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j53",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J54:$J54,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J54:$J54,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j54",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J55:$J55,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J55:$J55,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j55",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J56:$J56,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J56:$J56,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j56",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J57:$J57,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J57:$J57,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j57",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J58:$J58,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J58:$J58,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j58",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J59:$J59,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J59:$J59,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j59",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J60:$J60,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J60:$J60,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j60",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J61:$J61,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J61:$J61,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j61",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J62:$J62,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J62:$J62,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j62",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J63:$J63,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J63:$J63,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j63",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J64:$J64,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J64:$J64,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j64",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J65:$J65,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J65:$J65,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j65",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J66:$J66,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J66:$J66,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j66",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J67:$J67,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J67:$J67,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j67",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J68:$J68,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J68:$J68,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j68",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J69:$J69,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J69:$J69,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j69",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J70:$J70,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J70:$J70,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j70",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J71:$J71,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J71:$J71,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j71",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J72:$J72,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J72:$J72,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j72",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J73:$J73,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J73:$J73,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j73",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J74:$J74,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J74:$J74,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j74",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J75:$J75,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J75:$J75,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j75",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J76:$J76,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J76:$J76,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j76",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J77:$J77,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J77:$J77,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j77",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J78:$J78,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J78:$J78,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j78",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J79:$J79,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J79:$J79,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j79",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J80:$J80,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J80:$J80,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j80",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J81:$J81,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J81:$J81,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j81",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J82:$J82,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J82:$J82,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j82",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J83:$J83,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J83:$J83,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j83",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J84:$J84,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J84:$J84,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j84",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J85:$J85,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J85:$J85,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j85",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J87:$J87,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J87:$J87,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j87",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J8:$J8,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J8:$J8,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j8",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "VLOOKUP($J9:$J9,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J9:$J9,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j9",
+    "r",
+    "s"
+   ]
+  },
+  {
+   "formula": "Z28",
+   "spans": [],
+   "rewrite": "Z28",
+   "identifiers": [
+    "z28"
+   ]
+  },
+  {
+   "formula": "'SFARI Score'!A1+'It''s here'!B2",
+   "spans": [
+    [
+     0,
+     14,
+     "SFARI Score",
+     true
+    ],
+    [
+     17,
+     30,
+     "It's here",
+     true
+    ]
+   ],
+   "rewrite": "'Existing Conditions'!A1+'It''s here'!B2",
+   "identifiers": []
+  },
+  {
+   "formula": "\"a 'quoted' Sheet!A1\"&Score!C3",
+   "spans": [
+    [
+     22,
+     28,
+     "Score",
+     false
+    ]
+   ],
+   "rewrite": "\"a 'quoted' Sheet!A1\"&'S2 Score''s'!C3",
+   "identifiers": []
+  },
+  {
+   "formula": "#N/A+#DIV/0!",
+   "spans": [],
+   "rewrite": "#N/A+#DIV/0!",
+   "identifiers": [
+    "a",
+    "div",
+    "n"
+   ]
+  },
+  {
+   "formula": "SUM(Data:Other!A1)",
+   "error": "3-D reference: SUM(Data:Other!A1)",
+   "identifiers": [
+    "data"
+   ]
+  },
+  {
+   "formula": "[1]Sheet!A1",
+   "error": "external or structured reference: [1]Sheet!A1",
+   "identifiers": []
+  },
+  {
+   "formula": "Table1[Col]",
+   "error": "external or structured reference: Table1[Col]",
+   "identifiers": [
+    "col",
+    "table1"
+   ]
+  },
+  {
+   "formula": "1.5E+3*Sheet1!$A$1",
+   "spans": [
+    [
+     7,
+     14,
+     "Sheet1",
+     false
+    ]
+   ],
+   "rewrite": "1.5E+3*Data!$A$1",
+   "identifiers": [
+    "a"
+   ]
+  },
+  {
+   "formula": "myName*2+IF(x>1,Sheet2!B$4,\"\")",
+   "spans": [
+    [
+     16,
+     23,
+     "Sheet2",
+     false
+    ]
+   ],
+   "rewrite": "myName*2+IF(x>1,Sheet2!B$4,\"\")",
+   "identifiers": [
+    "myname",
+    "x"
+   ]
+  },
+  {
+   "formula": "'unclosed",
+   "error": "quoted text that is not a sheet reference: 'unclosed",
+   "identifiers": []
+  },
+  {
+   "formula": "Score!A1:B2+Score!C3",
+   "spans": [
+    [
+     0,
+     6,
+     "Score",
+     false
+    ],
+    [
+     12,
+     18,
+     "Score",
+     false
+    ]
+   ],
+   "rewrite": "'S2 Score''s'!A1:B2+'S2 Score''s'!C3",
+   "identifiers": [
+    "b2"
+   ]
+  },
+  {
+   "formula": "R1C1+TRUE",
+   "spans": [],
+   "rewrite": "R1C1+TRUE",
+   "identifiers": [
+    "r1c1",
+    "true"
+   ]
+  },
+  {
+   "formula": "é_name!A1",
+   "spans": [
+    [
+     0,
+     7,
+     "é_name",
+     false
+    ]
+   ],
+   "rewrite": "é_name!A1",
+   "identifiers": []
+  }
+ ],
+ "quote": {
+  "Summary": "Summary",
+  "Existing Conditions": "'Existing Conditions'",
+  "A1": "'A1'",
+  "R1C1": "'R1C1'",
+  "TRUE": "'TRUE'",
+  "x_1.y": "x_1.y",
+  "it's": "'it''s'",
+  "S2 Score": "'S2 Score'",
+  "abc123": "'abc123'",
+  "ABCD1": "ABCD1",
+  "R": "'R'",
+  "c12": "'c12'",
+  "_x": "_x",
+  "1abc": "'1abc'",
+  "Données": "'Données'"
+ },
+ "metrics": {
+  "textPx": [
+   [
+    "Reach name",
+    67.7,
+    71.762
+   ],
+   [
+    "EPA Level III ecoregion",
+    127.5,
+    135.15
+   ],
+   [
+    "Existing Conditions",
+    105.5,
+    111.83000000000001
+   ],
+   [
+    "Restored 'riffle' & pool",
+    119.0,
+    126.14
+   ],
+   [
+    "mmmWWW@%",
+    84.0,
+    89.04
+   ],
+   [
+    "",
+    0.0,
+    0.0
+   ],
+   [
+    "A long description of an alternative that wraps over several lines of the Summary tab.\nA second paragraph.",
+    580.6999999999999,
+    615.5419999999999
+   ],
+   [
+    "Supercalifragilisticexpialidocious-and-more-words-without-spaces-to-break",
+    429.29999999999995,
+    455.058
+   ]
+  ],
+  "lines": [
+   [
+    "Reach name",
+    91.0,
+    1,
+    1
+   ],
+   [
+    "Reach name",
+    168.0,
+    1,
+    1
+   ],
+   [
+    "Reach name",
+    500.5,
+    1,
+    1
+   ],
+   [
+    "EPA Level III ecoregion",
+    91.0,
+    2,
+    2
+   ],
+   [
+    "EPA Level III ecoregion",
+    168.0,
+    1,
+    1
+   ],
+   [
+    "EPA Level III ecoregion",
+    500.5,
+    1,
+    1
+   ],
+   [
+    "Existing Conditions",
+    91.0,
+    2,
+    2
+   ],
+   [
+    "Existing Conditions",
+    168.0,
+    1,
+    1
+   ],
+   [
+    "Existing Conditions",
+    500.5,
+    1,
+    1
+   ],
+   [
+    "Restored 'riffle' & pool",
+    91.0,
+    2,
+    2
+   ],
+   [
+    "Restored 'riffle' & pool",
+    168.0,
+    1,
+    1
+   ],
+   [
+    "Restored 'riffle' & pool",
+    500.5,
+    1,
+    1
+   ],
+   [
+    "mmmWWW@%",
+    91.0,
+    1,
+    2
+   ],
+   [
+    "mmmWWW@%",
+    168.0,
+    1,
+    1
+   ],
+   [
+    "mmmWWW@%",
+    500.5,
+    1,
+    1
+   ],
+   [
+    "",
+    91.0,
+    1,
+    1
+   ],
+   [
+    "",
+    168.0,
+    1,
+    1
+   ],
+   [
+    "",
+    500.5,
+    1,
+    1
+   ],
+   [
+    "A long description of an alternative that wraps over several lines of the Summary tab.\nA second paragraph.",
+    91.0,
+    9,
+    9
+   ],
+   [
+    "A long description of an alternative that wraps over several lines of the Summary tab.\nA second paragraph.",
+    168.0,
+    5,
+    5
+   ],
+   [
+    "A long description of an alternative that wraps over several lines of the Summary tab.\nA second paragraph.",
+    500.5,
+    2,
+    2
+   ],
+   [
+    "Supercalifragilisticexpialidocious-and-more-words-without-spaces-to-break",
+    91.0,
+    6,
+    6
+   ],
+   [
+    "Supercalifragilisticexpialidocious-and-more-words-without-spaces-to-break",
+    168.0,
+    3,
+    3
+   ],
+   [
+    "Supercalifragilisticexpialidocious-and-more-words-without-spaces-to-break",
+    500.5,
+    1,
+    1
+   ]
+  ],
+  "pageFit": [
+   [
+    400,
+    300,
+    [
+     "portrait",
+     1
+    ]
+   ],
+   [
+    700,
+    400,
+    [
+     "landscape",
+     1
+    ]
+   ],
+   [
+    900,
+    900,
+    [
+     "landscape",
+     0
+    ]
+   ],
+   [
+    523,
+    705,
+    [
+     "portrait",
+     1
+    ]
+   ],
+   [
+    2000,
+    300,
+    [
+     "landscape",
+     0
+    ]
+   ],
+   [
+    720,
+    1500,
+    [
+     "landscape",
+     0
+    ]
+   ],
+   [
+    600,
+    2000,
+    [
+     "portrait",
+     0
+    ]
+   ],
+   [
+    697.3,
+    940.0,
+    [
+     "portrait",
+     1
+    ]
+   ]
+  ]
+ },
+ "sfari": {
+  "delin": {
+   "delineation": {
+    "gnis_name": "Mink Brook",
+    "network": "nhdplus-hr",
+    "nhdplus_id": 1000123456789,
+    "snapped_lat": 43.68581234,
+    "snapped_lon": -72.23671234,
+    "reach_length_ft": 1000.5,
+    "drainage_area_sqkm": 12.3456,
+    "stream_order": 3
+   },
+   "siteEngine": {
+    "site": {
+     "ecoregionL3": {
+      "code": "59"
+     }
+    }
+   }
+  },
+  "scenarios": [
+   {
+    "id": "existing",
+    "name": "Existing Conditions",
+    "description": "",
+    "entries": {
+     "metric_scores": {
+      "catchment-hydrology-road-density": {
+       "likert": "Agree"
+      },
+      "surface-water-storage-wetland-coverage": {
+       "likert": "Not Applicable"
+      }
+     },
+     "function_scores": {
+      "catchment-hydrology": {
+       "score": 11
+      },
+      "surface-water-storage": {
+       "score": 4,
+       "note": "n"
+      }
+     }
+    }
+   },
+   {
+    "id": "s2",
+    "name": "Alt one",
+    "description": "Two scores changed.",
+    "entries": {
+     "metric_scores": {
+      "catchment-hydrology-road-density": {
+       "likert": "Strongly Agree"
+      }
+     },
+     "function_scores": {
+      "catchment-hydrology": {
+       "score": 14
+      },
+      "reach-inflow": {
+       "score": 9
+      }
+     }
+    }
+   },
+   {
+    "id": "s3",
+    "name": "Restored 'riffle' & pool",
+    "description": "A <test> & more",
+    "entries": {}
+   }
+  ],
+  "today": "2026-10-12",
+  "sha256": "01512062304a73f6447568fefad0cac23b0a29f3e1c35de82902c5e18c3360e1",
+  "size": 207127,
+  "parts": {
+   "[Content_Types].xml": "48eddf4ddc7674a4836bd5f1b522b82484c16224a50b16533a9a5f76e3e3c970",
+   "_rels/.rels": "0232528331d562bf624eefe3a130075aaeeb8061f35ba77f5fd3e659ae5a61fa",
+   "xl/workbook.xml": "ae89f91e09b409b1804c0e6ae0ad91ec1ef2390cbb828541771ed016a4704246",
+   "xl/_rels/workbook.xml.rels": "59c0c70464d3fa3972d8f1f7a057a7d4d808c882dce1adf7734a460df8c2bf34",
+   "xl/worksheets/sheet1.xml": "266fc73a442094be61b1635dd7ca5dd5c05c0da033c4a789deadb9844ff2ec84",
+   "xl/worksheets/sheet2.xml": "4ba33f90fd949d4552116eea286cc2ece847633993d2b4b6eb30e88e464625c6",
+   "xl/worksheets/sheet3.xml": "57e7e30eed9782387d7f02306b8ecc3118e5db768848fa9bd9f8f45d918a5f4c",
+   "xl/worksheets/sheet4.xml": "ce9fe98211c86d5cf8c9a2f02c045624d5443364bbf688133b02d2bbebbc8fbd",
+   "xl/worksheets/sheet5.xml": "81bf9460d8ca6253df2f6f7b5a496838243725ae61503312a09e360ff50a9b6b",
+   "xl/theme/theme1.xml": "00a4766f72029efd3de46e1ab5bf8b3bc44dc515f5b11c61059034516ebff8b3",
+   "xl/styles.xml": "b63d6fb9bbdc01dcc4c9d557bedf1dc73b9d8081bba2c724c33ebf6c3a9b299a",
+   "xl/sharedStrings.xml": "528f67cbf76ef692172625220e1704e16ffe8f71726622937253b6c13750df8d",
+   "xl/drawings/_rels/drawing4.xml.rels": "41e8ab6e22d4184d89249b26ff780b97c88c37b6ab65773b75b86cb9e4602959",
+   "xl/drawings/drawing1.xml": "596f9ab41ebafd83f3a0ce6676eb5450b50bc1cde65b896fbccdbd4739b73d99",
+   "xl/drawings/vmlDrawing1.vml": "04b134d5c2e44bdb2cb1c44687b855e133da67014e5797504256c6769639c949",
+   "xl/media/image1.emf": "9540f037277ca4932a17e2124d99bcd58c370ed35ddec288cda3c31505963e15",
+   "xl/media/image2.emf": "5b51bd0576fcdb3ed28958959d4700f6584ffaaa7120f6da9bc286e8748ea3d6",
+   "xl/media/image3.emf": "fba6fd98a4f96ce382c5e7d910278ab6ca00e215e098cf1c66d96a67541894e5",
+   "xl/media/image4.emf": "12e132c17fb06f5fd1b7cf9d9923d04107bb8da2b4d5c00fa21642cfc305353b",
+   "xl/drawings/drawing2.xml": "7fb5dfe1cbec4beaa0625509a7b13ff9fb04c8cf5c39c244c586a6e80c9a6e65",
+   "xl/charts/chart1.xml": "8e693f7f1e3b7ed0ee23ee46ebc3b3b406a0f455d8f06f0557686b3ff55a0fc6",
+   "xl/charts/style1.xml": "65ec7085b943b632355890072d9aaf286a52f4c5b25f581e5813fc2f177d3baa",
+   "xl/charts/colors1.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
+   "xl/charts/chart2.xml": "c17740476d40352b63843bb8c9d706421e20ca618ebd562598fe6a7f0744bc1e",
+   "xl/charts/style2.xml": "65ec7085b943b632355890072d9aaf286a52f4c5b25f581e5813fc2f177d3baa",
+   "xl/charts/colors2.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
+   "xl/media/image5.emf": "8950321d0861ba1560f608a8ff5478ff13ad7b033aa1bf760d7256a4feddf8d8",
+   "xl/drawings/drawing3.xml": "24399b8b43359bbdacc22a7f2567672a410a87098d6ae8766999f862d0bfd407",
+   "xl/media/image6.png": "78a7c60490c4f28c56a62325dc774b163d3019b8558d2f89363d73fc62ed9fe7",
+   "xl/media/image7.png": "b70e44ef980b36c7586359cb0383ba8a1531bedb0163c95bc2e75d20566a33c0",
+   "xl/media/image8.png": "27d3696bf88d3a100ac5eecb80167120a160b3a8516a67dd66819d213e952b4c",
+   "xl/media/image9.png": "fadc40c27c3ec4f4bf524d7edaa1c60a27ed425fb42db2b9aeca6e3a1c221787",
+   "xl/drawings/drawing4.xml": "e6ac32756a9f097dd5b1dc1d4b4f1d412971e4b6f4831fc03e3baab53cbf2079",
+   "xl/media/image10.png": "ad9c21b32eda3e6dab9f7818a48d6fd4d27ca4b54aa699324dfda2c70afd2768",
+   "xl/worksheets/_rels/sheet1.xml.rels": "385ad99e57278084a997e64597e0979a72ab709b3a03425f3f04c73402c5087e",
+   "xl/worksheets/_rels/sheet2.xml.rels": "b080444923aed7a5612898d96f615efb7a847fda5c099575e1681eb2e702c04a",
+   "xl/worksheets/_rels/sheet3.xml.rels": "0da1aa08a01d65db9c1263a1f68d65f90733a64ce020af4f113388737df272b4",
+   "xl/worksheets/_rels/sheet4.xml.rels": "0e4234a048389e815857e6948c0be3fbfbc311a3dc02cb05873eeab07ad14ee9",
+   "xl/drawings/_rels/drawing1.xml.rels": "dd0731845c4284aa5c0205a5c289a48d67516a497db58f98ab801481f600ae29",
+   "xl/drawings/_rels/drawing2.xml.rels": "5a188d11515fb48d4baeb53fc6f64ba2c168030e32629b09717b728215a18f1a",
+   "xl/charts/_rels/chart1.xml.rels": "1509ddaf2f7bc5d13e7a44c19ba59d526c7baf3549f284ddd3753758fbe3de6c",
+   "xl/charts/_rels/chart2.xml.rels": "36528e86cc5645d6ec154e8ce0b5b19b6dab3decc5d92b8b0ff2fd86d00cad53",
+   "xl/drawings/_rels/drawing3.xml.rels": "c3e2a3df16d3b3bd376d58272a3a1f08bbb49929f269d74c10d3298002c06d2b",
+   "xl/printerSettings/printerSettings1.bin": "bdf955d5ab58751095591b2cdda7f45432163b4bd92d595ab31fd93cd307f2a1",
+   "docProps/app.xml": "ee6881c071ffc97549d1bb5bf570fc5f5b477e838374c526e60d93ce1b37b1dd",
+   "docProps/custom.xml": "da107836200524f0f1491f1609c5e4a75693bf23fa9d3ea4e252329a2488071c",
+   "xl/printerSettings/printerSettings3.bin": "bdf955d5ab58751095591b2cdda7f45432163b4bd92d595ab31fd93cd307f2a1",
+   "xl/printerSettings/printerSettings2.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
+   "xl/comments1.xml": "db6c4ef04f9a1d50e1024500d29cd269f95fd99ecea5ee669b005737dfaae569",
+   "xl/printerSettings/printerSettings4.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
+   "customXml/item1.xml": "63cf51e97579df739ec636b986718bdf10742787489dd22a917dc3eaf1ad8791",
+   "customXml/itemProps1.xml": "2cae628bf8e1762426df1b100d07ab894745b6729ca341435b299d91ce80cc95",
+   "customXml/item2.xml": "5efcaf9ad70d9c29f406ee438f8f428b021a881d2c5afff0e53b00b1f67ae51e",
+   "customXml/itemProps2.xml": "feb487beab71a706df1d583b1ca4e71068d622a0884aae32d93d0bcad766b5c0",
+   "customXml/item3.xml": "84c2d75556ab52ad28c9d419d65f2fb5c89b4da94547081fba00d7f534c4f0ad",
+   "customXml/itemProps3.xml": "c8564620a8b5988a69bf39d00d67f52ec9934c3eb2fa5cf0f0966e4fa917fb3f",
+   "docMetadata/LabelInfo.xml": "df32ca7eba6c52dd65da24cb2f187402525a636e615b91cf96c75e2fd80d7b98",
+   "docProps/core.xml": "8de86ae811f68cf7d56fcf1eb1953f53b0f753be8dceeb9ab8ba68b909446b0a",
+   "customXml/_rels/item1.xml.rels": "80482f86e196171d66001e0e74d1900408a3aaf2463e54005d251b5f2db9a0b0",
+   "customXml/_rels/item2.xml.rels": "2a6aee4c8a9714223a3568077411a0c82d11b484b1c9ab93a19d50b99c57baa5",
+   "customXml/_rels/item3.xml.rels": "3aa4054f7f463c6d441102c960783aa7f937d6945a0a885b624a66aafaeedb6c",
+   "xl/persons/person.xml": "795b6dea443e93ff6f40a4cea461709a44a73048d6fa9052c2feb901e41dc5a8",
+   "xl/threadedComments/threadedComment1.xml": "9f27494f7dfb51835ea736441788b19444ecb6fc832dd920dacd5f8ddb43baf5",
+   "xl/worksheets/sheet6.xml": "926de417d26af65a00cacf1e1f4fac8862b79ae984f2a8d255bcf0e86077be32",
+   "xl/drawings/drawing5.xml": "c837b5d1c9f61043f671390d3e832b97cdef16304b07423af8a08c4714a0bec8",
+   "xl/charts/chart3.xml": "251d2b4317c939d8296e35ba1d0ed23362fc6ff755996015c099d275864c804d",
+   "xl/charts/colors3.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
+   "xl/charts/style3.xml": "65ec7085b943b632355890072d9aaf286a52f4c5b25f581e5813fc2f177d3baa",
+   "xl/charts/_rels/chart3.xml.rels": "46eff159dd252c4b59dcc7c3bc0242c278df6f42131424256a69ee0a4ff69a90",
+   "xl/charts/chart4.xml": "a1694deb4d52d663dba1c7e317291278b0da1ffb5cf06c6abc75c92c9d3d1116",
+   "xl/charts/colors4.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
+   "xl/charts/style4.xml": "65ec7085b943b632355890072d9aaf286a52f4c5b25f581e5813fc2f177d3baa",
+   "xl/charts/_rels/chart4.xml.rels": "e6672cade9dde07e5c6a8ff57848026ef33af0dca02915ae0e33a6486f9ff592",
+   "xl/drawings/_rels/drawing5.xml.rels": "ebad501e8479882096d0644d4788a5dee2812e285892a79e3e6e1e6627b6513f",
+   "xl/printerSettings/printerSettings5.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
+   "xl/worksheets/_rels/sheet6.xml.rels": "287073c2a0dbf5cea8db186bac8fa087207e697c0b7df7893a56b2bf7b97cdb9",
+   "xl/worksheets/sheet7.xml": "f4416ad9a4801092d277ca8e315c331381404f95d0122e0a726a0d7943e163ac",
+   "xl/worksheets/sheet8.xml": "580228de35bf6d4a3c3574a796aac0cb45f80a13fcbca59bcccda70263c598ab",
+   "xl/drawings/drawing6.xml": "da815988cf6167fd08214c03ca1ccd534c570ba02965e16cc2bccc5f77fef3d1",
+   "xl/charts/chart5.xml": "cb96ac4c19545fb03f49fe375b49d9fad913ceb40622c8f681b72e2cafb08c07",
+   "xl/charts/colors5.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
+   "xl/charts/style5.xml": "65ec7085b943b632355890072d9aaf286a52f4c5b25f581e5813fc2f177d3baa",
+   "xl/charts/_rels/chart5.xml.rels": "ebdf5164edb544f4e480cac184c4acb91a72974fa41deb4bc411dc6415911364",
+   "xl/charts/chart6.xml": "08bb694a9dfd9c65dbd91c73a4a089907eb2092a6b16c04b66d96737529fa8a5",
+   "xl/charts/colors6.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
+   "xl/charts/style6.xml": "65ec7085b943b632355890072d9aaf286a52f4c5b25f581e5813fc2f177d3baa",
+   "xl/charts/_rels/chart6.xml.rels": "56422f4afa29ff27e101de0ee3d6a04c90993829da41fa01f389820978ba9490",
+   "xl/drawings/_rels/drawing6.xml.rels": "c2b7f9f54a2d4fad7bdf6630c4eded2379603e04d4367d9264cca108fb3cd219",
+   "xl/printerSettings/printerSettings6.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
+   "xl/worksheets/_rels/sheet8.xml.rels": "acdf2708c2a144c999b8219e65c7e9de7d1ab9d639fb53a1f8bb9c2a94e13162",
+   "xl/worksheets/sheet9.xml": "a8beb03ea1191275f6167960d3eca64bd27848bb21278c76ad0891f4ed152ff2",
+   "xl/worksheets/sheet10.xml": "cfebd216feeb4e88aac6689b23c05e818db8cf80b12f09a64ef58621a12e34ac",
+   "xl/worksheets/sheet11.xml": "38c1e1f8ba70608db617a08617a7241daf92974c3a1d0c5e0f8ec5d16d368277"
+  }
+ }
+}

@@ -50,6 +50,9 @@ def test_default_version_and_hidden(tmp_path):
     assert {k: (f["version"], f["lifecycle"], f["status"]) for k, f in got.items()} == {
         "a": (1, "certified", "Final"), "b": (2, "draft", "Draft"), "c": (2, "certified", "Final")}
     assert got["a"]["name"] == "R" and got["a"]["code"] == "45" and got["a"]["geometry"] == SQUARE
+    # what Change shows: the default's name and region name, every eligible version's reference tier
+    assert got["a"]["assessmentName"] == "a" and got["a"]["regionName"] == "R"
+    assert got["a"]["referenceTierByRef"] == {"a@v1": None, "a@v2": None, "a@v3": None}
 
 
 @pytest.mark.skipif(not (DEEP / "deep").is_dir() or not (LIBRARY / "library.json").is_file(),
@@ -74,4 +77,14 @@ def test_same_as_deep(tmp_path, monkeypatch):
             "status": session.status_label(life), "lifecycle": life, "certified": life == "certified",
             "geometry": f.get("geometry")}
     assert len(ours) == len(theirs) > 0
-    assert ours == theirs
+    change = ("assessmentName", "regionName", "referenceTierByRef")
+    assert dict((k, dict((x, y) for x, y in f.items() if x not in change)) for k, f in ours.items()) == theirs
+    # Change's fields as covering_refs reads them from DEEP's registry records
+    from deep import config
+    records = config._registry_records()
+    for aid, f in ours.items():
+        recs = [r for r in records if r.get("assessmentId") == aid]
+        assert f["referenceTierByRef"] == dict((r["assessmentRef"], r.get("referenceTier")) for r in recs), aid
+        default = next(r for r in recs if r["version"] == max(r2["version"] for r2 in recs if r2.get("lifecycle") == f["lifecycle"]))
+        region = default.get("region") or (default.get("library") or {}).get("region") or {}
+        assert (f["assessmentName"], f["regionName"]) == (default.get("assessmentName", aid), region.get("name", "")), aid

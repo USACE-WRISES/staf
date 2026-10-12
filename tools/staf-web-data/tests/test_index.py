@@ -24,7 +24,7 @@ def test_app_index():
                      "files": {"bundle/lines2_0101.parquet": ["bundle/0101/lines2_0101.abc.parquet", 10],
                                "library/m.zip": ["library/m.def.zip", 5, "b" * 64],
                                "library/c.json": ["library/c.123.json.gz", 7, "e" * 64]},
-                     "gzip": {"library/c.json": 40}, "footers": {}, "datasets": {}, "bundle_sources": {}}
+                     "gzip": {"library/c.json": 40}, "footers": {}, "datasets": {}, "bundle_sources": {}, "bundle": {}}
 
 
 def test_dataset_regions():

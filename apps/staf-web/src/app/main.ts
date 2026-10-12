@@ -4,7 +4,11 @@
 // makes the shown tool's map, answers the shared page scripts (shim.ts) and the header's actions.
 // Leaflet is window.L as on the Shiny page, where the scripts find it.
 import L from 'leaflet'
+// Bootstrap's tab plugin: the pills of Get Forms switch as on the Shiny page
+import 'bootstrap/js/dist/tab'
 import { dataBase } from '../config'
+// the download links' one listener (each tool registers its files)
+import '../files/download'
 import { DataSource } from '../data/source'
 import { Dataset } from '../engine/dataset'
 import { PointTables } from '../engine/points'
@@ -42,6 +46,8 @@ const data = {
   points: new PointTables(src),
 }
 const tools = Object.fromEntries(ORDER.map((key) => [key, new Tool(key, nets, data)])) as Record<ToolKey, Tool>
+// DEEP's ?assessment=<id>[@<version>] link, read when DEEP first shows
+tools.deep.linkedAssessment = params.get('assessment')
 tools.deep.regionSource = async () => {
   await src.ready()
   const buf = await src.bytesOf('library/deep-regions.json')
@@ -64,7 +70,7 @@ document.addEventListener('click', (e) => {
 
 // the panes' action buttons: Find on map, Retry StreamCat lookup, the legend's Try again, Delineate,
 // Clear, the Basin's next step; DEEP's Change link
-const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streamcat_ws|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment|staf_sc_save|staf_sc_delete|close_modal_x|xs_prev|xs_next)$/
+const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streamcat_ws|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment|staf_sc_save|staf_sc_delete|close_modal_x|xs_prev|xs_next|nav_new|confirm_new|ff_retry|assess_pick_\d+)$/
 document.addEventListener('click', (e) => {
   const el = e.target instanceof Element ? e.target.closest('button[id], a[id]') : null
   const m = el && ACTIONS.exec(el.id)

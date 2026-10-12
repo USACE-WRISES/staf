@@ -1,0 +1,1171 @@
+{
+ "cases": [
+  {
+   "width": 3.12,
+   "depth": 0.312,
+   "geom": {
+    "points": [
+     [
+      -15.3543307086614,
+      1.1771653543307072
+     ],
+     [
+      -5.118110236220467,
+      1.0236220472440933
+     ],
+     [
+      -3.0708661417322802,
+      0.0
+     ],
+     [
+      3.0708661417322802,
+      0.0
+     ],
+     [
+      5.118110236220467,
+      1.0236220472440933
+     ],
+     [
+      15.3543307086614,
+      1.1771653543307072
+     ]
+    ],
+    "lb": -5.118110236220467,
+    "rb": 5.118110236220467,
+    "bankfull_stage": 1.0236220472440933,
+    "slope": 0.01,
+    "da": 1.0005,
+    "width_m": 3.12,
+    "depth_m": 0.312,
+    "division_name": "New England"
+   },
+   "bankfull": {
+    "stage": 1.0236220472440933,
+    "Q": 30.28891418503254,
+    "A": 8.382416764833511,
+    "P": 10.719509245275148,
+    "T": 10.236220472440934,
+    "R": 0.781977660826986,
+    "V": 3.6133868113194594,
+    "tau": 0.48795406035603933,
+    "power": 1.763166766220292,
+    "froude": 0.7039585971563931,
+    "depth_max": 1.0236220472440933,
+    "depth_avg": 0.8188976377952747,
+    "zones": {
+     "LOB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     },
+     "channel": {
+      "A": 8.382416764833511,
+      "P": 10.719509245275148,
+      "T": 10.236220472440934,
+      "dmax": 1.0236220472440933,
+      "R": 0.781977660826986,
+      "K": 302.88914185032536,
+      "Q": 30.28891418503254,
+      "V": 3.6133868113194594
+     },
+     "ROB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     }
+    },
+    "units": "US"
+   },
+   "modal": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Cross-section hydraulics</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"easi-instr\">Synthetic bankfull section: New England regional curve (Bieger 2015) at DA 1 km²: bankfull width 3.1 m, mean depth 0.31 m. Adjust slope, roughness, and target discharge; results feed the hydraulics metrics.</div>\n        <div class=\"row\">\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_slope-label\" for=\"sfari-xs_slope\">Channel slope (m/m)</label><input id=\"sfari-xs_slope\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.01\" min=\"1e-05\" step=\"0.0005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nchan-label\" for=\"sfari-xs_nchan\">Manning n (channel)</label><input id=\"sfari-xs_nchan\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.035\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nover-label\" for=\"sfari-xs_nover\">Manning n (overbank)</label><input id=\"sfari-xs_nover\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.06\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_targetq-label\" for=\"sfari-xs_targetq\">Target discharge Q (cfs)</label><input id=\"sfari-xs_targetq\" type=\"number\" class=\"shiny-input-number form-control\" value=\"30\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_d50-label\" for=\"sfari-xs_d50\">Bed D50 (mm)</label><input id=\"sfari-xs_d50\" type=\"number\" class=\"shiny-input-number form-control\" value=\"30.0\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"shiny-html-output\" id=\"sfari-xs_view\"></div>\n        <div class=\"easi-pane-actions\">\n          <button data-xs-attach=\"1\" type=\"button\" class=\"sfari-btn primary\">Attach results to hydraulics metrics</button>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>",
+   "views": [
+    {
+     "boxes": {
+      "slope": 0.01,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 30,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,65.3 218.6,67.6 220.5,77.8 222.3,87.9 224.2,98.0 226.0,108.1 227.8,118.2 229.7,128.4 231.5,138.5 233.4,148.6 235.2,158.7 237.1,168.8 238.9,179.0 240.8,189.1 242.6,199.2 244.5,209.3 246.3,219.4 248.2,229.6 250.0,239.7 251.8,249.8 253.7,259.9 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,259.9 368.2,249.8 370.0,239.7 371.8,229.6 373.7,219.4 375.5,209.3 377.4,199.2 379.2,189.1 381.1,179.0 382.9,168.8 384.8,158.7 386.6,148.6 388.5,138.5 390.3,128.4 392.2,118.2 394.0,108.1 395.8,98.0 397.7,87.9 399.5,77.8 401.4,67.6 401.4,65.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"65.3\" x2=\"586.0\" y2=\"65.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 254.8,266.0 365.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>30 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>1.02 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>3.60 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>10.2 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>0.78 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.486 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>1.75 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.70 (subcritical)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Critical shear τc (D50)</td>\n        <td>\n          <b>0.476 lb/ft² → mobilizes</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 1.02 ft at Q 30 cfs",
+       "field_value_text": "Low-flow depth 1.02 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 3.60 ft/s at Q 30 cfs",
+       "field_value_text": "Low-flow velocity 3.60 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 3.60 ft/s, τ 0.486 lb/ft², Fr 0.70",
+       "field_value_text": "Peak V 3.60 ft/s, Fr 0.70",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.486 vs critical τc 0.476 lb/ft² → mobilizes",
+       "field_value_text": "Bed shear tau 0.486 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 1.018523929625983,
+     "Q": 30.018180672454402
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.05,
+      "nover": 0.1,
+      "targetq": 5000,
+      "d50": null
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"34.0,34.0 34.0,208.0 35.8,208.1 37.7,208.2 39.5,208.2 41.4,208.3 43.2,208.4 45.1,208.5 46.9,208.5 48.8,208.6 50.6,208.7 52.5,208.8 54.3,208.8 56.2,208.9 58.0,209.0 59.8,209.1 61.7,209.1 63.5,209.2 65.4,209.3 67.2,209.4 69.1,209.4 70.9,209.5 72.8,209.6 74.6,209.7 76.5,209.7 78.3,209.8 80.2,209.9 82.0,210.0 83.8,210.0 85.7,210.1 87.5,210.2 89.4,210.3 91.2,210.4 93.1,210.4 94.9,210.5 96.8,210.6 98.6,210.7 100.5,210.7 102.3,210.8 104.2,210.9 106.0,211.0 107.8,211.0 109.7,211.1 111.5,211.2 113.4,211.3 115.2,211.3 117.1,211.4 118.9,211.5 120.8,211.6 122.6,211.6 124.5,211.7 126.3,211.8 128.2,211.9 130.0,211.9 131.8,212.0 133.7,212.1 135.5,212.2 137.4,212.3 139.2,212.3 141.1,212.4 142.9,212.5 144.8,212.6 146.6,212.6 148.5,212.7 150.3,212.8 152.2,212.9 154.0,212.9 155.8,213.0 157.7,213.1 159.5,213.2 161.4,213.2 163.2,213.3 165.1,213.4 166.9,213.5 168.8,213.5 170.6,213.6 172.5,213.7 174.3,213.8 176.2,213.8 178.0,213.9 179.8,214.0 181.7,214.1 183.5,214.1 185.4,214.2 187.2,214.3 189.1,214.4 190.9,214.5 192.8,214.5 194.6,214.6 196.5,214.7 198.3,214.8 200.2,214.8 202.0,214.9 203.8,215.0 205.7,215.1 207.5,215.1 209.4,215.2 211.2,215.3 213.1,215.4 214.9,215.4 216.8,215.5 218.6,216.4 220.5,218.9 222.3,221.5 224.2,224.0 226.0,226.5 227.8,229.1 229.7,231.6 231.5,234.1 233.4,236.6 235.2,239.2 237.1,241.7 238.9,244.2 240.8,246.8 242.6,249.3 244.5,251.8 246.3,254.4 248.2,256.9 250.0,259.4 251.8,262.0 253.7,264.5 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,264.5 368.2,262.0 370.0,259.4 371.8,256.9 373.7,254.4 375.5,251.8 377.4,249.3 379.2,246.8 381.1,244.2 382.9,241.7 384.8,239.2 386.6,236.6 388.5,234.1 390.3,231.6 392.2,229.1 394.0,226.5 395.8,224.0 397.7,221.5 399.5,218.9 401.4,216.4 403.2,215.5 405.1,215.4 406.9,215.4 408.8,215.3 410.6,215.2 412.5,215.1 414.3,215.1 416.2,215.0 418.0,214.9 419.8,214.8 421.7,214.8 423.5,214.7 425.4,214.6 427.2,214.5 429.1,214.5 430.9,214.4 432.8,214.3 434.6,214.2 436.5,214.1 438.3,214.1 440.2,214.0 442.0,213.9 443.8,213.8 445.7,213.8 447.5,213.7 449.4,213.6 451.2,213.5 453.1,213.5 454.9,213.4 456.8,213.3 458.6,213.2 460.5,213.2 462.3,213.1 464.2,213.0 466.0,212.9 467.8,212.9 469.7,212.8 471.5,212.7 473.4,212.6 475.2,212.6 477.1,212.5 478.9,212.4 480.8,212.3 482.6,212.3 484.5,212.2 486.3,212.1 488.2,212.0 490.0,211.9 491.8,211.9 493.7,211.8 495.5,211.7 497.4,211.6 499.2,211.6 501.1,211.5 502.9,211.4 504.8,211.3 506.6,211.3 508.5,211.2 510.3,211.1 512.2,211.0 514.0,211.0 515.8,210.9 517.7,210.8 519.5,210.7 521.4,210.7 523.2,210.6 525.1,210.5 526.9,210.4 528.8,210.4 530.6,210.3 532.5,210.2 534.3,210.1 536.2,210.0 538.0,210.0 539.8,209.9 541.7,209.8 543.5,209.7 545.4,209.7 547.2,209.6 549.1,209.5 550.9,209.4 552.8,209.4 554.6,209.3 556.5,209.2 558.3,209.1 560.2,209.1 562.0,209.0 563.8,208.9 565.7,208.8 567.5,208.8 569.4,208.7 571.2,208.6 573.1,208.5 574.9,208.5 576.8,208.4 578.6,208.3 580.5,208.2 582.3,208.2 584.2,208.1 586.0,208.0 586.0,34.0\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"34.0\" x2=\"586.0\" y2=\"34.0\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,208.0 218.0,215.6 254.8,266.0 365.2,266.0 402.0,215.6 586.0,208.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>278 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>4.71 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>2.32 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>30.7 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>3.85 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.480 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>1.11 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.21 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 4.71 ft at Q 278 cfs",
+       "field_value_text": "Low-flow depth 4.71 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 2.32 ft/s at Q 278 cfs",
+       "field_value_text": "Low-flow velocity 2.32 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 2.32 ft/s, τ 0.480 lb/ft², Fr 0.21",
+       "field_value_text": "Peak V 2.32 ft/s, Fr 0.21",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.480 lb/ft²",
+       "field_value_text": "Bed shear tau 0.480 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 4.708661417322828,
+     "Q": 278.28257002109376
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.03,
+      "nover": 0.03,
+      "targetq": 0.5,
+      "d50": "abc"
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"250.0,239.0 250.0,239.7 251.8,249.8 253.7,259.9 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,259.9 368.2,249.8 370.0,239.7 370.0,239.0\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"239.0\" x2=\"586.0\" y2=\"239.0\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 254.8,266.0 365.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>1 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>0.14 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>0.57 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>6.7 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>0.13 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.016 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>0.01 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.28 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 0.14 ft at Q 1 cfs",
+       "field_value_text": "Low-flow depth 0.14 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 0.57 ft/s at Q 1 cfs",
+       "field_value_text": "Low-flow velocity 0.57 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 0.57 ft/s, τ 0.016 lb/ft², Fr 0.28",
+       "field_value_text": "Peak V 0.57 ft/s, Fr 0.28",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.016 lb/ft²",
+       "field_value_text": "Bed shear tau 0.016 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 0.13679948941929115,
+     "Q": 0.5001104163658519
+    },
+    {
+     "boxes": {
+      "slope": null,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 2
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,67.6 220.5,77.8 222.3,87.9 224.2,98.0 226.0,108.1 227.8,118.2 229.7,128.4 231.5,138.5 233.4,148.6 235.2,158.7 237.1,168.8 238.9,179.0 240.8,189.1 242.6,199.2 244.5,209.3 246.3,219.4 248.2,229.6 250.0,239.7 251.8,249.8 253.7,259.9 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,259.9 368.2,249.8 370.0,239.7 371.8,229.6 373.7,219.4 375.5,209.3 377.4,199.2 379.2,189.1 381.1,179.0 382.9,168.8 384.8,158.7 386.6,148.6 388.5,138.5 390.3,128.4 392.2,118.2 394.0,108.1 395.8,98.0 397.7,87.9 399.5,77.8 401.4,67.6 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 254.8,266.0 365.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": 0.001,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": -3,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,67.6 220.5,77.8 222.3,87.9 224.2,98.0 226.0,108.1 227.8,118.2 229.7,128.4 231.5,138.5 233.4,148.6 235.2,158.7 237.1,168.8 238.9,179.0 240.8,189.1 242.6,199.2 244.5,209.3 246.3,219.4 248.2,229.6 250.0,239.7 251.8,249.8 253.7,259.9 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,259.9 368.2,249.8 370.0,239.7 371.8,229.6 373.7,219.4 375.5,209.3 377.4,199.2 379.2,189.1 381.1,179.0 382.9,168.8 384.8,158.7 386.6,148.6 388.5,138.5 390.3,128.4 392.2,118.2 394.0,108.1 395.8,98.0 397.7,87.9 399.5,77.8 401.4,67.6 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 254.8,266.0 365.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": "x",
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,67.6 220.5,77.8 222.3,87.9 224.2,98.0 226.0,108.1 227.8,118.2 229.7,128.4 231.5,138.5 233.4,148.6 235.2,158.7 237.1,168.8 238.9,179.0 240.8,189.1 242.6,199.2 244.5,209.3 246.3,219.4 248.2,229.6 250.0,239.7 251.8,249.8 253.7,259.9 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,259.9 368.2,249.8 370.0,239.7 371.8,229.6 373.7,219.4 375.5,209.3 377.4,199.2 379.2,189.1 381.1,179.0 382.9,168.8 384.8,158.7 386.6,148.6 388.5,138.5 390.3,128.4 392.2,118.2 394.0,108.1 395.8,98.0 397.7,87.9 399.5,77.8 401.4,67.6 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 254.8,266.0 365.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    }
+   ]
+  },
+  {
+   "width": 25.4,
+   "depth": 1.42,
+   "geom": {
+    "points": [
+     [
+      -124.99999999999986,
+      5.357611548556425
+     ],
+     [
+      -41.66666666666662,
+      4.65879265091863
+     ],
+     [
+      -32.34908136482936,
+      0.0
+     ],
+     [
+      32.34908136482936,
+      0.0
+     ],
+     [
+      41.66666666666662,
+      4.65879265091863
+     ],
+     [
+      124.99999999999986,
+      5.357611548556425
+     ]
+    ],
+    "lb": -41.66666666666662,
+    "rb": 41.66666666666662,
+    "bankfull_stage": 4.65879265091863,
+    "slope": 0.0004,
+    "da": 812.7,
+    "width_m": 25.4,
+    "depth_m": 1.42,
+    "division_name": "Coastal Plain"
+   },
+   "bankfull": {
+    "stage": 4.65879265091863,
+    "Q": 743.684200839719,
+    "A": 344.8240229813785,
+    "P": 85.53291685071974,
+    "T": 83.33333333333323,
+    "R": 4.031477420362017,
+    "V": 2.1567064684466026,
+    "tau": 0.10062567641223595,
+    "power": 0.217020047210084,
+    "froude": 0.1869171419919521,
+    "depth_max": 4.65879265091863,
+    "depth_avg": 4.137888275776548,
+    "zones": {
+     "LOB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     },
+     "channel": {
+      "A": 344.8240229813785,
+      "P": 85.53291685071974,
+      "T": 83.33333333333323,
+      "dmax": 4.65879265091863,
+      "R": 4.031477420362017,
+      "K": 37184.21004198595,
+      "Q": 743.684200839719,
+      "V": 2.1567064684466026
+     },
+     "ROB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     }
+    },
+    "units": "US"
+   },
+   "modal": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Cross-section hydraulics</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"easi-instr\">Synthetic bankfull section: Coastal Plain regional curve (Bieger 2015) at DA 813 km²: bankfull width 25.4 m, mean depth 1.42 m. Adjust slope, roughness, and target discharge; results feed the hydraulics metrics.</div>\n        <div class=\"row\">\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_slope-label\" for=\"sfari-xs_slope\">Channel slope (m/m)</label><input id=\"sfari-xs_slope\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.0004\" min=\"1e-05\" step=\"0.0005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nchan-label\" for=\"sfari-xs_nchan\">Manning n (channel)</label><input id=\"sfari-xs_nchan\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.035\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nover-label\" for=\"sfari-xs_nover\">Manning n (overbank)</label><input id=\"sfari-xs_nover\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.06\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_targetq-label\" for=\"sfari-xs_targetq\">Target discharge Q (cfs)</label><input id=\"sfari-xs_targetq\" type=\"number\" class=\"shiny-input-number form-control\" value=\"744\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_d50-label\" for=\"sfari-xs_d50\">Bed D50 (mm)</label><input id=\"sfari-xs_d50\" type=\"number\" class=\"shiny-input-number form-control\" value=\"30.0\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"shiny-html-output\" id=\"sfari-xs_view\"></div>\n        <div class=\"easi-pane-actions\">\n          <button data-xs-attach=\"1\" type=\"button\" class=\"sfari-btn primary\">Attach results to hydraulics metrics</button>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>",
+   "views": [
+    {
+     "boxes": {
+      "slope": 0.0004,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 744,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.1 218.6,70.3 220.5,88.4 222.3,106.5 224.2,124.6 226.0,142.7 227.8,160.8 229.7,178.9 231.5,197.0 233.4,215.1 235.2,233.2 237.1,251.3 238.9,266.0 240.8,266.0 242.6,266.0 244.5,266.0 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,266.0 377.4,266.0 379.2,266.0 381.1,266.0 382.9,251.3 384.8,233.2 386.6,215.1 388.5,197.0 390.3,178.9 392.2,160.8 394.0,142.7 395.8,124.6 397.7,106.5 399.5,88.4 401.4,70.3 401.4,64.1\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.1\" x2=\"586.0\" y2=\"64.1\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 238.6,266.0 381.4,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>745 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>4.66 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>2.16 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>84.0 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>4.00 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.100 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>0.22 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.19 (subcritical)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Critical shear τc (D50)</td>\n        <td>\n          <b>0.476 lb/ft² → stable</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 4.66 ft at Q 745 cfs",
+       "field_value_text": "Low-flow depth 4.66 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 2.16 ft/s at Q 745 cfs",
+       "field_value_text": "Low-flow velocity 2.16 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 2.16 ft/s, τ 0.100 lb/ft², Fr 0.19",
+       "field_value_text": "Peak V 2.16 ft/s, Fr 0.19",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.100 vs critical τc 0.476 lb/ft² → stable",
+       "field_value_text": "Bed shear tau 0.100 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 4.661749892347435,
+     "Q": 744.570238252514
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.05,
+      "nover": 0.1,
+      "targetq": 5000,
+      "d50": null
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"34.0,34.0 34.0,128.4 35.8,128.5 37.7,128.7 39.5,128.9 41.4,129.1 43.2,129.3 45.1,129.4 46.9,129.6 48.8,129.8 50.6,130.0 52.5,130.2 54.3,130.3 56.2,130.5 58.0,130.7 59.8,130.9 61.7,131.1 63.5,131.2 65.4,131.4 67.2,131.6 69.1,131.8 70.9,132.0 72.8,132.1 74.6,132.3 76.5,132.5 78.3,132.7 80.2,132.9 82.0,133.0 83.8,133.2 85.7,133.4 87.5,133.6 89.4,133.8 91.2,133.9 93.1,134.1 94.9,134.3 96.8,134.5 98.6,134.7 100.5,134.8 102.3,135.0 104.2,135.2 106.0,135.4 107.8,135.6 109.7,135.7 111.5,135.9 113.4,136.1 115.2,136.3 117.1,136.5 118.9,136.6 120.8,136.8 122.6,137.0 124.5,137.2 126.3,137.4 128.2,137.5 130.0,137.7 131.8,137.9 133.7,138.1 135.5,138.3 137.4,138.4 139.2,138.6 141.1,138.8 142.9,139.0 144.8,139.2 146.6,139.3 148.5,139.5 150.3,139.7 152.2,139.9 154.0,140.1 155.8,140.2 157.7,140.4 159.5,140.6 161.4,140.8 163.2,141.0 165.1,141.1 166.9,141.3 168.8,141.5 170.6,141.7 172.5,141.9 174.3,142.0 176.2,142.2 178.0,142.4 179.8,142.6 181.7,142.8 183.5,142.9 185.4,143.1 187.2,143.3 189.1,143.5 190.9,143.7 192.8,143.9 194.6,144.0 196.5,144.2 198.3,144.4 200.2,144.6 202.0,144.8 203.8,144.9 205.7,145.1 207.5,145.3 209.4,145.5 211.2,145.7 213.1,145.8 214.9,146.0 216.8,146.2 218.6,149.9 220.5,160.6 222.3,171.4 224.2,182.1 226.0,192.9 227.8,203.6 229.7,214.3 231.5,225.1 233.4,235.8 235.2,246.6 237.1,257.3 238.9,266.0 240.8,266.0 242.6,266.0 244.5,266.0 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,266.0 377.4,266.0 379.2,266.0 381.1,266.0 382.9,257.3 384.8,246.6 386.6,235.8 388.5,225.1 390.3,214.3 392.2,203.6 394.0,192.9 395.8,182.1 397.7,171.4 399.5,160.6 401.4,149.9 403.2,146.2 405.1,146.0 406.9,145.8 408.8,145.7 410.6,145.5 412.5,145.3 414.3,145.1 416.2,144.9 418.0,144.8 419.8,144.6 421.7,144.4 423.5,144.2 425.4,144.0 427.2,143.9 429.1,143.7 430.9,143.5 432.8,143.3 434.6,143.1 436.5,142.9 438.3,142.8 440.2,142.6 442.0,142.4 443.8,142.2 445.7,142.0 447.5,141.9 449.4,141.7 451.2,141.5 453.1,141.3 454.9,141.1 456.8,141.0 458.6,140.8 460.5,140.6 462.3,140.4 464.2,140.2 466.0,140.1 467.8,139.9 469.7,139.7 471.5,139.5 473.4,139.3 475.2,139.2 477.1,139.0 478.9,138.8 480.8,138.6 482.6,138.4 484.5,138.3 486.3,138.1 488.2,137.9 490.0,137.7 491.8,137.5 493.7,137.4 495.5,137.2 497.4,137.0 499.2,136.8 501.1,136.6 502.9,136.5 504.8,136.3 506.6,136.1 508.5,135.9 510.3,135.7 512.2,135.6 514.0,135.4 515.8,135.2 517.7,135.0 519.5,134.8 521.4,134.7 523.2,134.5 525.1,134.3 526.9,134.1 528.8,133.9 530.6,133.8 532.5,133.6 534.3,133.4 536.2,133.2 538.0,133.0 539.8,132.9 541.7,132.7 543.5,132.5 545.4,132.3 547.2,132.1 549.1,132.0 550.9,131.8 552.8,131.6 554.6,131.4 556.5,131.2 558.3,131.1 560.2,130.9 562.0,130.7 563.8,130.5 565.7,130.3 567.5,130.2 569.4,130.0 571.2,129.8 573.1,129.6 574.9,129.4 576.8,129.3 578.6,129.1 580.5,128.9 582.3,128.7 584.2,128.5 586.0,128.4 586.0,34.0\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"34.0\" x2=\"586.0\" y2=\"34.0\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,128.4 218.0,146.3 238.6,266.0 381.4,266.0 402.0,146.3 586.0,128.4\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>5001 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>9.03 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>3.63 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>250.0 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>5.47 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.683 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>2.47 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.27 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 9.03 ft at Q 5001 cfs",
+       "field_value_text": "Low-flow depth 9.03 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 3.63 ft/s at Q 5001 cfs",
+       "field_value_text": "Low-flow velocity 3.63 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 3.63 ft/s, τ 0.683 lb/ft², Fr 0.27",
+       "field_value_text": "Peak V 3.63 ft/s, Fr 0.27",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.683 lb/ft²",
+       "field_value_text": "Bed shear tau 0.683 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 9.030505403133192,
+     "Q": 5001.079956579967
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.03,
+      "nover": 0.03,
+      "targetq": 0.5,
+      "d50": "abc"
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"238.9,264.5 238.9,266.0 240.8,266.0 242.6,266.0 244.5,266.0 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,266.0 377.4,266.0 379.2,266.0 381.1,266.0 381.1,264.5\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"264.5\" x2=\"586.0\" y2=\"264.5\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 238.6,266.0 381.4,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>1 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>0.03 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>0.23 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>64.8 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>0.03 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.004 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>0.00 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.22 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 0.03 ft at Q 1 cfs",
+       "field_value_text": "Low-flow depth 0.03 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 0.23 ft/s at Q 1 cfs",
+       "field_value_text": "Low-flow velocity 0.23 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 0.23 ft/s, τ 0.004 lb/ft², Fr 0.22",
+       "field_value_text": "Peak V 0.23 ft/s, Fr 0.22",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.004 lb/ft²",
+       "field_value_text": "Bed shear tau 0.004 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 0.03351777244427694,
+     "Q": 0.500814357512419
+    },
+    {
+     "boxes": {
+      "slope": null,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 2
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,70.3 220.5,88.4 222.3,106.5 224.2,124.6 226.0,142.7 227.8,160.8 229.7,178.9 231.5,197.0 233.4,215.1 235.2,233.2 237.1,251.3 238.9,266.0 240.8,266.0 242.6,266.0 244.5,266.0 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,266.0 377.4,266.0 379.2,266.0 381.1,266.0 382.9,251.3 384.8,233.2 386.6,215.1 388.5,197.0 390.3,178.9 392.2,160.8 394.0,142.7 395.8,124.6 397.7,106.5 399.5,88.4 401.4,70.3 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 238.6,266.0 381.4,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": 0.001,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": -3,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,70.3 220.5,88.4 222.3,106.5 224.2,124.6 226.0,142.7 227.8,160.8 229.7,178.9 231.5,197.0 233.4,215.1 235.2,233.2 237.1,251.3 238.9,266.0 240.8,266.0 242.6,266.0 244.5,266.0 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,266.0 377.4,266.0 379.2,266.0 381.1,266.0 382.9,251.3 384.8,233.2 386.6,215.1 388.5,197.0 390.3,178.9 392.2,160.8 394.0,142.7 395.8,124.6 397.7,106.5 399.5,88.4 401.4,70.3 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 238.6,266.0 381.4,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": "x",
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,70.3 220.5,88.4 222.3,106.5 224.2,124.6 226.0,142.7 227.8,160.8 229.7,178.9 231.5,197.0 233.4,215.1 235.2,233.2 237.1,251.3 238.9,266.0 240.8,266.0 242.6,266.0 244.5,266.0 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,266.0 377.4,266.0 379.2,266.0 381.1,266.0 382.9,251.3 384.8,233.2 386.6,215.1 388.5,197.0 390.3,178.9 392.2,160.8 394.0,142.7 395.8,124.6 397.7,106.5 399.5,88.4 401.4,70.3 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 238.6,266.0 381.4,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    }
+   ]
+  },
+  {
+   "width": 0.1,
+   "depth": 0.05,
+   "geom": {
+    "points": [
+     [
+      -1.4763779527559038,
+      0.3772965879265088
+     ],
+     [
+      -0.49212598425196796,
+      0.328083989501312
+     ],
+     [
+      -0.14763779527559037,
+      0.0
+     ],
+     [
+      0.14763779527559037,
+      0.0
+     ],
+     [
+      0.49212598425196796,
+      0.328083989501312
+     ],
+     [
+      1.4763779527559038,
+      0.3772965879265088
+     ]
+    ],
+    "lb": -0.49212598425196796,
+    "rb": 0.49212598425196796,
+    "bankfull_stage": 0.328083989501312,
+    "slope": 0.001,
+    "da": 0.02,
+    "width_m": 0.1,
+    "depth_m": 0.05,
+    "division_name": "National curve"
+   },
+   "bankfull": {
+    "stage": 0.328083989501312,
+    "Q": 0.08615495861277572,
+    "A": 0.20989625312583915,
+    "P": 1.2467191601049854,
+    "T": 0.9842519685039359,
+    "R": 0.1683588893493575,
+    "V": 0.41046449057441353,
+    "tau": 0.010505594695399908,
+    "power": 0.004312173574828584,
+    "froude": 0.15670175714955298,
+    "depth_max": 0.328083989501312,
+    "depth_avg": 0.2132545931758528,
+    "zones": {
+     "LOB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     },
+     "channel": {
+      "A": 0.20989625312583915,
+      "P": 1.2467191601049854,
+      "T": 0.9842519685039359,
+      "dmax": 0.328083989501312,
+      "R": 0.1683588893493575,
+      "K": 2.72445900933912,
+      "Q": 0.08615495861277572,
+      "V": 0.41046449057441353
+     },
+     "ROB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     }
+    },
+    "units": "US"
+   },
+   "modal": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Cross-section hydraulics</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"easi-instr\">Synthetic bankfull section: National curve regional curve (Bieger 2015) at DA 0 km²: bankfull width 0.1 m, mean depth 0.05 m. Adjust slope, roughness, and target discharge; results feed the hydraulics metrics.</div>\n        <div class=\"row\">\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_slope-label\" for=\"sfari-xs_slope\">Channel slope (m/m)</label><input id=\"sfari-xs_slope\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.001\" min=\"1e-05\" step=\"0.0005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nchan-label\" for=\"sfari-xs_nchan\">Manning n (channel)</label><input id=\"sfari-xs_nchan\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.035\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nover-label\" for=\"sfari-xs_nover\">Manning n (overbank)</label><input id=\"sfari-xs_nover\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.06\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_targetq-label\" for=\"sfari-xs_targetq\">Target discharge Q (cfs)</label><input id=\"sfari-xs_targetq\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_d50-label\" for=\"sfari-xs_d50\">Bed D50 (mm)</label><input id=\"sfari-xs_d50\" type=\"number\" class=\"shiny-input-number form-control\" value=\"30.0\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"shiny-html-output\" id=\"sfari-xs_view\"></div>\n        <div class=\"easi-pane-actions\">\n          <button data-xs-attach=\"1\" type=\"button\" class=\"sfari-btn primary\">Attach results to hydraulics metrics</button>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>",
+   "views": [
+    {
+     "boxes": {
+      "slope": 0.001,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 0,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,66.2 220.5,72.0 222.3,77.8 224.2,83.5 226.0,89.3 227.8,95.1 229.7,100.9 231.5,106.7 233.4,112.5 235.2,118.2 237.1,124.0 238.9,129.8 240.8,135.6 242.6,141.4 244.5,147.2 246.3,152.9 248.2,158.7 250.0,164.5 251.8,170.3 253.7,176.1 255.5,181.9 257.4,187.6 259.2,193.4 261.1,199.2 262.9,205.0 264.8,210.8 266.6,216.6 268.5,222.3 270.3,228.1 272.2,233.9 274.0,239.7 275.8,245.5 277.7,251.3 279.5,257.0 281.4,262.8 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,262.8 340.5,257.0 342.3,251.3 344.2,245.5 346.0,239.7 347.8,233.9 349.7,228.1 351.5,222.3 353.4,216.6 355.2,210.8 357.1,205.0 358.9,199.2 360.8,193.4 362.6,187.6 364.5,181.9 366.3,176.1 368.2,170.3 370.0,164.5 371.8,158.7 373.7,152.9 375.5,147.2 377.4,141.4 379.2,135.6 381.1,129.8 382.9,124.0 384.8,118.2 386.6,112.5 388.5,106.7 390.3,100.9 392.2,95.1 394.0,89.3 395.8,83.5 397.7,77.8 399.5,72.0 401.4,66.2 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 282.4,266.0 337.6,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.05,
+      "nover": 0.1,
+      "targetq": 5000,
+      "d50": null
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"34.0,34.0 34.0,208.0 35.8,208.1 37.7,208.2 39.5,208.2 41.4,208.3 43.2,208.4 45.1,208.5 46.9,208.5 48.8,208.6 50.6,208.7 52.5,208.8 54.3,208.8 56.2,208.9 58.0,209.0 59.8,209.1 61.7,209.1 63.5,209.2 65.4,209.3 67.2,209.4 69.1,209.4 70.9,209.5 72.8,209.6 74.6,209.7 76.5,209.7 78.3,209.8 80.2,209.9 82.0,210.0 83.8,210.0 85.7,210.1 87.5,210.2 89.4,210.3 91.2,210.4 93.1,210.4 94.9,210.5 96.8,210.6 98.6,210.7 100.5,210.7 102.3,210.8 104.2,210.9 106.0,211.0 107.8,211.0 109.7,211.1 111.5,211.2 113.4,211.3 115.2,211.3 117.1,211.4 118.9,211.5 120.8,211.6 122.6,211.6 124.5,211.7 126.3,211.8 128.2,211.9 130.0,211.9 131.8,212.0 133.7,212.1 135.5,212.2 137.4,212.3 139.2,212.3 141.1,212.4 142.9,212.5 144.8,212.6 146.6,212.6 148.5,212.7 150.3,212.8 152.2,212.9 154.0,212.9 155.8,213.0 157.7,213.1 159.5,213.2 161.4,213.2 163.2,213.3 165.1,213.4 166.9,213.5 168.8,213.5 170.6,213.6 172.5,213.7 174.3,213.8 176.2,213.8 178.0,213.9 179.8,214.0 181.7,214.1 183.5,214.1 185.4,214.2 187.2,214.3 189.1,214.4 190.9,214.5 192.8,214.5 194.6,214.6 196.5,214.7 198.3,214.8 200.2,214.8 202.0,214.9 203.8,215.0 205.7,215.1 207.5,215.1 209.4,215.2 211.2,215.3 213.1,215.4 214.9,215.4 216.8,215.5 218.6,216.0 220.5,217.5 222.3,218.9 224.2,220.4 226.0,221.8 227.8,223.3 229.7,224.7 231.5,226.2 233.4,227.6 235.2,229.1 237.1,230.5 238.9,232.0 240.8,233.4 242.6,234.8 244.5,236.3 246.3,237.7 248.2,239.2 250.0,240.6 251.8,242.1 253.7,243.5 255.5,245.0 257.4,246.4 259.2,247.9 261.1,249.3 262.9,250.7 264.8,252.2 266.6,253.6 268.5,255.1 270.3,256.5 272.2,258.0 274.0,259.4 275.8,260.9 277.7,262.3 279.5,263.8 281.4,265.2 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,265.2 340.5,263.8 342.3,262.3 344.2,260.9 346.0,259.4 347.8,258.0 349.7,256.5 351.5,255.1 353.4,253.6 355.2,252.2 357.1,250.7 358.9,249.3 360.8,247.9 362.6,246.4 364.5,245.0 366.3,243.5 368.2,242.1 370.0,240.6 371.8,239.2 373.7,237.7 375.5,236.3 377.4,234.8 379.2,233.4 381.1,232.0 382.9,230.5 384.8,229.1 386.6,227.6 388.5,226.2 390.3,224.7 392.2,223.3 394.0,221.8 395.8,220.4 397.7,218.9 399.5,217.5 401.4,216.0 403.2,215.5 405.1,215.4 406.9,215.4 408.8,215.3 410.6,215.2 412.5,215.1 414.3,215.1 416.2,215.0 418.0,214.9 419.8,214.8 421.7,214.8 423.5,214.7 425.4,214.6 427.2,214.5 429.1,214.5 430.9,214.4 432.8,214.3 434.6,214.2 436.5,214.1 438.3,214.1 440.2,214.0 442.0,213.9 443.8,213.8 445.7,213.8 447.5,213.7 449.4,213.6 451.2,213.5 453.1,213.5 454.9,213.4 456.8,213.3 458.6,213.2 460.5,213.2 462.3,213.1 464.2,213.0 466.0,212.9 467.8,212.9 469.7,212.8 471.5,212.7 473.4,212.6 475.2,212.6 477.1,212.5 478.9,212.4 480.8,212.3 482.6,212.3 484.5,212.2 486.3,212.1 488.2,212.0 490.0,211.9 491.8,211.9 493.7,211.8 495.5,211.7 497.4,211.6 499.2,211.6 501.1,211.5 502.9,211.4 504.8,211.3 506.6,211.3 508.5,211.2 510.3,211.1 512.2,211.0 514.0,211.0 515.8,210.9 517.7,210.8 519.5,210.7 521.4,210.7 523.2,210.6 525.1,210.5 526.9,210.4 528.8,210.4 530.6,210.3 532.5,210.2 534.3,210.1 536.2,210.0 538.0,210.0 539.8,209.9 541.7,209.8 543.5,209.7 545.4,209.7 547.2,209.6 549.1,209.5 550.9,209.4 552.8,209.4 554.6,209.3 556.5,209.2 558.3,209.1 560.2,209.1 562.0,209.0 563.8,208.9 565.7,208.8 567.5,208.8 569.4,208.7 571.2,208.6 573.1,208.5 574.9,208.5 576.8,208.4 578.6,208.3 580.5,208.2 582.3,208.2 584.2,208.1 586.0,208.0 586.0,34.0\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"34.0\" x2=\"586.0\" y2=\"34.0\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,208.0 218.0,215.6 282.4,266.0 337.6,266.0 402.0,215.6 586.0,208.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>4 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>1.51 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>0.99 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>3.0 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>1.13 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.142 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>0.14 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.16 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 1.51 ft at Q 4 cfs",
+       "field_value_text": "Low-flow depth 1.51 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 0.99 ft/s at Q 4 cfs",
+       "field_value_text": "Low-flow velocity 0.99 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 0.99 ft/s, τ 0.142 lb/ft², Fr 0.16",
+       "field_value_text": "Peak V 0.99 ft/s, Fr 0.16",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.142 lb/ft²",
+       "field_value_text": "Bed shear tau 0.142 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 1.509186351706035,
+     "Q": 3.619930690123108
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.03,
+      "nover": 0.03,
+      "targetq": 0.5,
+      "d50": "abc"
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"34.0,34.0 34.0,84.9 35.8,85.2 37.7,85.4 39.5,85.6 41.4,85.9 43.2,86.1 45.1,86.3 46.9,86.6 48.8,86.8 50.6,87.1 52.5,87.3 54.3,87.5 56.2,87.8 58.0,88.0 59.8,88.2 61.7,88.5 63.5,88.7 65.4,89.0 67.2,89.2 69.1,89.4 70.9,89.7 72.8,89.9 74.6,90.1 76.5,90.4 78.3,90.6 80.2,90.9 82.0,91.1 83.8,91.3 85.7,91.6 87.5,91.8 89.4,92.0 91.2,92.3 93.1,92.5 94.9,92.7 96.8,93.0 98.6,93.2 100.5,93.5 102.3,93.7 104.2,93.9 106.0,94.2 107.8,94.4 109.7,94.6 111.5,94.9 113.4,95.1 115.2,95.4 117.1,95.6 118.9,95.8 120.8,96.1 122.6,96.3 124.5,96.5 126.3,96.8 128.2,97.0 130.0,97.2 131.8,97.5 133.7,97.7 135.5,98.0 137.4,98.2 139.2,98.4 141.1,98.7 142.9,98.9 144.8,99.1 146.6,99.4 148.5,99.6 150.3,99.9 152.2,100.1 154.0,100.3 155.8,100.6 157.7,100.8 159.5,101.0 161.4,101.3 163.2,101.5 165.1,101.8 166.9,102.0 168.8,102.2 170.6,102.5 172.5,102.7 174.3,102.9 176.2,103.2 178.0,103.4 179.8,103.6 181.7,103.9 183.5,104.1 185.4,104.4 187.2,104.6 189.1,104.8 190.9,105.1 192.8,105.3 194.6,105.5 196.5,105.8 198.3,106.0 200.2,106.3 202.0,106.5 203.8,106.7 205.7,107.0 207.5,107.2 209.4,107.4 211.2,107.7 213.1,107.9 214.9,108.2 216.8,108.4 218.6,110.0 220.5,114.6 222.3,119.1 224.2,123.6 226.0,128.1 227.8,132.6 229.7,137.1 231.5,141.6 233.4,146.2 235.2,150.7 237.1,155.2 238.9,159.7 240.8,164.2 242.6,168.7 244.5,173.2 246.3,177.8 248.2,182.3 250.0,186.8 251.8,191.3 253.7,195.8 255.5,200.3 257.4,204.8 259.2,209.4 261.1,213.9 262.9,218.4 264.8,222.9 266.6,227.4 268.5,231.9 270.3,236.4 272.2,240.9 274.0,245.5 275.8,250.0 277.7,254.5 279.5,259.0 281.4,263.5 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,263.5 340.5,259.0 342.3,254.5 344.2,250.0 346.0,245.5 347.8,240.9 349.7,236.4 351.5,231.9 353.4,227.4 355.2,222.9 357.1,218.4 358.9,213.9 360.8,209.4 362.6,204.8 364.5,200.3 366.3,195.8 368.2,191.3 370.0,186.8 371.8,182.3 373.7,177.8 375.5,173.2 377.4,168.7 379.2,164.2 381.1,159.7 382.9,155.2 384.8,150.7 386.6,146.2 388.5,141.6 390.3,137.1 392.2,132.6 394.0,128.1 395.8,123.6 397.7,119.1 399.5,114.6 401.4,110.0 403.2,108.4 405.1,108.2 406.9,107.9 408.8,107.7 410.6,107.4 412.5,107.2 414.3,107.0 416.2,106.7 418.0,106.5 419.8,106.3 421.7,106.0 423.5,105.8 425.4,105.5 427.2,105.3 429.1,105.1 430.9,104.8 432.8,104.6 434.6,104.4 436.5,104.1 438.3,103.9 440.2,103.6 442.0,103.4 443.8,103.2 445.7,102.9 447.5,102.7 449.4,102.5 451.2,102.2 453.1,102.0 454.9,101.8 456.8,101.5 458.6,101.3 460.5,101.0 462.3,100.8 464.2,100.6 466.0,100.3 467.8,100.1 469.7,99.9 471.5,99.6 473.4,99.4 475.2,99.1 477.1,98.9 478.9,98.7 480.8,98.4 482.6,98.2 484.5,98.0 486.3,97.7 488.2,97.5 490.0,97.2 491.8,97.0 493.7,96.8 495.5,96.5 497.4,96.3 499.2,96.1 501.1,95.8 502.9,95.6 504.8,95.4 506.6,95.1 508.5,94.9 510.3,94.6 512.2,94.4 514.0,94.2 515.8,93.9 517.7,93.7 519.5,93.5 521.4,93.2 523.2,93.0 525.1,92.7 526.9,92.5 528.8,92.3 530.6,92.0 532.5,91.8 534.3,91.6 536.2,91.3 538.0,91.1 539.8,90.9 541.7,90.6 543.5,90.4 545.4,90.1 547.2,89.9 549.1,89.7 550.9,89.4 552.8,89.2 554.6,89.0 556.5,88.7 558.3,88.5 560.2,88.2 562.0,88.0 563.8,87.8 565.7,87.5 567.5,87.3 569.4,87.1 571.2,86.8 573.1,86.6 574.9,86.3 576.8,86.1 578.6,85.9 580.5,85.6 582.3,85.4 584.2,85.2 586.0,84.9 586.0,34.0\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"34.0\" x2=\"586.0\" y2=\"34.0\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,84.9 218.0,108.5 282.4,266.0 337.6,266.0 402.0,108.5 586.0,84.9\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>1 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>0.48 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>0.81 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>3.0 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>0.19 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.024 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>0.02 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.31 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 0.48 ft at Q 1 cfs",
+       "field_value_text": "Low-flow depth 0.48 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 0.81 ft/s at Q 1 cfs",
+       "field_value_text": "Low-flow velocity 0.81 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 0.81 ft/s, τ 0.024 lb/ft², Fr 0.31",
+       "field_value_text": "Peak V 0.81 ft/s, Fr 0.31",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.024 lb/ft²",
+       "field_value_text": "Bed shear tau 0.024 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 0.48341125328083945,
+     "Q": 0.5009301036335375
+    },
+    {
+     "boxes": {
+      "slope": null,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 2
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,66.2 220.5,72.0 222.3,77.8 224.2,83.5 226.0,89.3 227.8,95.1 229.7,100.9 231.5,106.7 233.4,112.5 235.2,118.2 237.1,124.0 238.9,129.8 240.8,135.6 242.6,141.4 244.5,147.2 246.3,152.9 248.2,158.7 250.0,164.5 251.8,170.3 253.7,176.1 255.5,181.9 257.4,187.6 259.2,193.4 261.1,199.2 262.9,205.0 264.8,210.8 266.6,216.6 268.5,222.3 270.3,228.1 272.2,233.9 274.0,239.7 275.8,245.5 277.7,251.3 279.5,257.0 281.4,262.8 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,262.8 340.5,257.0 342.3,251.3 344.2,245.5 346.0,239.7 347.8,233.9 349.7,228.1 351.5,222.3 353.4,216.6 355.2,210.8 357.1,205.0 358.9,199.2 360.8,193.4 362.6,187.6 364.5,181.9 366.3,176.1 368.2,170.3 370.0,164.5 371.8,158.7 373.7,152.9 375.5,147.2 377.4,141.4 379.2,135.6 381.1,129.8 382.9,124.0 384.8,118.2 386.6,112.5 388.5,106.7 390.3,100.9 392.2,95.1 394.0,89.3 395.8,83.5 397.7,77.8 399.5,72.0 401.4,66.2 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 282.4,266.0 337.6,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": 0.001,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": -3,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,66.2 220.5,72.0 222.3,77.8 224.2,83.5 226.0,89.3 227.8,95.1 229.7,100.9 231.5,106.7 233.4,112.5 235.2,118.2 237.1,124.0 238.9,129.8 240.8,135.6 242.6,141.4 244.5,147.2 246.3,152.9 248.2,158.7 250.0,164.5 251.8,170.3 253.7,176.1 255.5,181.9 257.4,187.6 259.2,193.4 261.1,199.2 262.9,205.0 264.8,210.8 266.6,216.6 268.5,222.3 270.3,228.1 272.2,233.9 274.0,239.7 275.8,245.5 277.7,251.3 279.5,257.0 281.4,262.8 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,262.8 340.5,257.0 342.3,251.3 344.2,245.5 346.0,239.7 347.8,233.9 349.7,228.1 351.5,222.3 353.4,216.6 355.2,210.8 357.1,205.0 358.9,199.2 360.8,193.4 362.6,187.6 364.5,181.9 366.3,176.1 368.2,170.3 370.0,164.5 371.8,158.7 373.7,152.9 375.5,147.2 377.4,141.4 379.2,135.6 381.1,129.8 382.9,124.0 384.8,118.2 386.6,112.5 388.5,106.7 390.3,100.9 392.2,95.1 394.0,89.3 395.8,83.5 397.7,77.8 399.5,72.0 401.4,66.2 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 282.4,266.0 337.6,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": "x",
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,66.2 220.5,72.0 222.3,77.8 224.2,83.5 226.0,89.3 227.8,95.1 229.7,100.9 231.5,106.7 233.4,112.5 235.2,118.2 237.1,124.0 238.9,129.8 240.8,135.6 242.6,141.4 244.5,147.2 246.3,152.9 248.2,158.7 250.0,164.5 251.8,170.3 253.7,176.1 255.5,181.9 257.4,187.6 259.2,193.4 261.1,199.2 262.9,205.0 264.8,210.8 266.6,216.6 268.5,222.3 270.3,228.1 272.2,233.9 274.0,239.7 275.8,245.5 277.7,251.3 279.5,257.0 281.4,262.8 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,262.8 340.5,257.0 342.3,251.3 344.2,245.5 346.0,239.7 347.8,233.9 349.7,228.1 351.5,222.3 353.4,216.6 355.2,210.8 357.1,205.0 358.9,199.2 360.8,193.4 362.6,187.6 364.5,181.9 366.3,176.1 368.2,170.3 370.0,164.5 371.8,158.7 373.7,152.9 375.5,147.2 377.4,141.4 379.2,135.6 381.1,129.8 382.9,124.0 384.8,118.2 386.6,112.5 388.5,106.7 390.3,100.9 392.2,95.1 394.0,89.3 395.8,83.5 397.7,77.8 399.5,72.0 401.4,66.2 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 282.4,266.0 337.6,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    }
+   ]
+  },
+  {
+   "width": 8.75,
+   "depth": 0.66,
+   "geom": {
+    "points": [
+     [
+      -43.0610236220472,
+      2.490157480314958
+     ],
+     [
+      -14.3536745406824,
+      2.1653543307086593
+     ],
+     [
+      -10.022965879265081,
+      0.0
+     ],
+     [
+      10.022965879265081,
+      0.0
+     ],
+     [
+      14.3536745406824,
+      2.1653543307086593
+     ],
+     [
+      43.0610236220472,
+      2.490157480314958
+     ]
+    ],
+    "lb": -14.3536745406824,
+    "rb": 14.3536745406824,
+    "bankfull_stage": 2.1653543307086593,
+    "slope": 0.0123456,
+    "da": 46.2,
+    "width_m": 8.75,
+    "depth_m": 0.66,
+    "division_name": "Appalachian Plateau"
+   },
+   "bankfull": {
+    "stage": 2.1653543307086593,
+    "Q": 366.0879527908017,
+    "A": 52.78406390146104,
+    "P": 29.72969071620641,
+    "T": 28.7073490813648,
+    "R": 1.7754662974911846,
+    "V": 6.935577250630536,
+    "tau": 1.3677578754719673,
+    "power": 9.48619040549413,
+    "froude": 0.901727299204397,
+    "depth_max": 2.1653543307086593,
+    "depth_avg": 1.8386951631046105,
+    "zones": {
+     "LOB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     },
+     "channel": {
+      "A": 52.78406390146104,
+      "P": 29.72969071620641,
+      "T": 28.7073490813648,
+      "dmax": 2.1653543307086593,
+      "R": 1.7754662974911846,
+      "K": 3294.802118500864,
+      "Q": 366.0879527908017,
+      "V": 6.935577250630536
+     },
+     "ROB": {
+      "A": 0.0,
+      "P": 0.0,
+      "T": 0.0,
+      "dmax": 0.0,
+      "R": 0.0,
+      "K": 0.0,
+      "Q": 0.0,
+      "V": 0.0
+     }
+    },
+    "units": "US"
+   },
+   "modal": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-lg\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Cross-section hydraulics</h4>\n      </div>\n      <div class=\"modal-body\">\n        <div class=\"easi-instr\">Synthetic bankfull section: Appalachian Plateau regional curve (Bieger 2015) at DA 46 km²: bankfull width 8.8 m, mean depth 0.66 m. Adjust slope, roughness, and target discharge; results feed the hydraulics metrics.</div>\n        <div class=\"row\">\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_slope-label\" for=\"sfari-xs_slope\">Channel slope (m/m)</label><input id=\"sfari-xs_slope\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.01235\" min=\"1e-05\" step=\"0.0005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nchan-label\" for=\"sfari-xs_nchan\">Manning n (channel)</label><input id=\"sfari-xs_nchan\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.035\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-4\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_nover-label\" for=\"sfari-xs_nover\">Manning n (overbank)</label><input id=\"sfari-xs_nover\" type=\"number\" class=\"shiny-input-number form-control\" value=\"0.06\" step=\"0.005\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_targetq-label\" for=\"sfari-xs_targetq\">Target discharge Q (cfs)</label><input id=\"sfari-xs_targetq\" type=\"number\" class=\"shiny-input-number form-control\" value=\"366\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n          <div class=\"col-sm-6\">\n            <div class=\"form-group shiny-input-container\">\n              <label class=\"control-label\" id=\"sfari-xs_d50-label\" for=\"sfari-xs_d50\">Bed D50 (mm)</label><input id=\"sfari-xs_d50\" type=\"number\" class=\"shiny-input-number form-control\" value=\"30.0\" min=\"0\" step=\"1\" data-update-on=\"change\"/>\n            </div>\n          </div>\n        </div>\n        <div class=\"shiny-html-output\" id=\"sfari-xs_view\"></div>\n        <div class=\"easi-pane-actions\">\n          <button data-xs-attach=\"1\" type=\"button\" class=\"sfari-btn primary\">Attach results to hydraulics metrics</button>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>",
+   "views": [
+    {
+     "boxes": {
+      "slope": 0.0123456,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 366,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.4 218.6,68.7 220.5,82.2 222.3,95.6 224.2,109.0 226.0,122.4 227.8,135.8 229.7,149.2 231.5,162.7 233.4,176.1 235.2,189.5 237.1,202.9 238.9,216.3 240.8,229.7 242.6,243.2 244.5,256.6 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,256.6 377.4,243.2 379.2,229.7 381.1,216.3 382.9,202.9 384.8,189.5 386.6,176.1 388.5,162.7 390.3,149.2 392.2,135.8 394.0,122.4 395.8,109.0 397.7,95.6 399.5,82.2 401.4,68.7 401.4,64.4\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.4\" x2=\"586.0\" y2=\"64.4\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 245.8,266.0 374.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>366 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>2.16 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>6.93 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>28.7 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>1.77 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>1.367 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>9.48 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.90 (subcritical)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Critical shear τc (D50)</td>\n        <td>\n          <b>0.476 lb/ft² → mobilizes</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 2.16 ft at Q 366 cfs",
+       "field_value_text": "Low-flow depth 2.16 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 6.93 ft/s at Q 366 cfs",
+       "field_value_text": "Low-flow velocity 6.93 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 6.93 ft/s, τ 1.367 lb/ft², Fr 0.90",
+       "field_value_text": "Peak V 6.93 ft/s, Fr 0.90",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 1.367 vs critical τc 0.476 lb/ft² → mobilizes",
+       "field_value_text": "Bed shear tau 1.367 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 2.1642970287893677,
+     "Q": 365.77597884617825
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.05,
+      "nover": 0.1,
+      "targetq": 5000,
+      "d50": null
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"34.0,34.0 34.0,208.0 35.8,208.1 37.7,208.2 39.5,208.2 41.4,208.3 43.2,208.4 45.1,208.5 46.9,208.5 48.8,208.6 50.6,208.7 52.5,208.8 54.3,208.8 56.2,208.9 58.0,209.0 59.8,209.1 61.7,209.1 63.5,209.2 65.4,209.3 67.2,209.4 69.1,209.4 70.9,209.5 72.8,209.6 74.6,209.7 76.5,209.7 78.3,209.8 80.2,209.9 82.0,210.0 83.8,210.0 85.7,210.1 87.5,210.2 89.4,210.3 91.2,210.4 93.1,210.4 94.9,210.5 96.8,210.6 98.6,210.7 100.5,210.7 102.3,210.8 104.2,210.9 106.0,211.0 107.8,211.0 109.7,211.1 111.5,211.2 113.4,211.3 115.2,211.3 117.1,211.4 118.9,211.5 120.8,211.6 122.6,211.6 124.5,211.7 126.3,211.8 128.2,211.9 130.0,211.9 131.8,212.0 133.7,212.1 135.5,212.2 137.4,212.3 139.2,212.3 141.1,212.4 142.9,212.5 144.8,212.6 146.6,212.6 148.5,212.7 150.3,212.8 152.2,212.9 154.0,212.9 155.8,213.0 157.7,213.1 159.5,213.2 161.4,213.2 163.2,213.3 165.1,213.4 166.9,213.5 168.8,213.5 170.6,213.6 172.5,213.7 174.3,213.8 176.2,213.8 178.0,213.9 179.8,214.0 181.7,214.1 183.5,214.1 185.4,214.2 187.2,214.3 189.1,214.4 190.9,214.5 192.8,214.5 194.6,214.6 196.5,214.7 198.3,214.8 200.2,214.8 202.0,214.9 203.8,215.0 205.7,215.1 207.5,215.1 209.4,215.2 211.2,215.3 213.1,215.4 214.9,215.4 216.8,215.5 218.6,216.7 220.5,220.0 222.3,223.4 224.2,226.7 226.0,230.1 227.8,233.5 229.7,236.8 231.5,240.2 233.4,243.5 235.2,246.9 237.1,250.2 238.9,253.6 240.8,256.9 242.6,260.3 244.5,263.6 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,263.6 377.4,260.3 379.2,256.9 381.1,253.6 382.9,250.2 384.8,246.9 386.6,243.5 388.5,240.2 390.3,236.8 392.2,233.5 394.0,230.1 395.8,226.7 397.7,223.4 399.5,220.0 401.4,216.7 403.2,215.5 405.1,215.4 406.9,215.4 408.8,215.3 410.6,215.2 412.5,215.1 414.3,215.1 416.2,215.0 418.0,214.9 419.8,214.8 421.7,214.8 423.5,214.7 425.4,214.6 427.2,214.5 429.1,214.5 430.9,214.4 432.8,214.3 434.6,214.2 436.5,214.1 438.3,214.1 440.2,214.0 442.0,213.9 443.8,213.8 445.7,213.8 447.5,213.7 449.4,213.6 451.2,213.5 453.1,213.5 454.9,213.4 456.8,213.3 458.6,213.2 460.5,213.2 462.3,213.1 464.2,213.0 466.0,212.9 467.8,212.9 469.7,212.8 471.5,212.7 473.4,212.6 475.2,212.6 477.1,212.5 478.9,212.4 480.8,212.3 482.6,212.3 484.5,212.2 486.3,212.1 488.2,212.0 490.0,211.9 491.8,211.9 493.7,211.8 495.5,211.7 497.4,211.6 499.2,211.6 501.1,211.5 502.9,211.4 504.8,211.3 506.6,211.3 508.5,211.2 510.3,211.1 512.2,211.0 514.0,211.0 515.8,210.9 517.7,210.8 519.5,210.7 521.4,210.7 523.2,210.6 525.1,210.5 526.9,210.4 528.8,210.4 530.6,210.3 532.5,210.2 534.3,210.1 536.2,210.0 538.0,210.0 539.8,209.9 541.7,209.8 543.5,209.7 545.4,209.7 547.2,209.6 549.1,209.5 550.9,209.4 552.8,209.4 554.6,209.3 556.5,209.2 558.3,209.1 560.2,209.1 562.0,209.0 563.8,208.9 565.7,208.8 567.5,208.8 569.4,208.7 571.2,208.6 573.1,208.5 574.9,208.5 576.8,208.4 578.6,208.3 580.5,208.2 582.3,208.2 584.2,208.1 586.0,208.0 586.0,34.0\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"34.0\" x2=\"586.0\" y2=\"34.0\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,208.0 218.0,215.6 245.8,266.0 374.2,266.0 402.0,215.6 586.0,208.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>2762 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>9.96 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>3.86 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>86.1 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>8.20 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>1.024 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>3.96 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.24 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 9.96 ft at Q 2762 cfs",
+       "field_value_text": "Low-flow depth 9.96 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 3.86 ft/s at Q 2762 cfs",
+       "field_value_text": "Low-flow velocity 3.86 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 3.86 ft/s, τ 1.024 lb/ft², Fr 0.24",
+       "field_value_text": "Peak V 3.86 ft/s, Fr 0.24",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 1.024 lb/ft²",
+       "field_value_text": "Bed shear tau 1.024 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 9.96062992125983,
+     "Q": 2762.319321165218
+    },
+    {
+     "boxes": {
+      "slope": 0.002,
+      "nchan": 0.03,
+      "nover": 0.03,
+      "targetq": 0.5,
+      "d50": "abc"
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"246.3,259.7 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 373.7,259.7\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"259.7\" x2=\"586.0\" y2=\"259.7\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 245.8,266.0 374.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <table class=\"easi-tbl\">\n    <tbody>\n      <tr>\n        <td>Discharge Q</td>\n        <td>\n          <b>1 cfs</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Water-surface stage / max depth</td>\n        <td>\n          <b>0.07 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Mean velocity V</td>\n        <td>\n          <b>0.37 ft/s</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Top width T</td>\n        <td>\n          <b>20.3 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Hydraulic radius R</td>\n        <td>\n          <b>0.07 ft</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Bed shear τ = γRS</td>\n        <td>\n          <b>0.008 lb/ft²</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Unit stream power τV</td>\n        <td>\n          <b>0.00 lb/(ft·s)</b>\n        </td>\n      </tr>\n      <tr>\n        <td>Froude number</td>\n        <td>\n          <b>0.25 (subcritical)</b>\n        </td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+     "evidence": {
+      "low-flow-baseflow-dynamics-low-flow-depth": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-depth",
+       "value_text": "modeled max depth 0.07 ft at Q 1 cfs",
+       "field_value_text": "Low-flow depth 0.07 ft",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "low-flow-baseflow-dynamics-low-flow-velocity": {
+       "metric_id": "low-flow-baseflow-dynamics-low-flow-velocity",
+       "value_text": "modeled velocity 0.37 ft/s at Q 1 cfs",
+       "field_value_text": "Low-flow velocity 0.37 ft/s",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "From the cross-section Manning solver."
+      },
+      "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress": {
+       "metric_id": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+       "value_text": "V 0.37 ft/s, τ 0.008 lb/ft², Fr 0.25",
+       "field_value_text": "Peak V 0.37 ft/s, Fr 0.25",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "At the modeled stage."
+      },
+      "high-flow-dynamics-bed-mobilization-frequency": {
+       "metric_id": "high-flow-dynamics-bed-mobilization-frequency",
+       "value_text": "bed shear τ 0.008 lb/ft²",
+       "field_value_text": "Bed shear tau 0.008 lb/ft2",
+       "suggested_likert": null,
+       "confidence": "M",
+       "source": "Native cross-section hydraulics (Manning)",
+       "source_url": "",
+       "status": "ok",
+       "note": "Shields comparison with the entered D50."
+      }
+     },
+     "stage": 0.06763428214966774,
+     "Q": 0.5005140544040321
+    },
+    {
+     "boxes": {
+      "slope": null,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 2
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,68.7 220.5,82.2 222.3,95.6 224.2,109.0 226.0,122.4 227.8,135.8 229.7,149.2 231.5,162.7 233.4,176.1 235.2,189.5 237.1,202.9 238.9,216.3 240.8,229.7 242.6,243.2 244.5,256.6 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,256.6 377.4,243.2 379.2,229.7 381.1,216.3 382.9,202.9 384.8,189.5 386.6,176.1 388.5,162.7 390.3,149.2 392.2,135.8 394.0,122.4 395.8,109.0 397.7,95.6 399.5,82.2 401.4,68.7 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 245.8,266.0 374.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": 0.001,
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": -3,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,68.7 220.5,82.2 222.3,95.6 224.2,109.0 226.0,122.4 227.8,135.8 229.7,149.2 231.5,162.7 233.4,176.1 235.2,189.5 237.1,202.9 238.9,216.3 240.8,229.7 242.6,243.2 244.5,256.6 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,256.6 377.4,243.2 379.2,229.7 381.1,216.3 382.9,202.9 384.8,189.5 386.6,176.1 388.5,162.7 390.3,149.2 392.2,135.8 394.0,122.4 395.8,109.0 397.7,95.6 399.5,82.2 401.4,68.7 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 245.8,266.0 374.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    },
+    {
+     "boxes": {
+      "slope": "x",
+      "nchan": 0.035,
+      "nover": 0.06,
+      "targetq": 10,
+      "d50": 30.0
+     },
+     "html": "<div>\n  <div style=\"margin-bottom:8px;\"><svg viewBox=\"0 0 620 300\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;background:#fff;border:1px solid #e5e8ee;border-radius:6px;\"><polygon points=\"218.6,64.3 218.6,68.7 220.5,82.2 222.3,95.6 224.2,109.0 226.0,122.4 227.8,135.8 229.7,149.2 231.5,162.7 233.4,176.1 235.2,189.5 237.1,202.9 238.9,216.3 240.8,229.7 242.6,243.2 244.5,256.6 246.3,266.0 248.2,266.0 250.0,266.0 251.8,266.0 253.7,266.0 255.5,266.0 257.4,266.0 259.2,266.0 261.1,266.0 262.9,266.0 264.8,266.0 266.6,266.0 268.5,266.0 270.3,266.0 272.2,266.0 274.0,266.0 275.8,266.0 277.7,266.0 279.5,266.0 281.4,266.0 283.2,266.0 285.1,266.0 286.9,266.0 288.8,266.0 290.6,266.0 292.5,266.0 294.3,266.0 296.2,266.0 298.0,266.0 299.8,266.0 301.7,266.0 303.5,266.0 305.4,266.0 307.2,266.0 309.1,266.0 310.9,266.0 312.8,266.0 314.6,266.0 316.5,266.0 318.3,266.0 320.2,266.0 322.0,266.0 323.8,266.0 325.7,266.0 327.5,266.0 329.4,266.0 331.2,266.0 333.1,266.0 334.9,266.0 336.8,266.0 338.6,266.0 340.5,266.0 342.3,266.0 344.2,266.0 346.0,266.0 347.8,266.0 349.7,266.0 351.5,266.0 353.4,266.0 355.2,266.0 357.1,266.0 358.9,266.0 360.8,266.0 362.6,266.0 364.5,266.0 366.3,266.0 368.2,266.0 370.0,266.0 371.8,266.0 373.7,266.0 375.5,256.6 377.4,243.2 379.2,229.7 381.1,216.3 382.9,202.9 384.8,189.5 386.6,176.1 388.5,162.7 390.3,149.2 392.2,135.8 394.0,122.4 395.8,109.0 397.7,95.6 399.5,82.2 401.4,68.7 401.4,64.3\" fill=\"#8fbce6\" fill-opacity=\"0.65\"/><line x1=\"34.0\" y1=\"64.3\" x2=\"586.0\" y2=\"64.3\" stroke=\"#1f6feb\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"218.0\" y1=\"34\" x2=\"218.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><line x1=\"402.0\" y1=\"34\" x2=\"402.0\" y2=\"266\" stroke=\"#c0c8d4\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/><polyline points=\"34.0,34.0 218.0,64.3 245.8,266.0 374.2,266.0 402.0,64.3 586.0,34.0\" fill=\"none\" stroke=\"#5b4636\" stroke-width=\"2\"/><text x=\"310\" y=\"294\" font-size=\"11\" text-anchor=\"middle\" fill=\"#667\">Station (ft) · Elevation (ft)</text></svg></div>\n  <p class=\"text-muted\" style=\"font-size:12px;\">Enter a valid slope, roughness, and discharge.</p>\n</div>",
+     "evidence": null,
+     "stage": null,
+     "Q": null
+    }
+   ]
+  }
+ ]
+}

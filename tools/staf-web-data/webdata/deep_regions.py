@@ -13,7 +13,9 @@ carried here so the static app keeps working once the Shiny apps are retired:
   ``assessmentRef``), with the assessments DEEP hides (``-sqt-adapted``, ``deep/config.py``) left out;
 - one version per assessment, DEEP's default (``deep/library.py default_pointers``): the newest Final
   version, else the newest Preliminary, else the newest Draft;
-- its region outline (``deep/assessments.py _region_geometry``) and the sidebar's fields.
+- its region outline (``deep/assessments.py _region_geometry``) and the sidebar's fields;
+- what DEEP's Change dialog shows of it (``covering_refs``): its name, its region's name and every
+  version's reference tier, so the static app opens Change without reading each version's bundle.
 
 A DEEP deployed with a baked registry also serves its baked versions, which the release normally holds
 as well; ``tests/test_deep_regions.py`` compares the two while apps/deep is still in the repo.
@@ -145,6 +147,11 @@ def payload(library: Path) -> dict:
         life = str(r.get("lifecycle") or "preliminary").strip().lower()
         versions.setdefault(r["assessmentId"], {s: [] for s in ELIGIBLE})[life if life in ELIGIBLE else "preliminary"].append(int(r["version"]))
     default = {aid: next(max(d[s]) for s in DEFAULT_ORDER if d[s]) for aid, d in versions.items()}
+    # each version's reference tier (deep/assessments.py covering_refs referenceTierByRef): DEEP's Change
+    # dialog shows the default's, and the static app reads it here rather than every version's bundle
+    tiers: dict = {}
+    for r in records:
+        tiers.setdefault(r["assessmentId"], {})[r["assessmentRef"]] = r.get("referenceTier")
     features = []
     for r in records:
         if r["version"] != default[r["assessmentId"]]:
@@ -163,6 +170,10 @@ def payload(library: Path) -> dict:
             "lifecycle": life,
             "certified": life == "certified",
             "geometry": geom,
+            # what DEEP's Change dialog shows (covering_refs: the default record's name and region name)
+            "assessmentName": r.get("assessmentName", r.get("assessmentId")),
+            "regionName": region.get("name", ""),
+            "referenceTierByRef": tiers.get(r["assessmentId"], {}),
         })
     return {"features": features}
 

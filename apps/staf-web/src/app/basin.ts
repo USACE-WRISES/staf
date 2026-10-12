@@ -17,6 +17,7 @@ import { basinCard, basinPane, esc, type ToolKey } from './markup'
 import { notify, removeNotification } from './notify'
 import { timed } from './perf'
 import { pyFixedComma } from './pyfmt'
+import { pyCopy, pySet } from './pyjson'
 import { warmFiles } from './warm'
 
 export const WATERSHED_STYLE: L.PathOptions = { color: '#caa700', weight: 1, fillColor: '#fdf24a', fillOpacity: 0.40 }
@@ -279,7 +280,17 @@ export class Basin {
     const a = this.host.identify.anchor
     const c = a?.scoredReach?.comid
     const cid = typeof c === 'number' && Number.isInteger(c) && c > 0 ? c : null
-    return { ...d, siteAnchor: a, ctx_inputs: { ...d.ctx_inputs, siteAnchor: a, comid: cid }, delineation: { ...d.delineation, comid: cid } }
+    // copies that keep each number's int or float (and the keys' places), as dict() does
+    const out = pyCopy(d)
+    const ci = pyCopy(d.ctx_inputs ?? {})
+    pySet(ci, 'siteAnchor', a)
+    pySet(ci, 'comid', cid)
+    const dl = pyCopy(d.delineation ?? {})
+    pySet(dl, 'comid', cid)
+    pySet(out, 'siteAnchor', a)
+    pySet(out, 'ctx_inputs', ci)
+    pySet(out, 'delineation', dl)
+    return out
   }
 
   private offerNoWatershed(state: EngineState, lat: number, lon: number, reachFt: number, gen: number): void {
@@ -306,6 +317,21 @@ export class Basin {
     })
   }
 
+  /** Open (each app.py _load_session): a saved delineation as if this pick had just delineated it, drawn
+   * and framed (``center``: where the map goes when there is nothing to frame); SFARI and DEEP restore
+   * the engine's state from the saved record. */
+  restore(d: Result, center: [number, number] | null = null): boolean {
+    this.invalidate()
+    if (this.host.key !== 'easi') {
+      const se = d.siteEngine
+      this.engineState = se && (se.status ?? 'ok') === 'ok' ? { status: 'ok', record: se, reason: null }
+        : se ? { ...se } : { status: 'idle' }
+    }
+    if (!this.draw(d, center)) return false
+    this.delin = d
+    return true
+  }
+
   // ---------------------------------------------------------------- the map
 
   private removeWatershed(): void {
@@ -316,7 +342,7 @@ export class Basin {
   }
 
   /** _draw_delineation: the watershed and the reach, the point on top, the map framed. */
-  private draw(res: Result): boolean {
+  private draw(res: Result, center: [number, number] | null = null): boolean {
     const map = this.host.map
     try {
       this.removeLayers()
@@ -332,6 +358,7 @@ export class Basin {
       const bounds = geojsonBounds(res.watershed_geojson, res.reach_geojson)
       const d = res.delineation ?? {}
       if (bounds) fitBounds(map, bounds)
+      else if (center) map.setView(center, map.getZoom(), { animate: false })
       else if (d.snapped_lat != null) map.setView([d.snapped_lat, d.snapped_lon], map.getZoom(), { animate: false })
     } catch (err) {
       notify(`Could not draw the basin on the map: ${err instanceof Error ? err.message : err}`, { type: 'error', seconds: 8 })
@@ -365,6 +392,11 @@ export class Basin {
     if (d.nhdplus_id !== null && d.nhdplus_id !== undefined) rows.push(['NHDPlusID', String(d.nhdplus_id)])
     rows.push(['StreamCat reach', this.host.identify.reachText(res.siteAnchor)])
     return basinCard(key, d.gnis_name || '(unnamed reach)', rows, this.engineLine())
+  }
+
+  /** The engine's progress line while it runs for this site (_engine_progress_text), else null. */
+  engineProgress(): string | null {
+    return this.engineState?.status === 'running' ? this.stage || progressText({}) : null
   }
 
   /** SFARI's and DEEP's engine line in the card (_engine_line_ui). */

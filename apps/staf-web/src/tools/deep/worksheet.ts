@@ -6,10 +6,27 @@
 // keeps the measured values, redraws the function list and the rail on every change (they read the
 // scores), and redraws the function's page only when Shiny would: a move, a curve-set choice, the
 // desktop prefill landing or a scenario switch.
-import { type Child, h, HTML, outputHtml } from '../../app/htm'
+import { type Child, h, HTML, outputHtml, type Tag } from '../../app/htm'
 import { notify, removeNotification } from '../../app/notify'
 import { timed } from '../../app/perf'
 import { removeModal, showModal } from '../../shared/modal'
+import * as shim from '../../app/shim'
+import { calculatorFor } from '../../app/deepAssess'
+import { level3At, resolveSiteRegions } from '../../engine/ecoregion'
+import { displaySimplify } from '../../engine/simplify'
+import { registerDownload } from '../../files/download'
+import { scenarioSuffix, XLSX_MEDIA_TYPE } from '../../shared/downloads'
+import { blankFilename, fieldFormsFilename, ffPreview, ffSite, ffStatus, ffTable, filledFilename, formsModal, metricsFilename } from './forms'
+import { todayIso } from '../../files/xlsx/calcfill'
+import { buildFilled } from './calculator'
+import type { SummaryInfo } from '../../shared/summary'
+import { svg } from '../../shared/reportmap'
+import { regionsForL3, reportScenario, summaryBlock, summaryRows } from '../../shared/summary'
+import { buildCsv, buildGeojson, reportModal } from './report'
+import { floatKeys, pyClone, pyCopy, pySet } from '../../app/pyjson'
+import * as deepSession from '../../session/deep'
+import { scenarioSet, scenariosBlock } from '../../session/file'
+import { stateFingerprint } from '../../session/guard'
 import {
   addDialog, BASELINE_ID, buildComparison, compareDialog, type Comparison, DESC_INPUT, deleteDialog, type Measure, NAME_INPUT, railDelta,
   type Scenario, scenarioBar, scenarioDialog, type ScenarioScores, ScenarioSet, START_BLANK, START_INPUT,
@@ -38,7 +55,7 @@ export interface DeepHost {
 }
 
 const ADD_HINT = 'A copy brings its values and notes; photos stay with the original. Blank keeps only the desktop values.'
-const copy = <T>(x: T): T => JSON.parse(JSON.stringify(x ?? {}))
+const copy = <T>(x: T): T => pyClone(x ?? ({} as T))
 const strip = (s: string) => s.replace(/^\s+|\s+$/g, '')
 
 function withoutPhotos(measured: Record<string, Rec>): Record<string, Rec> {
@@ -48,7 +65,7 @@ function withoutPhotos(measured: Record<string, Rec>): Record<string, Rec> {
 }
 
 /** workbook.functions: the scored functions in framework order. */
-function bookFunctions(bundle: Bundle | null): [string, string, string][] {
+export function bookFunctions(bundle: Bundle | null): [string, string, string][] {
   const blocks = new Map<string, Rec>((bundle?.metricsByFunction ?? []).map((fn: Rec) => [fn.functionId, fn]))
   const out: [string, string, string][] = []
   for (const f of [...FUNCTIONS].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
@@ -86,6 +103,11 @@ export function deepComparison(bundle: Bundle | null, names: string[], results: 
 
 export class DeepWorksheet {
   measured: Record<string, Rec> = {}
+
+  /** Values to lose (New's question): any measured value entry. */
+  hasValues(): boolean {
+    return Object.keys(this.measured).length > 0
+  }
   currentFn = 0
   scenarios = new ScenarioSet()
   private dialog: 'new' | 'edit' | null = null
@@ -94,8 +116,237 @@ export class DeepWorksheet {
   /** the desktop values computed ahead for a site and assessment version (computeAhead) */
   private ahead: { key: string, p: Promise<Record<string, Rec> | null> } | null = null
   private desktopFill: [string, Record<string, Rec>] | null = null
+  /** the desktop values are being computed for this site (compute_task running) */
+  private computing = false
+  /** Get Forms while it is open: its refresh timer and what its outputs show */
+  private forms: { timer: ReturnType<typeof setInterval>, status: string, table: string } | null = null
+  /** the field worksheet made for (version, ref, values, site): Get Forms' preview and its download */
+  private fieldForms: { la: unknown, ref: string, measured: unknown, delin: unknown, bytes: Uint8Array, url: string | null } | null = null
+  private previewBusy = false
 
-  constructor(private host: DeepHost) {}
+  constructor(private host: DeepHost) {
+    this.registerDownloads()
+  }
+
+  // ---------------------------------------------------------------- the report
+
+  private reportSerial = 0
+  private pendingReport: { id: number, delin: Rec, step: string, la: Bundle } | null = null
+
+  /** _finish_report */
+  private finishReport(opened = false): void {
+    const req = this.pendingReport
+    if (!req) return
+    this.pendingReport = null
+    shim.send('staf-report-state', { requestId: req.id, busy: false, opened, ns: 'deep' })
+  }
+
+  /** _cancel_report */
+  cancelReport(): void {
+    if (this.pendingReport) this.finishReport()
+  }
+
+  /** _report_title */
+  private reportTitle(): string {
+    const s = this.scenarios
+    const base = 'DEEP Detailed Assessment Report'
+    return s.hasAlternatives() ? `${base} · ${s.current.name}` : base
+  }
+
+  /** _site_region: the snapped site's Level III ecoregion and state (the reports and the file stamp it). */
+  siteRegion(): Promise<Rec> {
+    const dd = (this.host.delin() ?? {}).delineation ?? {}
+    return resolveSiteRegions(this.host.data.src, dd.snapped_lat ?? null, dd.snapped_lon ?? null)
+  }
+
+  /** _summary_section: DEEP's heading over the shared summary block (workbook.summary_info's rows). */
+  /** workbook.summary_info: the site, its Level III ecoregion from the polygons at its point. */
+  private async summaryInfo(d: Rec): Promise<SummaryInfo> {
+    const dl = d.delineation ?? {}
+    let l3: string | null = null
+    if (dl.snapped_lat !== null && dl.snapped_lat !== undefined && dl.snapped_lon !== null && dl.snapped_lon !== undefined) {
+      try {
+        l3 = (await level3At(this.host.data.src, dl.snapped_lat, dl.snapped_lon) ?? {} as any).code ?? null
+      } catch {
+        l3 = null                                     // the summary reads "Not available" instead
+      }
+    }
+    return { app: 'DEEP', reachName: dl.gnis_name, reachLengthFt: dl.reach_length_ft, drainageAreaSqkm: dl.drainage_area_sqkm,
+      streamOrder: dl.stream_order, regions: regionsForL3(l3) }
+  }
+
+  private async summarySection(d: Rec): Promise<Child> {
+    const rows = summaryRows(await this.summaryInfo(d))
+    return h.div(h.h4('Assessment summary', { style: 'margin-top:4px;' }), summaryBlock(rows, reportScenario(this.scenarios)),
+      { class: 'staf-report-summary' })
+  }
+
+  /** _request_report: the report of the loaded assessment, once its basin map is drawn. */
+  requestReport(): void {
+    const d = this.host.delin()
+    const la = this.host.loaded()
+    if (!d || !la) return
+    const step = this.host.step()
+    const p = this.pendingReport
+    if (p && p.delin === d && p.step === step && p.la === la) return
+    this.cancelReport()
+    const id = ++this.reportSerial
+    this.pendingReport = { id, delin: d, step, la }
+    shim.send('staf-report-state', { requestId: id, busy: true, opened: false, ns: 'deep' })
+    void (async () => {
+      let minimap = ''
+      let summary: Child = null
+      let calc: string | null = null
+      try {
+        ;[minimap, summary, calc] = await Promise.all([svg(displaySimplify(d.watershed_geojson, 700), d.reach_geojson), this.summarySection(d),
+          calculatorFor(this.host.data.src, la).catch(() => null)])
+      } catch {
+        if (this.pendingReport?.id === id) {
+          notify('Could not prepare the report. Please try again.', { type: 'error', seconds: 5 })
+          this.finishReport()
+        }
+        return
+      }
+      const req = this.pendingReport
+      if (!req || req.id !== id) return
+      if (this.host.delin() !== d || this.host.loaded() !== la) {
+        this.finishReport()
+        return
+      }
+      const [sc] = this.scored()
+      showModal(reportModal({ delin: d, la, sc, measured: this.measured, minimap, summary, title: this.reportTitle(), hasCalculator: calc !== null }))
+      this.finishReport(true)
+    })()
+  }
+
+  /** The report's downloads (dl_csv, dl_geojson), named for the scenario shown. */
+  private registerDownloads(): void {
+    const suffix = () => scenarioSuffix(this.scenarios)
+    registerDownload('deep-dl_csv', { filename: () => `deep-report${suffix()}.csv`, mime: 'text/csv',
+      build: async () => buildCsv(this.host.delin() ?? {}, this.host.loaded(), this.measured, this.scored()[0], await this.siteRegion()) })
+    registerDownload('deep-dl_geojson', { filename: () => `deep-report${suffix()}.geojson`, mime: 'application/geo+json',
+      build: async () => buildGeojson(this.host.delin() ?? {}, this.host.loaded(), this.scored()[0], await this.siteRegion(), this.measured) })
+    // the report's PDF (report.build_pdf), named for the scenario shown
+    registerDownload('deep-dl_pdf', { filename: () => `deep-report${suffix()}.pdf`, mime: 'application/pdf', build: async () => {
+      const { buildPdf } = await import('./reportpdf')
+      return buildPdf(this.host.delin() ?? {}, this.host.loaded(), this.measured, this.scored()[0], await this.siteRegion(),
+        reportScenario(this.scenarios))
+    } })
+    // Get Forms: the metrics list as a PDF (report.build_metrics_pdf)
+    registerDownload('deep-dl_metrics_pdf', { filename: () => metricsFilename(this.host.loaded()), mime: 'application/pdf', build: async () => {
+      const { buildMetricsPdf } = await import('./reportpdf')
+      return buildMetricsPdf(this.host.loaded(), this.host.ref() ?? '', this.measured, this.host.delin() ?? {})
+    } })
+    // the completed workbook (Get Forms and the report's footer): the scenario workbook, or the single
+    // calculator when it cannot be assembled (_workbook_bytes)
+    registerDownload('deep-dl_calc_filled', { filename: () => filledFilename(this.host.loaded()), mime: XLSX_MEDIA_TYPE, build: async () => {
+      const la = this.host.loaded()
+      const calc = await calculatorFor(this.host.data.src, la)
+      if (!calc) return null
+      const template = new Uint8Array(await this.host.data.src.bytesOf(calc))
+      const d = this.host.delin() ?? {}
+      const today = todayIso()
+      const rows = this.scenarioValues()
+      try {
+        const { buildWorkbook } = await import('./workbook')
+        return await buildWorkbook(template, la, d, rows, await this.summaryInfo(d), today)
+      } catch (err) {
+        console.warn('DEEP: the scenario workbook failed; serving the single calculator', err)
+        return buildFilled(template, la, rows[0][1], d, today)
+      }
+    } })
+    // Get Forms: the field worksheet, made for what is loaded (report.build_field_forms_pdf)
+    registerDownload('deep-dl_field_forms', { filename: () => fieldFormsFilename(this.host.loaded()), mime: 'application/pdf',
+      build: async () => (await this.fieldFormsPdf()).bytes })
+    // Get Forms: the loaded version's calculator, blank (nothing when the version has none)
+    registerDownload('deep-dl_calc_blank', { filename: () => blankFilename(this.host.loaded()), mime: XLSX_MEDIA_TYPE, build: async () => {
+      const calc = await calculatorFor(this.host.data.src, this.host.loaded())
+      return calc ? new Uint8Array(await this.host.data.src.bytesOf(calc)) : null
+    } })
+  }
+
+  // ---------------------------------------------------------------- Get Forms
+  /** _open_field_forms: the dialog's shell with its outputs; while it is open, the status line and the
+   * table are drawn again where they changed (ff_status polls while the desktop values compute). */
+  private async openForms(): Promise<void> {
+    this.cancelReport()
+    this.closeForms()
+    const la = this.host.loaded()
+    const calc = la ? await calculatorFor(this.host.data.src, la).catch(() => null) : null
+    const status = this.formsStatus()
+    const table = ffTable(la, this.measured, this.computing)
+    const el = showModal(formsModal(calc !== null, ffSite(la, this.host.ref(), this.host.delin()), status, table, null))
+    this.forms = { timer: setInterval(() => this.refreshForms(), 1000), status: outputHtml(status), table: outputHtml(table) }
+    el.addEventListener('hidden.bs.modal', () => this.closeForms(), { once: true })
+    void this.refreshPreview()
+  }
+
+  /** The field worksheet for what is loaded now, made again only when the version, its ref, the values or
+   * the site changed. */
+  private async fieldFormsPdf(): Promise<NonNullable<WorksheetFieldForms>> {
+    const la = this.host.loaded()
+    const ref = this.host.ref() ?? ''
+    const measured = this.measured
+    const d = this.host.delin()
+    const f = this.fieldForms
+    if (f && f.la === la && f.ref === ref && f.measured === measured && f.delin === d) return f
+    const { buildFieldFormsPdf } = await import('./fieldform')
+    const bytes = buildFieldFormsPdf(la, ref, measured, d ?? {})
+    if (this.fieldForms?.url) URL.revokeObjectURL(this.fieldForms.url)
+    this.fieldForms = { la, ref, measured, delin: d, bytes, url: null }
+    return this.fieldForms
+  }
+
+  private fieldFormsStale(): boolean {
+    const f = this.fieldForms
+    return !f || f.la !== this.host.loaded() || f.ref !== (this.host.ref() ?? '') || f.measured !== this.measured || f.delin !== this.host.delin()
+  }
+
+  /** ff_preview: the worksheet shown in the dialog (drawn again when what it prints changes) */
+  private async refreshPreview(): Promise<void> {
+    if (this.previewBusy) return
+    this.previewBusy = true
+    try {
+      const f = await this.fieldFormsPdf()
+      if (!this.forms) return
+      if (!f.url) f.url = URL.createObjectURL(new Blob([f.bytes as BlobPart], { type: 'application/pdf' }))
+      this.setOutput('ff_preview', ffPreview(f.url))
+    } catch (err) {
+      console.warn('DEEP: the field worksheet failed', err)
+    } finally {
+      this.previewBusy = false
+    }
+  }
+
+  private formsStatus(): Tag {
+    return ffStatus(this.host.loaded(), this.measured, this.computing, !!((this.host.delin() ?? {}).delineation ?? null))
+  }
+
+  private closeForms(): void {
+    if (this.forms) clearInterval(this.forms.timer)
+    this.forms = null
+  }
+
+  /** Get Forms' outputs drawn again where they changed (nothing when the dialog is closed). */
+  private refreshForms(): void {
+    const f = this.forms
+    if (!f) return
+    if (!document.getElementById('deep-ff_status')) {
+      this.closeForms()
+      return
+    }
+    const status = outputHtml(this.formsStatus())
+    if (status !== f.status) {
+      f.status = status
+      this.setOutput('ff_status', new HTML(status))
+    }
+    const table = outputHtml(ffTable(this.host.loaded(), this.measured, this.computing))
+    if (table !== f.table) {
+      f.table = table
+      this.setOutput('ff_table', new HTML(table))
+    }
+    if (this.fieldFormsStale()) void this.refreshPreview()
+  }
 
   private el(id: string): HTMLElement | null {
     return document.getElementById(`deep-${id}`)
@@ -108,12 +359,45 @@ export class DeepWorksheet {
 
   /** A new pick: the values, the scenarios and the prefill go (_begin_pick). */
   reset(): void {
+    this.cancelReport()
     this.measured = {}
     this.scenarios = new ScenarioSet()
     this.computedFor = null
     this.computeGen += 1
+    this.computing = false
     this.currentFn = 0
     removeNotification('deep_compute')
+  }
+
+  // ---------------------------------------------------------------- the assessment file
+
+  /** _session_scenarios: every scenario's values, the shown one's read live. */
+  private sessionScenarios(): Rec {
+    return scenariosBlock(this.scenarios, { measured_values: copy(this.measured) })
+  }
+
+  /** Save (save_session): the file's text, with the assessment inlined and its provenance stamped. */
+  saveText(delin: Rec | null, raw: Rec | null, region: Rec | null): string {
+    return deepSession.dump(delin ?? {}, raw ?? {}, this.sessionScenarios(), region)
+  }
+
+  /** _work_fp: the site, the assessment and every scenario's own entries (null: nothing to lose). */
+  workFingerprint(delin: Rec | null): string | null {
+    const dd = (delin ?? {}).delineation ?? {}
+    const rows = this.scenarioValues().map(([s, mv]) => [s.id, s.name, s.description, deepSession.ownEntries(mv)])
+    if (!Object.keys(dd).length && !rows.some((r) => Object.keys(r[3] as Rec).length) && rows.length === 1 && !rows[0][2]) return null
+    const site = ['nhdplusid', 'comid', 'snapped_lat', 'snapped_lon'].map((k) => dd[k] ?? null)
+    const la = this.host.loaded()
+    return stateFingerprint(site, la ? la.assessmentId ?? '' : null, rows)
+  }
+
+  /** Open (_load_session's part): every scenario's values, the saved one shown; the desktop values are
+   * computed again for the site (computed_for reset). */
+  restore(scenarios: Rec | null): void {
+    this.reset()
+    const sset = scenarioSet(scenarios)
+    this.scenarios = sset
+    this.measured = copy(sset.current.state?.measured_values ?? {})
   }
 
   /** An assessment adopted or changed (_load_ref_into_state): its values start empty. */
@@ -339,6 +623,7 @@ export class DeepWorksheet {
     if (!ids.length) return
     this.computedFor = key
     const gen = ++this.computeGen
+    this.computing = true
     const es = this.host.engineState()
     const ahead = this.ahead?.key === key ? this.ahead.p : null
     this.ahead = null
@@ -348,7 +633,9 @@ export class DeepWorksheet {
   }
 
   private computeDone(gen: number, key: string, res: Record<string, Rec> | null): void {
-    if (gen !== this.computeGen || this.siteKey() !== key) return
+    if (gen !== this.computeGen) return
+    this.computing = false
+    if (this.siteKey() !== key) return
     removeNotification('deep_compute')
     if (!res) return
     this.desktopFill = [key, copy(res)]
@@ -357,7 +644,7 @@ export class DeepWorksheet {
     for (const [mid, entry] of Object.entries(res)) {
       const cur = mvs[mid] ?? {}
       if ((cur.value === null || cur.value === undefined || cur.value === '') && !cur.na) {
-        mvs[mid] = { ...cur, ...entry }
+        mvs[mid] = floatKeys({ ...cur, ...entry }, 'value')
         n += 1
       }
     }
@@ -366,7 +653,7 @@ export class DeepWorksheet {
       for (const [mid, entry] of Object.entries(res)) {
         const cur = mv[mid] ?? {}
         if ((cur.value === null || cur.value === undefined || cur.value === '') && !cur.na) {
-          mv[mid] = { ...cur, ...copy(entry) }
+          mv[mid] = floatKeys({ ...cur, ...copy(entry) }, 'value')
           filled = true
         }
       }
@@ -508,7 +795,7 @@ export class DeepWorksheet {
 
   // ---------------------------------------------------------------- the edit bridge
   private update(mid: string, change: (cur: Rec) => void): void {
-    const cur = { ...(this.measured[mid] ?? {}) }
+    const cur = pyCopy(this.measured[mid] ?? {})
     change(cur)
     this.measured = { ...this.measured, [mid]: cur }
   }
@@ -526,7 +813,7 @@ export class DeepWorksheet {
           val = Number.isNaN(x) && String(raw).trim().toLowerCase() !== 'nan' ? null : x
         }
         this.update(ev.mid, (cur) => {
-          cur.value = val
+          pySet(cur, 'value', val, val !== null)
           cur.origin = 'field'
         })
         this.scoresChanged()
@@ -573,10 +860,10 @@ export class DeepWorksheet {
         if (ev.i !== undefined && ev.i !== null) this.move(Math.trunc(Number(ev.i)))
         return true
       case 'open_report_evt':
-        notify('The report is not in the web app yet.', { type: 'message', seconds: 4 })
+        this.requestReport()
         return true
       case 'field_forms_evt':
-        notify('Get Forms is not in the web app yet.', { type: 'message', seconds: 4 })
+        void this.openForms()
         return true
       case 'staf_scenario_evt':
         this.scenarioEvent(ev)
@@ -592,3 +879,5 @@ export class DeepWorksheet {
     }
   }
 }
+
+type WorksheetFieldForms = { la: unknown, ref: string, measured: unknown, delin: unknown, bytes: Uint8Array, url: string | null } | null

@@ -49,6 +49,7 @@ export const SCRIPTS: Item[] = [
   { path: 'js/staf/legend-dock.js' },
   { path: 'js/staf/tooltip.js' },
   { path: 'js/staf/report-ready.js' },
+  { path: 'js/staf/unsaved-guard.js' },
   { path: 'js/staf/scenarios.js' },
   { path: 'js/staf/metric-rows.js' },
   { path: 'js/staf/coord-entry.js' },
@@ -77,6 +78,17 @@ const TOOL_SCRIPT = `<script>(function () {
   document.title = ${JSON.stringify(Object.fromEntries(ORDER.map((k) => [k, TOOLS[k].name])))}[tool] + " · STAF";
 })();</script>`
 
+/** The one jQuery call the shared page scripts make, ``jQuery(document).on(events, handler)``, kept in the
+ * page: on the Shiny page jQuery hears Bootstrap's modal events (report-ready.js returns the focus to
+ * the report's opener on hidden.bs.modal). Bootstrap's own scripts are told to leave it alone
+ * (``data-bs-no-jquery`` on the body), as they would otherwise take it for jQuery. */
+const JQUERY_SCRIPT = `<script>window.jQuery = window.jQuery || function (target) {
+  return { on: function (events, handler) {
+    String(events).split(" ").forEach(function (type) { if (type) target.addEventListener(type, handler); });
+    return this;
+  } };
+};</script>`
+
 export function stafSite(): Plugin {
   return {
     name: 'staf-site',
@@ -89,7 +101,7 @@ export function stafSite(): Plugin {
           : `<link rel="stylesheet" href="${url(item)}">`)
         const scripts = SCRIPTS.map((item) => `<script src="${url(item)}" defer></script>`)
         return html
-          .replace('<!--staf:head-->', [...links, TOOL_SCRIPT, ...scripts].join('\n    '))
+          .replace('<!--staf:head-->', [...links, TOOL_SCRIPT, JQUERY_SCRIPT, ...scripts].join('\n    '))
           .replace('<!--staf:body-->', page())
       },
     },

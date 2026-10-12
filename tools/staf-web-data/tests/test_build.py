@@ -35,6 +35,11 @@ def test_build(tmp_path, monkeypatch):
                                                                 ("lines2_0101.parquet", bundle / "lines2_0101.parquet", "region", "0101")])
     monkeypatch.setattr(build, "xs_files", lambda x, r=None: ([], {}))
     monkeypatch.setattr(build, "engine_files", lambda: [])
+    own = tmp_path / "own"
+    own.mkdir()
+    states = json.dumps({"type": "FeatureCollection", "features": [{"properties": {"state": "NH"}}] * 50}).encode("utf-8")
+    (own / "us_states.geojson.gz").write_bytes(gzip.compress(states))
+    monkeypatch.setattr(build, "OWN", own)
     monkeypatch.setattr(points, "write", lambda tables, cache, log=print: [])
 
     def regions(lib, dst):
@@ -67,9 +72,15 @@ def test_build(tmp_path, monkeypatch):
     assert index["gzip"]["library/library.json"] == len(raw)
     assert "library/small.json" not in index["gzip"]
     assert index["bundle_sources"] == {"nlcd": "2021"}
+    assert index["bundle"] == {"built": "x", "format": 2, "regions": 1}
     assert index["footers"]["bundle/lines2_0101.parquet"] == lines["footer"]
     assert "library/library.json" not in index["footers"]
     assert json.loads((out / build.MANIFEST).read_text(encoding="utf-8")) == manifest
+    # the static app's own copies (DEEP's state polygons): unzipped content described, stored gzipped again
+    st = files["engine/us_states.geojson"]
+    assert st["encoding"] == "gzip" and st["raw_bytes"] == len(states)
+    assert gzip.decompress((out / st["path"]).read_bytes()) == states
+    assert manifest["sources"]["own"] == {"files": ["us_states.geojson"]}
     # a second build stores the same files
     again = build.build(out, bundle=bundle, library=library, log=lambda *a: None)
     assert dict((k, e["path"]) for k, e in again["files"].items()) == dict((k, e["path"]) for k, e in files.items())

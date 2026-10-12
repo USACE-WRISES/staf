@@ -1,0 +1,4497 @@
+{
+ "delin": {
+  "status": "ok",
+  "watershedBasis": "site-engine",
+  "siteEngine": {
+   "engineId": "site-engine",
+   "engineVersion": "0.5.0",
+   "status": "ok",
+   "reason": null,
+   "input": {
+    "lat": 43.685784,
+    "lon": -72.236713,
+    "config": {
+     "includeGeometry": true,
+     "landcoverBaseline": true,
+     "maxHops": 190,
+     "maxReaches": 3000,
+     "metricFamilies": [
+      "baseflow",
+      "dams",
+      "landcover",
+      "roads",
+      "runoff",
+      "soils",
+      "xsection"
+     ],
+     "reachLengthFt": 1000.0,
+     "snapTolFt": 150.0
+    }
+   },
+   "site": {
+    "network": "nhdplus-hr",
+    "nhdplusId": 10000900049512,
+    "gnisName": null,
+    "reachcode": "01080104003460",
+    "vpuid": "0108",
+    "snapLat": 43.685784,
+    "snapLon": -72.236713,
+    "snapDistFt": 0.0,
+    "drainageAreaSqkm": 1.0005,
+    "slope": 0.01,
+    "streamOrder": 2,
+    "fcode": 46003,
+    "sinuosity": 1.061,
+    "eromQamaCfs": 0.784792,
+    "ecoregionL3": {
+     "code": "58",
+     "name": "Northeastern Highlands"
+    }
+   },
+   "watershed": {
+    "status": "ok",
+    "method": "hr-catchment-aggregation",
+    "polygon": null,
+    "areaSqkm": 1.0005,
+    "vaaAreaSqkm": 1.0005,
+    "areaAgreement": 1.0,
+    "nReaches": 11,
+    "nHops": 7,
+    "warnings": [],
+    "reason": null
+   },
+   "reach": {
+    "lengthFt": 1000.0,
+    "geometry": null,
+    "warnings": []
+   },
+   "metrics": {
+    "baseflowIndexPct": {
+     "value": 48.0,
+     "unit": "%",
+     "source": "USGS base-flow index grid (Wolock 2003)",
+     "vintage": "USGS base-flow index grid, Wolock 2003 (1 km)",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "baseflowIndexCells": {
+     "value": 1,
+     "unit": "count",
+     "source": "USGS base-flow index grid (Wolock 2003)",
+     "vintage": "USGS base-flow index grid, Wolock 2003 (1 km)",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "damCount": {
+     "value": 0,
+     "unit": "count",
+     "source": "USACE NID, located per HR catchment (STAF data bundle)",
+     "vintage": "NID FeatureServer snapshot 2026-10-02",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "damDensityPerSqkm": {
+     "value": 0.0,
+     "unit": "count/km2",
+     "source": "USACE NID, located per HR catchment (STAF data bundle)",
+     "vintage": "NID FeatureServer snapshot 2026-10-02",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "damStorageAcreFt": {
+     "value": 0.0,
+     "unit": "acre-ft",
+     "source": "USACE NID, located per HR catchment (STAF data bundle), normal storage",
+     "vintage": "NID FeatureServer snapshot 2026-10-02",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "damStoragePerSqkm": {
+     "value": 0.0,
+     "unit": "acre-ft/km2",
+     "source": "USACE NID, located per HR catchment (STAF data bundle), normal storage",
+     "vintage": "NID FeatureServer snapshot 2026-10-02",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "damNidStorageAcreFt": {
+     "value": 0.0,
+     "unit": "acre-ft",
+     "source": "USACE NID, located per HR catchment (STAF data bundle), NID storage",
+     "vintage": "NID FeatureServer snapshot 2026-10-02",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "damNidStoragePerSqkm": {
+     "value": 0.0,
+     "unit": "acre-ft/km2",
+     "source": "USACE NID, located per HR catchment (STAF data bundle), NID storage",
+     "vintage": "NID FeatureServer snapshot 2026-10-02",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "imperviousPctWatershed": {
+     "value": 6.03,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "cropPctWatershed": {
+     "value": 0.0,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "hayPasturePctWatershed": {
+     "value": 2.11,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "forestPctWatershed": {
+     "value": 67.58,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "shrubPctWatershed": {
+     "value": 2.39,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "grasslandPctWatershed": {
+     "value": 0.0,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "woodyWetlandPctWatershed": {
+     "value": 11.81,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "herbWetlandPctWatershed": {
+     "value": 1.35,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "imperviousPct2001Watershed": {
+     "value": 5.5,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2001",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "imperviousPctRiparian": {
+     "value": 10.54,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "cropPctRiparian": {
+     "value": 0.0,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "hayPasturePctRiparian": {
+     "value": 4.69,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "forestPctRiparian": {
+     "value": 48.4,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "shrubPctRiparian": {
+     "value": 0.0,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "grasslandPctRiparian": {
+     "value": 0.0,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "woodyWetlandPctRiparian": {
+     "value": 20.43,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "herbWetlandPctRiparian": {
+     "value": 4.29,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2021",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "imperviousPct2001Riparian": {
+     "value": 9.77,
+     "unit": "percent",
+     "source": "NLCD, counted per HR catchment (STAF data bundle)",
+     "vintage": "2001",
+     "spatialSupport": "riparianBuffer",
+     "warnings": []
+    },
+    "roadLengthKm": {
+     "value": 1.706,
+     "unit": "km",
+     "source": "TIGER/Line roads, measured per HR catchment (STAF data bundle)",
+     "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "roadDensity": {
+     "value": 1.7055,
+     "unit": "km/km2",
+     "source": "TIGER/Line roads, measured per HR catchment (STAF data bundle)",
+     "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "roadCrossings": {
+     "value": 1,
+     "unit": "count",
+     "source": "TIGER/Line roads x NHDPlus HR flowlines, per HR catchment (STAF data bundle)",
+     "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "roadCrossingDensity": {
+     "value": 0.9995,
+     "unit": "crossings/km2",
+     "source": "TIGER/Line roads x NHDPlus HR flowlines, per HR catchment (STAF data bundle)",
+     "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+     "spatialSupport": "pointWatershed",
+     "warnings": []
+    },
+    "meanAnnualFlowCfs": {
+     "value": 0.785,
+     "unit": "cfs",
+     "source": "NHDPlus HR EROM mean-annual flow",
+     "vintage": "NHDPlus HR VAA (live service)",
+     "spatialSupport": "reach",
+     "warnings": []
+    },
+    "runoffDepthMm": {
+     "value": 700.9,
+     "unit": "mm/yr",
+     "source": "NHDPlus HR EROM mean-annual flow over drainage area",
+     "vintage": "NHDPlus HR VAA (live service)",
+     "spatialSupport": "pointWatershed",
+     "warnings": [
+      "EROM-derived; not equivalent to StreamCat runoffws"
+     ]
+    },
+    "soilKFactor": {
+     "value": 0.307,
+     "unit": "dimensionless",
+     "source": "gNATSGO surface-horizon kwfact by 10 m cell, retired map units from current SSURGO, per HR catchment (STAF data bundle)",
+     "vintage": "gNATSGO July 2020 (Microsoft Planetary Computer); SSURGO patch 2026-10-04",
+     "spatialSupport": "pointWatershed",
+     "warnings": [
+      "29% of the watershed area has no surface-horizon K and is excluded from the mean"
+     ]
+    },
+    "entrenchmentRatio": {
+     "value": 1.54,
+     "unit": "ratio",
+     "source": "USGS 3DEP reach cross-sections, median of the sampled sections (engine reach)",
+     "vintage": "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull",
+     "spatialSupport": "reach",
+     "warnings": [
+      "DEM resolution 1 m"
+     ]
+    },
+    "bankHeightRatio": {
+     "value": 1.68,
+     "unit": "ratio",
+     "source": "USGS 3DEP reach cross-sections, median of the sampled sections (engine reach)",
+     "vintage": "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull",
+     "spatialSupport": "reach",
+     "warnings": [
+      "DEM resolution 1 m"
+     ]
+    },
+    "bankfullWidthM": {
+     "value": 3.12,
+     "unit": "m",
+     "source": "Bieger 2015 (Appalachian Highlands)",
+     "vintage": "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull",
+     "spatialSupport": "reach",
+     "warnings": []
+    }
+   },
+   "exclusions": [
+    {
+     "code": "epa-modeled-indices",
+     "reason": "The EPA watershed/catchment integrity components (hyd, sed, chem, conn, temp, habt) and prG_BMMI exist only as per-COMID EPA model outputs on the NHDPlus V2 network."
+    }
+   ],
+   "warnings": [],
+   "hrSource": {
+    "source": "bundle",
+    "built": "2026-10-03T00:56:05+00:00",
+    "regions": 226,
+    "format": 2,
+    "delivered": {
+     "release": "https://github.com/USACE-WRISES/staf/releases/download/staf-data-current/",
+     "packed": "2026-10-04T19:04:05+00:00",
+     "cache": "C:\\Users\\gtmen\\AppData\\Local\\Temp\\staf\\data_bundle"
+    },
+    "answeredBy": [
+     "bundle"
+    ]
+   }
+  },
+  "input": {
+   "lat": 43.68578402974118,
+   "lon": -72.23671349639952,
+   "reach_length_ft": 1000.0
+  },
+  "delineation": {
+   "comid": 9327042,
+   "nhdplus_id": 10000900049512,
+   "gnis_name": "(unnamed stream)",
+   "network": "nhdplus-hr",
+   "huc8": "01080104",
+   "huc12": null,
+   "drainage_area_sqkm": 1.0005,
+   "slope": 0.01,
+   "stream_order": 2,
+   "sinuosity": 1.061,
+   "fcode": 46003,
+   "snapped_lat": 43.685784,
+   "snapped_lon": -72.236713,
+   "watershed_area_sqkm": 1.0005,
+   "reach_length_ft": 1000.0,
+   "warnings": []
+  },
+  "watershed_geojson": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "id": "0",
+     "type": "Feature",
+     "properties": {},
+     "geometry": {
+      "type": "MultiPolygon",
+      "coordinates": [
+       [
+        [
+         [
+          -72.241061,
+          43.68306
+         ],
+         [
+          -72.2411226,
+          43.6828863
+         ],
+         [
+          -72.241002,
+          43.6828642
+         ],
+         [
+          -72.2411252,
+          43.6825168
+         ],
+         [
+          -72.2412459,
+          43.682539
+         ],
+         [
+          -72.2412767,
+          43.6824522
+         ],
+         [
+          -72.2413974,
+          43.6824743
+         ],
+         [
+          -72.2416131,
+          43.6818665
+         ],
+         [
+          -72.2417338,
+          43.6818887
+         ],
+         [
+          -72.2420111,
+          43.6811072
+         ],
+         [
+          -72.2421318,
+          43.6811294
+         ],
+         [
+          -72.2423167,
+          43.6806084
+         ],
+         [
+          -72.2424373,
+          43.6806305
+         ],
+         [
+          -72.2427455,
+          43.6797622
+         ],
+         [
+          -72.2426248,
+          43.67974
+         ],
+         [
+          -72.2429945,
+          43.678698
+         ],
+         [
+          -72.2428738,
+          43.6786759
+         ],
+         [
+          -72.2429971,
+          43.6783285
+         ],
+         [
+          -72.2427557,
+          43.6782842
+         ],
+         [
+          -72.2426633,
+          43.6785447
+         ],
+         [
+          -72.2425426,
+          43.6785225
+         ],
+         [
+          -72.242481,
+          43.6786962
+         ],
+         [
+          -72.2423603,
+          43.678674
+         ],
+         [
+          -72.2423295,
+          43.6787608
+         ],
+         [
+          -72.2420882,
+          43.6787165
+         ],
+         [
+          -72.2420574,
+          43.6788033
+         ],
+         [
+          -72.241816,
+          43.678759
+         ],
+         [
+          -72.2417852,
+          43.6788458
+         ],
+         [
+          -72.2416645,
+          43.6788236
+         ],
+         [
+          -72.2416337,
+          43.6789105
+         ],
+         [
+          -72.2413924,
+          43.6788661
+         ],
+         [
+          -72.2413616,
+          43.678953
+         ],
+         [
+          -72.2412409,
+          43.6789308
+         ],
+         [
+          -72.2412101,
+          43.6790176
+         ],
+         [
+          -72.2410894,
+          43.6789955
+         ],
+         [
+          -72.2410586,
+          43.6790823
+         ],
+         [
+          -72.2408172,
+          43.6790379
+         ],
+         [
+          -72.2407556,
+          43.6792116
+         ],
+         [
+          -72.2406349,
+          43.6791894
+         ],
+         [
+          -72.2406041,
+          43.6792763
+         ],
+         [
+          -72.2404835,
+          43.6792541
+         ],
+         [
+          -72.2404526,
+          43.6793409
+         ],
+         [
+          -72.2402113,
+          43.6792966
+         ],
+         [
+          -72.2401805,
+          43.6793834
+         ],
+         [
+          -72.2399391,
+          43.6793391
+         ],
+         [
+          -72.2399083,
+          43.6794259
+         ],
+         [
+          -72.2397876,
+          43.6794037
+         ],
+         [
+          -72.2397568,
+          43.6794906
+         ],
+         [
+          -72.2395155,
+          43.6794462
+         ],
+         [
+          -72.2394847,
+          43.679533
+         ],
+         [
+          -72.239364,
+          43.6795109
+         ],
+         [
+          -72.2393332,
+          43.6795977
+         ],
+         [
+          -72.2390918,
+          43.6795534
+         ],
+         [
+          -72.239061,
+          43.6796402
+         ],
+         [
+          -72.238699,
+          43.6795737
+         ],
+         [
+          -72.2386682,
+          43.6796605
+         ],
+         [
+          -72.2380648,
+          43.6795496
+         ],
+         [
+          -72.2380956,
+          43.6794628
+         ],
+         [
+          -72.2377336,
+          43.6793963
+         ],
+         [
+          -72.2377644,
+          43.6793094
+         ],
+         [
+          -72.2375231,
+          43.6792651
+         ],
+         [
+          -72.2375539,
+          43.6791782
+         ],
+         [
+          -72.2371919,
+          43.6791117
+         ],
+         [
+          -72.2372227,
+          43.6790249
+         ],
+         [
+          -72.2369814,
+          43.6789805
+         ],
+         [
+          -72.2370122,
+          43.6788937
+         ],
+         [
+          -72.2368915,
+          43.6788715
+         ],
+         [
+          -72.2369223,
+          43.6787847
+         ],
+         [
+          -72.2368017,
+          43.6787625
+         ],
+         [
+          -72.2368325,
+          43.6786757
+         ],
+         [
+          -72.2365911,
+          43.6786313
+         ],
+         [
+          -72.2366219,
+          43.6785445
+         ],
+         [
+          -72.2363806,
+          43.6785001
+         ],
+         [
+          -72.2364114,
+          43.6784133
+         ],
+         [
+          -72.2360494,
+          43.6783468
+         ],
+         [
+          -72.235957,
+          43.6786073
+         ],
+         [
+          -72.2358363,
+          43.6785851
+         ],
+         [
+          -72.2358055,
+          43.6786719
+         ],
+         [
+          -72.2356848,
+          43.6786497
+         ],
+         [
+          -72.235654,
+          43.6787366
+         ],
+         [
+          -72.2355333,
+          43.6787144
+         ],
+         [
+          -72.2355025,
+          43.6788012
+         ],
+         [
+          -72.2353818,
+          43.6787791
+         ],
+         [
+          -72.235351,
+          43.6788659
+         ],
+         [
+          -72.2352303,
+          43.6788437
+         ],
+         [
+          -72.2351995,
+          43.6789305
+         ],
+         [
+          -72.2350788,
+          43.6789084
+         ],
+         [
+          -72.235048,
+          43.6789952
+         ],
+         [
+          -72.2349273,
+          43.678973
+         ],
+         [
+          -72.2348657,
+          43.6791467
+         ],
+         [
+          -72.234745,
+          43.6791245
+         ],
+         [
+          -72.2347142,
+          43.6792113
+         ],
+         [
+          -72.2345935,
+          43.6791892
+         ],
+         [
+          -72.2345319,
+          43.6793628
+         ],
+         [
+          -72.2344112,
+          43.6793406
+         ],
+         [
+          -72.2343496,
+          43.6795143
+         ],
+         [
+          -72.2342289,
+          43.6794921
+         ],
+         [
+          -72.2341981,
+          43.679579
+         ],
+         [
+          -72.2340774,
+          43.6795568
+         ],
+         [
+          -72.2340466,
+          43.6796436
+         ],
+         [
+          -72.2339259,
+          43.6796214
+         ],
+         [
+          -72.2338951,
+          43.6797083
+         ],
+         [
+          -72.2337744,
+          43.6796861
+         ],
+         [
+          -72.2337436,
+          43.6797729
+         ],
+         [
+          -72.2336229,
+          43.6797507
+         ],
+         [
+          -72.2335921,
+          43.6798376
+         ],
+         [
+          -72.2334714,
+          43.6798154
+         ],
+         [
+          -72.2334406,
+          43.6799022
+         ],
+         [
+          -72.2333199,
+          43.67988
+         ],
+         [
+          -72.2332891,
+          43.6799669
+         ],
+         [
+          -72.2331684,
+          43.6799447
+         ],
+         [
+          -72.2331376,
+          43.6800315
+         ],
+         [
+          -72.2330169,
+          43.6800093
+         ],
+         [
+          -72.2329553,
+          43.680183
+         ],
+         [
+          -72.2325933,
+          43.6801165
+         ],
+         [
+          -72.2325624,
+          43.6802033
+         ],
+         [
+          -72.2323211,
+          43.6801589
+         ],
+         [
+          -72.2320745,
+          43.6808536
+         ],
+         [
+          -72.2318331,
+          43.6808092
+         ],
+         [
+          -72.2318023,
+          43.680896
+         ],
+         [
+          -72.2314403,
+          43.6808295
+         ],
+         [
+          -72.2314095,
+          43.6809163
+         ],
+         [
+          -72.2311681,
+          43.680872
+         ],
+         [
+          -72.2311373,
+          43.6809588
+         ],
+         [
+          -72.2310166,
+          43.6809366
+         ],
+         [
+          -72.2309241,
+          43.6811971
+         ],
+         [
+          -72.2308035,
+          43.6811749
+         ],
+         [
+          -72.2307726,
+          43.6812618
+         ],
+         [
+          -72.230652,
+          43.6812396
+         ],
+         [
+          -72.2306211,
+          43.6813264
+         ],
+         [
+          -72.2305005,
+          43.6813042
+         ],
+         [
+          -72.2305313,
+          43.6812174
+         ],
+         [
+          -72.2304106,
+          43.6811952
+         ],
+         [
+          -72.2304723,
+          43.6810215
+         ],
+         [
+          -72.2303516,
+          43.6809994
+         ],
+         [
+          -72.2303824,
+          43.6809125
+         ],
+         [
+          -72.2297791,
+          43.6808016
+         ],
+         [
+          -72.2298099,
+          43.6807148
+         ],
+         [
+          -72.2296892,
+          43.6806926
+         ],
+         [
+          -72.22972,
+          43.6806058
+         ],
+         [
+          -72.2294787,
+          43.6805614
+         ],
+         [
+          -72.2294479,
+          43.6806482
+         ],
+         [
+          -72.2293272,
+          43.6806261
+         ],
+         [
+          -72.2292964,
+          43.6807129
+         ],
+         [
+          -72.2284517,
+          43.6805576
+         ],
+         [
+          -72.2284208,
+          43.6806444
+         ],
+         [
+          -72.2283002,
+          43.6806222
+         ],
+         [
+          -72.2282693,
+          43.6807091
+         ],
+         [
+          -72.2281487,
+          43.6806869
+         ],
+         [
+          -72.2281178,
+          43.6807737
+         ],
+         [
+          -72.2273938,
+          43.6806406
+         ],
+         [
+          -72.227363,
+          43.6807274
+         ],
+         [
+          -72.2267596,
+          43.6806165
+         ],
+         [
+          -72.2267288,
+          43.6807033
+         ],
+         [
+          -72.2260048,
+          43.6805702
+         ],
+         [
+          -72.2259739,
+          43.6806571
+         ],
+         [
+          -72.2254912,
+          43.6805683
+         ],
+         [
+          -72.2255221,
+          43.6804815
+         ],
+         [
+          -72.2254014,
+          43.6804593
+         ],
+         [
+          -72.2253706,
+          43.6805461
+         ],
+         [
+          -72.2250086,
+          43.6804796
+         ],
+         [
+          -72.2249777,
+          43.6805664
+         ],
+         [
+          -72.224857,
+          43.6805442
+         ],
+         [
+          -72.2248879,
+          43.6804574
+         ],
+         [
+          -72.2245259,
+          43.6803908
+         ],
+         [
+          -72.224495,
+          43.6804776
+         ],
+         [
+          -72.2235297,
+          43.6803001
+         ],
+         [
+          -72.2235605,
+          43.6802133
+         ],
+         [
+          -72.2234398,
+          43.6801911
+         ],
+         [
+          -72.223409,
+          43.6802779
+         ],
+         [
+          -72.2220816,
+          43.6800339
+         ],
+         [
+          -72.2220508,
+          43.6801207
+         ],
+         [
+          -72.2216888,
+          43.6800541
+         ],
+         [
+          -72.221658,
+          43.6801409
+         ],
+         [
+          -72.2215373,
+          43.6801188
+         ],
+         [
+          -72.2215065,
+          43.6802056
+         ],
+         [
+          -72.2213858,
+          43.6801834
+         ],
+         [
+          -72.2213549,
+          43.6802702
+         ],
+         [
+          -72.2209929,
+          43.6802036
+         ],
+         [
+          -72.2209621,
+          43.6802905
+         ],
+         [
+          -72.2208414,
+          43.6802683
+         ],
+         [
+          -72.2208106,
+          43.6803551
+         ],
+         [
+          -72.2204486,
+          43.6802885
+         ],
+         [
+          -72.2204177,
+          43.6803754
+         ],
+         [
+          -72.2195731,
+          43.68022
+         ],
+         [
+          -72.2196039,
+          43.6801332
+         ],
+         [
+          -72.2194832,
+          43.680111
+         ],
+         [
+          -72.2195141,
+          43.6800242
+         ],
+         [
+          -72.2193934,
+          43.680002
+         ],
+         [
+          -72.2194243,
+          43.6799152
+         ],
+         [
+          -72.2174936,
+          43.6795601
+         ],
+         [
+          -72.2174627,
+          43.6796469
+         ],
+         [
+          -72.2172214,
+          43.6796025
+         ],
+         [
+          -72.2171906,
+          43.6796893
+         ],
+         [
+          -72.2174319,
+          43.6797337
+         ],
+         [
+          -72.217401,
+          43.6798205
+         ],
+         [
+          -72.2176424,
+          43.6798649
+         ],
+         [
+          -72.2176115,
+          43.6799518
+         ],
+         [
+          -72.2179735,
+          43.6800183
+         ],
+         [
+          -72.2179427,
+          43.6801052
+         ],
+         [
+          -72.2180634,
+          43.6801274
+         ],
+         [
+          -72.2180325,
+          43.6802142
+         ],
+         [
+          -72.2183945,
+          43.6802808
+         ],
+         [
+          -72.2183637,
+          43.6803676
+         ],
+         [
+          -72.218605,
+          43.680412
+         ],
+         [
+          -72.2185742,
+          43.6804988
+         ],
+         [
+          -72.2197809,
+          43.6807207
+         ],
+         [
+          -72.21975,
+          43.6808076
+         ],
+         [
+          -72.2198707,
+          43.6808298
+         ],
+         [
+          -72.219809,
+          43.6810034
+         ],
+         [
+          -72.220171,
+          43.68107
+         ],
+         [
+          -72.2201402,
+          43.6811568
+         ],
+         [
+          -72.2202608,
+          43.681179
+         ],
+         [
+          -72.22023,
+          43.6812658
+         ],
+         [
+          -72.2203507,
+          43.681288
+         ],
+         [
+          -72.220289,
+          43.6814617
+         ],
+         [
+          -72.2204097,
+          43.6814839
+         ],
+         [
+          -72.2203788,
+          43.6815707
+         ],
+         [
+          -72.2204995,
+          43.6815929
+         ],
+         [
+          -72.2204687,
+          43.6816797
+         ],
+         [
+          -72.2205893,
+          43.6817019
+         ],
+         [
+          -72.2204968,
+          43.6819624
+         ],
+         [
+          -72.2206175,
+          43.6819846
+         ],
+         [
+          -72.2205866,
+          43.6820714
+         ],
+         [
+          -72.2207073,
+          43.6820936
+         ],
+         [
+          -72.2205839,
+          43.6824409
+         ],
+         [
+          -72.2207046,
+          43.6824631
+         ],
+         [
+          -72.2206738,
+          43.68255
+         ],
+         [
+          -72.2209151,
+          43.6825943
+         ],
+         [
+          -72.2208843,
+          43.6826812
+         ],
+         [
+          -72.2212463,
+          43.6827477
+         ],
+         [
+          -72.2212155,
+          43.6828346
+         ],
+         [
+          -72.2213361,
+          43.6828568
+         ],
+         [
+          -72.2213053,
+          43.6829436
+         ],
+         [
+          -72.2215466,
+          43.682988
+         ],
+         [
+          -72.2215158,
+          43.6830748
+         ],
+         [
+          -72.2216365,
+          43.683097
+         ],
+         [
+          -72.2215748,
+          43.6832706
+         ],
+         [
+          -72.2216955,
+          43.6832928
+         ],
+         [
+          -72.2216338,
+          43.6834665
+         ],
+         [
+          -72.2218751,
+          43.6835109
+         ],
+         [
+          -72.2218134,
+          43.6836845
+         ],
+         [
+          -72.2219341,
+          43.6837067
+         ],
+         [
+          -72.2219033,
+          43.6837936
+         ],
+         [
+          -72.2225067,
+          43.6839045
+         ],
+         [
+          -72.2224758,
+          43.6839913
+         ],
+         [
+          -72.2225965,
+          43.6840135
+         ],
+         [
+          -72.2225348,
+          43.6841872
+         ],
+         [
+          -72.2230175,
+          43.6842759
+         ],
+         [
+          -72.2229867,
+          43.6843628
+         ],
+         [
+          -72.223228,
+          43.6844071
+         ],
+         [
+          -72.2231972,
+          43.684494
+         ],
+         [
+          -72.2233179,
+          43.6845162
+         ],
+         [
+          -72.223287,
+          43.684603
+         ],
+         [
+          -72.2236491,
+          43.6846696
+         ],
+         [
+          -72.2236182,
+          43.6847564
+         ],
+         [
+          -72.2237389,
+          43.6847786
+         ],
+         [
+          -72.2237081,
+          43.6848654
+         ],
+         [
+          -72.2243115,
+          43.6849763
+         ],
+         [
+          -72.2242806,
+          43.6850632
+         ],
+         [
+          -72.224522,
+          43.6851076
+         ],
+         [
+          -72.2244911,
+          43.6851944
+         ],
+         [
+          -72.2247325,
+          43.6852388
+         ],
+         [
+          -72.2247017,
+          43.6853256
+         ],
+         [
+          -72.2248223,
+          43.6853478
+         ],
+         [
+          -72.2248532,
+          43.6852609
+         ],
+         [
+          -72.2254566,
+          43.6853719
+         ],
+         [
+          -72.2254874,
+          43.6852851
+         ],
+         [
+          -72.2257288,
+          43.6853294
+         ],
+         [
+          -72.2256979,
+          43.6854163
+         ],
+         [
+          -72.2277495,
+          43.6857934
+         ],
+         [
+          -72.2277187,
+          43.6858803
+         ],
+         [
+          -72.2283221,
+          43.6859912
+         ],
+         [
+          -72.2283529,
+          43.6859043
+         ],
+         [
+          -72.2287149,
+          43.6859709
+         ],
+         [
+          -72.2286841,
+          43.6860577
+         ],
+         [
+          -72.2294082,
+          43.6861908
+         ],
+         [
+          -72.229439,
+          43.686104
+         ],
+         [
+          -72.2298011,
+          43.6861706
+         ],
+         [
+          -72.2298319,
+          43.6860837
+         ],
+         [
+          -72.2299526,
+          43.6861059
+         ],
+         [
+          -72.2299834,
+          43.6860191
+         ],
+         [
+          -72.2301041,
+          43.6860413
+         ],
+         [
+          -72.2301349,
+          43.6859544
+         ],
+         [
+          -72.2303763,
+          43.6859988
+         ],
+         [
+          -72.2303455,
+          43.6860856
+         ],
+         [
+          -72.2313109,
+          43.6862631
+         ],
+         [
+          -72.2313418,
+          43.6861762
+         ],
+         [
+          -72.2314624,
+          43.6861984
+         ],
+         [
+          -72.2314933,
+          43.6861116
+         ],
+         [
+          -72.231614,
+          43.6861338
+         ],
+         [
+          -72.2316448,
+          43.6860469
+         ],
+         [
+          -72.2317655,
+          43.6860691
+         ],
+         [
+          -72.2317963,
+          43.6859823
+         ],
+         [
+          -72.231917,
+          43.6860045
+         ],
+         [
+          -72.2319478,
+          43.6859176
+         ],
+         [
+          -72.233758,
+          43.6862504
+         ],
+         [
+          -72.2337889,
+          43.6861635
+         ],
+         [
+          -72.2340302,
+          43.6862079
+         ],
+         [
+          -72.2340611,
+          43.6861211
+         ],
+         [
+          -72.2349059,
+          43.6862763
+         ],
+         [
+          -72.2349367,
+          43.6861895
+         ],
+         [
+          -72.2350574,
+          43.6862116
+         ],
+         [
+          -72.2350882,
+          43.6861248
+         ],
+         [
+          -72.2352089,
+          43.686147
+         ],
+         [
+          -72.2352397,
+          43.6860602
+         ],
+         [
+          -72.2358431,
+          43.6861711
+         ],
+         [
+          -72.2358739,
+          43.6860842
+         ],
+         [
+          -72.2359946,
+          43.6861064
+         ],
+         [
+          -72.2360254,
+          43.6860196
+         ],
+         [
+          -72.2361461,
+          43.6860417
+         ],
+         [
+          -72.236177,
+          43.6859549
+         ],
+         [
+          -72.2362976,
+          43.6859771
+         ],
+         [
+          -72.2363285,
+          43.6858903
+         ],
+         [
+          -72.2368112,
+          43.685979
+         ],
+         [
+          -72.236842,
+          43.6858921
+         ],
+         [
+          -72.2369627,
+          43.6859143
+         ],
+         [
+          -72.2369935,
+          43.6858275
+         ],
+         [
+          -72.2371142,
+          43.6858497
+         ],
+         [
+          -72.237145,
+          43.6857628
+         ],
+         [
+          -72.2372657,
+          43.685785
+         ],
+         [
+          -72.2372965,
+          43.6856982
+         ],
+         [
+          -72.2374172,
+          43.6857203
+         ],
+         [
+          -72.237448,
+          43.6856335
+         ],
+         [
+          -72.2376894,
+          43.6856779
+         ],
+         [
+          -72.2377202,
+          43.685591
+         ],
+         [
+          -72.2378409,
+          43.6856132
+         ],
+         [
+          -72.2378717,
+          43.6855264
+         ],
+         [
+          -72.2381131,
+          43.6855707
+         ],
+         [
+          -72.2382672,
+          43.6851366
+         ],
+         [
+          -72.2383879,
+          43.6851587
+         ],
+         [
+          -72.2384495,
+          43.6849851
+         ],
+         [
+          -72.2385702,
+          43.6850072
+         ],
+         [
+          -72.2388476,
+          43.6842257
+         ],
+         [
+          -72.2387269,
+          43.6842036
+         ],
+         [
+          -72.2387577,
+          43.6841167
+         ],
+         [
+          -72.2383957,
+          43.6840502
+         ],
+         [
+          -72.2384265,
+          43.6839634
+         ],
+         [
+          -72.2383058,
+          43.6839412
+         ],
+         [
+          -72.2383674,
+          43.6837675
+         ],
+         [
+          -72.2382468,
+          43.6837454
+         ],
+         [
+          -72.23837,
+          43.683398
+         ],
+         [
+          -72.2384907,
+          43.6834202
+         ],
+         [
+          -72.2385524,
+          43.6832465
+         ],
+         [
+          -72.238673,
+          43.6832687
+         ],
+         [
+          -72.2387347,
+          43.683095
+         ],
+         [
+          -72.2388554,
+          43.6831172
+         ],
+         [
+          -72.238917,
+          43.6829436
+         ],
+         [
+          -72.2390377,
+          43.6829657
+         ],
+         [
+          -72.2390685,
+          43.6828789
+         ],
+         [
+          -72.2391892,
+          43.6829011
+         ],
+         [
+          -72.23922,
+          43.6828142
+         ],
+         [
+          -72.2393407,
+          43.6828364
+         ],
+         [
+          -72.2393715,
+          43.6827496
+         ],
+         [
+          -72.2402162,
+          43.6829048
+         ],
+         [
+          -72.2401854,
+          43.6829916
+         ],
+         [
+          -72.2403061,
+          43.6830138
+         ],
+         [
+          -72.2402753,
+          43.6831006
+         ],
+         [
+          -72.240758,
+          43.6831893
+         ],
+         [
+          -72.2407888,
+          43.6831025
+         ],
+         [
+          -72.2409095,
+          43.6831247
+         ],
+         [
+          -72.2409403,
+          43.6830378
+         ],
+         [
+          -72.241061,
+          43.68306
+         ]
+        ]
+       ]
+      ]
+     },
+     "bbox": [
+      -72.2429971,
+      43.6782842,
+      -72.2171906,
+      43.6862763
+     ]
+    }
+   ],
+   "bbox": [
+    -72.2429971,
+    43.6782842,
+    -72.2171906,
+    43.6862763
+   ]
+  },
+  "reach_geojson": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "id": "0",
+     "type": "Feature",
+     "properties": {},
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        -72.2353865373986,
+        43.68363989215404
+       ],
+       [
+        -72.23544,
+        43.68380999999998
+       ],
+       [
+        -72.23554,
+        43.68391999999999
+       ],
+       [
+        -72.23565,
+        43.684000000000026
+       ],
+       [
+        -72.23635,
+        43.68422000000003
+       ],
+       [
+        -72.23643,
+        43.68436999999997
+       ],
+       [
+        -72.23643,
+        43.68458999999997
+       ],
+       [
+        -72.23642,
+        43.684729999999966
+       ],
+       [
+        -72.23651,
+        43.68490000000006
+       ],
+       [
+        -72.23646000000001,
+        43.68496000000001
+       ],
+       [
+        -72.23635,
+        43.68503999999998
+       ],
+       [
+        -72.23629,
+        43.68512999999996
+       ],
+       [
+        -72.2363,
+        43.68522000000004
+       ],
+       [
+        -72.23637,
+        43.68545000000002
+       ],
+       [
+        -72.23643,
+        43.68565999999997
+       ],
+       [
+        -72.23671311564244,
+        43.6857838631605
+       ]
+      ]
+     },
+     "bbox": [
+      -72.23671311564244,
+      43.68363989215404,
+      -72.2353865373986,
+      43.6857838631605
+     ]
+    }
+   ],
+   "bbox": [
+    -72.23671311564244,
+    43.68363989215404,
+    -72.2353865373986,
+    43.6857838631605
+   ]
+  },
+  "ctx_inputs": {
+   "lat": 43.685784,
+   "lon": -72.236713,
+   "comid": 9327042,
+   "huc8": "01080104",
+   "watershed_geojson": {
+    "type": "FeatureCollection",
+    "features": [
+     {
+      "id": "0",
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+       "type": "MultiPolygon",
+       "coordinates": [
+        [
+         [
+          [
+           -72.241061,
+           43.68306
+          ],
+          [
+           -72.2411226,
+           43.6828863
+          ],
+          [
+           -72.241002,
+           43.6828642
+          ],
+          [
+           -72.2411252,
+           43.6825168
+          ],
+          [
+           -72.2412459,
+           43.682539
+          ],
+          [
+           -72.2412767,
+           43.6824522
+          ],
+          [
+           -72.2413974,
+           43.6824743
+          ],
+          [
+           -72.2416131,
+           43.6818665
+          ],
+          [
+           -72.2417338,
+           43.6818887
+          ],
+          [
+           -72.2420111,
+           43.6811072
+          ],
+          [
+           -72.2421318,
+           43.6811294
+          ],
+          [
+           -72.2423167,
+           43.6806084
+          ],
+          [
+           -72.2424373,
+           43.6806305
+          ],
+          [
+           -72.2427455,
+           43.6797622
+          ],
+          [
+           -72.2426248,
+           43.67974
+          ],
+          [
+           -72.2429945,
+           43.678698
+          ],
+          [
+           -72.2428738,
+           43.6786759
+          ],
+          [
+           -72.2429971,
+           43.6783285
+          ],
+          [
+           -72.2427557,
+           43.6782842
+          ],
+          [
+           -72.2426633,
+           43.6785447
+          ],
+          [
+           -72.2425426,
+           43.6785225
+          ],
+          [
+           -72.242481,
+           43.6786962
+          ],
+          [
+           -72.2423603,
+           43.678674
+          ],
+          [
+           -72.2423295,
+           43.6787608
+          ],
+          [
+           -72.2420882,
+           43.6787165
+          ],
+          [
+           -72.2420574,
+           43.6788033
+          ],
+          [
+           -72.241816,
+           43.678759
+          ],
+          [
+           -72.2417852,
+           43.6788458
+          ],
+          [
+           -72.2416645,
+           43.6788236
+          ],
+          [
+           -72.2416337,
+           43.6789105
+          ],
+          [
+           -72.2413924,
+           43.6788661
+          ],
+          [
+           -72.2413616,
+           43.678953
+          ],
+          [
+           -72.2412409,
+           43.6789308
+          ],
+          [
+           -72.2412101,
+           43.6790176
+          ],
+          [
+           -72.2410894,
+           43.6789955
+          ],
+          [
+           -72.2410586,
+           43.6790823
+          ],
+          [
+           -72.2408172,
+           43.6790379
+          ],
+          [
+           -72.2407556,
+           43.6792116
+          ],
+          [
+           -72.2406349,
+           43.6791894
+          ],
+          [
+           -72.2406041,
+           43.6792763
+          ],
+          [
+           -72.2404835,
+           43.6792541
+          ],
+          [
+           -72.2404526,
+           43.6793409
+          ],
+          [
+           -72.2402113,
+           43.6792966
+          ],
+          [
+           -72.2401805,
+           43.6793834
+          ],
+          [
+           -72.2399391,
+           43.6793391
+          ],
+          [
+           -72.2399083,
+           43.6794259
+          ],
+          [
+           -72.2397876,
+           43.6794037
+          ],
+          [
+           -72.2397568,
+           43.6794906
+          ],
+          [
+           -72.2395155,
+           43.6794462
+          ],
+          [
+           -72.2394847,
+           43.679533
+          ],
+          [
+           -72.239364,
+           43.6795109
+          ],
+          [
+           -72.2393332,
+           43.6795977
+          ],
+          [
+           -72.2390918,
+           43.6795534
+          ],
+          [
+           -72.239061,
+           43.6796402
+          ],
+          [
+           -72.238699,
+           43.6795737
+          ],
+          [
+           -72.2386682,
+           43.6796605
+          ],
+          [
+           -72.2380648,
+           43.6795496
+          ],
+          [
+           -72.2380956,
+           43.6794628
+          ],
+          [
+           -72.2377336,
+           43.6793963
+          ],
+          [
+           -72.2377644,
+           43.6793094
+          ],
+          [
+           -72.2375231,
+           43.6792651
+          ],
+          [
+           -72.2375539,
+           43.6791782
+          ],
+          [
+           -72.2371919,
+           43.6791117
+          ],
+          [
+           -72.2372227,
+           43.6790249
+          ],
+          [
+           -72.2369814,
+           43.6789805
+          ],
+          [
+           -72.2370122,
+           43.6788937
+          ],
+          [
+           -72.2368915,
+           43.6788715
+          ],
+          [
+           -72.2369223,
+           43.6787847
+          ],
+          [
+           -72.2368017,
+           43.6787625
+          ],
+          [
+           -72.2368325,
+           43.6786757
+          ],
+          [
+           -72.2365911,
+           43.6786313
+          ],
+          [
+           -72.2366219,
+           43.6785445
+          ],
+          [
+           -72.2363806,
+           43.6785001
+          ],
+          [
+           -72.2364114,
+           43.6784133
+          ],
+          [
+           -72.2360494,
+           43.6783468
+          ],
+          [
+           -72.235957,
+           43.6786073
+          ],
+          [
+           -72.2358363,
+           43.6785851
+          ],
+          [
+           -72.2358055,
+           43.6786719
+          ],
+          [
+           -72.2356848,
+           43.6786497
+          ],
+          [
+           -72.235654,
+           43.6787366
+          ],
+          [
+           -72.2355333,
+           43.6787144
+          ],
+          [
+           -72.2355025,
+           43.6788012
+          ],
+          [
+           -72.2353818,
+           43.6787791
+          ],
+          [
+           -72.235351,
+           43.6788659
+          ],
+          [
+           -72.2352303,
+           43.6788437
+          ],
+          [
+           -72.2351995,
+           43.6789305
+          ],
+          [
+           -72.2350788,
+           43.6789084
+          ],
+          [
+           -72.235048,
+           43.6789952
+          ],
+          [
+           -72.2349273,
+           43.678973
+          ],
+          [
+           -72.2348657,
+           43.6791467
+          ],
+          [
+           -72.234745,
+           43.6791245
+          ],
+          [
+           -72.2347142,
+           43.6792113
+          ],
+          [
+           -72.2345935,
+           43.6791892
+          ],
+          [
+           -72.2345319,
+           43.6793628
+          ],
+          [
+           -72.2344112,
+           43.6793406
+          ],
+          [
+           -72.2343496,
+           43.6795143
+          ],
+          [
+           -72.2342289,
+           43.6794921
+          ],
+          [
+           -72.2341981,
+           43.679579
+          ],
+          [
+           -72.2340774,
+           43.6795568
+          ],
+          [
+           -72.2340466,
+           43.6796436
+          ],
+          [
+           -72.2339259,
+           43.6796214
+          ],
+          [
+           -72.2338951,
+           43.6797083
+          ],
+          [
+           -72.2337744,
+           43.6796861
+          ],
+          [
+           -72.2337436,
+           43.6797729
+          ],
+          [
+           -72.2336229,
+           43.6797507
+          ],
+          [
+           -72.2335921,
+           43.6798376
+          ],
+          [
+           -72.2334714,
+           43.6798154
+          ],
+          [
+           -72.2334406,
+           43.6799022
+          ],
+          [
+           -72.2333199,
+           43.67988
+          ],
+          [
+           -72.2332891,
+           43.6799669
+          ],
+          [
+           -72.2331684,
+           43.6799447
+          ],
+          [
+           -72.2331376,
+           43.6800315
+          ],
+          [
+           -72.2330169,
+           43.6800093
+          ],
+          [
+           -72.2329553,
+           43.680183
+          ],
+          [
+           -72.2325933,
+           43.6801165
+          ],
+          [
+           -72.2325624,
+           43.6802033
+          ],
+          [
+           -72.2323211,
+           43.6801589
+          ],
+          [
+           -72.2320745,
+           43.6808536
+          ],
+          [
+           -72.2318331,
+           43.6808092
+          ],
+          [
+           -72.2318023,
+           43.680896
+          ],
+          [
+           -72.2314403,
+           43.6808295
+          ],
+          [
+           -72.2314095,
+           43.6809163
+          ],
+          [
+           -72.2311681,
+           43.680872
+          ],
+          [
+           -72.2311373,
+           43.6809588
+          ],
+          [
+           -72.2310166,
+           43.6809366
+          ],
+          [
+           -72.2309241,
+           43.6811971
+          ],
+          [
+           -72.2308035,
+           43.6811749
+          ],
+          [
+           -72.2307726,
+           43.6812618
+          ],
+          [
+           -72.230652,
+           43.6812396
+          ],
+          [
+           -72.2306211,
+           43.6813264
+          ],
+          [
+           -72.2305005,
+           43.6813042
+          ],
+          [
+           -72.2305313,
+           43.6812174
+          ],
+          [
+           -72.2304106,
+           43.6811952
+          ],
+          [
+           -72.2304723,
+           43.6810215
+          ],
+          [
+           -72.2303516,
+           43.6809994
+          ],
+          [
+           -72.2303824,
+           43.6809125
+          ],
+          [
+           -72.2297791,
+           43.6808016
+          ],
+          [
+           -72.2298099,
+           43.6807148
+          ],
+          [
+           -72.2296892,
+           43.6806926
+          ],
+          [
+           -72.22972,
+           43.6806058
+          ],
+          [
+           -72.2294787,
+           43.6805614
+          ],
+          [
+           -72.2294479,
+           43.6806482
+          ],
+          [
+           -72.2293272,
+           43.6806261
+          ],
+          [
+           -72.2292964,
+           43.6807129
+          ],
+          [
+           -72.2284517,
+           43.6805576
+          ],
+          [
+           -72.2284208,
+           43.6806444
+          ],
+          [
+           -72.2283002,
+           43.6806222
+          ],
+          [
+           -72.2282693,
+           43.6807091
+          ],
+          [
+           -72.2281487,
+           43.6806869
+          ],
+          [
+           -72.2281178,
+           43.6807737
+          ],
+          [
+           -72.2273938,
+           43.6806406
+          ],
+          [
+           -72.227363,
+           43.6807274
+          ],
+          [
+           -72.2267596,
+           43.6806165
+          ],
+          [
+           -72.2267288,
+           43.6807033
+          ],
+          [
+           -72.2260048,
+           43.6805702
+          ],
+          [
+           -72.2259739,
+           43.6806571
+          ],
+          [
+           -72.2254912,
+           43.6805683
+          ],
+          [
+           -72.2255221,
+           43.6804815
+          ],
+          [
+           -72.2254014,
+           43.6804593
+          ],
+          [
+           -72.2253706,
+           43.6805461
+          ],
+          [
+           -72.2250086,
+           43.6804796
+          ],
+          [
+           -72.2249777,
+           43.6805664
+          ],
+          [
+           -72.224857,
+           43.6805442
+          ],
+          [
+           -72.2248879,
+           43.6804574
+          ],
+          [
+           -72.2245259,
+           43.6803908
+          ],
+          [
+           -72.224495,
+           43.6804776
+          ],
+          [
+           -72.2235297,
+           43.6803001
+          ],
+          [
+           -72.2235605,
+           43.6802133
+          ],
+          [
+           -72.2234398,
+           43.6801911
+          ],
+          [
+           -72.223409,
+           43.6802779
+          ],
+          [
+           -72.2220816,
+           43.6800339
+          ],
+          [
+           -72.2220508,
+           43.6801207
+          ],
+          [
+           -72.2216888,
+           43.6800541
+          ],
+          [
+           -72.221658,
+           43.6801409
+          ],
+          [
+           -72.2215373,
+           43.6801188
+          ],
+          [
+           -72.2215065,
+           43.6802056
+          ],
+          [
+           -72.2213858,
+           43.6801834
+          ],
+          [
+           -72.2213549,
+           43.6802702
+          ],
+          [
+           -72.2209929,
+           43.6802036
+          ],
+          [
+           -72.2209621,
+           43.6802905
+          ],
+          [
+           -72.2208414,
+           43.6802683
+          ],
+          [
+           -72.2208106,
+           43.6803551
+          ],
+          [
+           -72.2204486,
+           43.6802885
+          ],
+          [
+           -72.2204177,
+           43.6803754
+          ],
+          [
+           -72.2195731,
+           43.68022
+          ],
+          [
+           -72.2196039,
+           43.6801332
+          ],
+          [
+           -72.2194832,
+           43.680111
+          ],
+          [
+           -72.2195141,
+           43.6800242
+          ],
+          [
+           -72.2193934,
+           43.680002
+          ],
+          [
+           -72.2194243,
+           43.6799152
+          ],
+          [
+           -72.2174936,
+           43.6795601
+          ],
+          [
+           -72.2174627,
+           43.6796469
+          ],
+          [
+           -72.2172214,
+           43.6796025
+          ],
+          [
+           -72.2171906,
+           43.6796893
+          ],
+          [
+           -72.2174319,
+           43.6797337
+          ],
+          [
+           -72.217401,
+           43.6798205
+          ],
+          [
+           -72.2176424,
+           43.6798649
+          ],
+          [
+           -72.2176115,
+           43.6799518
+          ],
+          [
+           -72.2179735,
+           43.6800183
+          ],
+          [
+           -72.2179427,
+           43.6801052
+          ],
+          [
+           -72.2180634,
+           43.6801274
+          ],
+          [
+           -72.2180325,
+           43.6802142
+          ],
+          [
+           -72.2183945,
+           43.6802808
+          ],
+          [
+           -72.2183637,
+           43.6803676
+          ],
+          [
+           -72.218605,
+           43.680412
+          ],
+          [
+           -72.2185742,
+           43.6804988
+          ],
+          [
+           -72.2197809,
+           43.6807207
+          ],
+          [
+           -72.21975,
+           43.6808076
+          ],
+          [
+           -72.2198707,
+           43.6808298
+          ],
+          [
+           -72.219809,
+           43.6810034
+          ],
+          [
+           -72.220171,
+           43.68107
+          ],
+          [
+           -72.2201402,
+           43.6811568
+          ],
+          [
+           -72.2202608,
+           43.681179
+          ],
+          [
+           -72.22023,
+           43.6812658
+          ],
+          [
+           -72.2203507,
+           43.681288
+          ],
+          [
+           -72.220289,
+           43.6814617
+          ],
+          [
+           -72.2204097,
+           43.6814839
+          ],
+          [
+           -72.2203788,
+           43.6815707
+          ],
+          [
+           -72.2204995,
+           43.6815929
+          ],
+          [
+           -72.2204687,
+           43.6816797
+          ],
+          [
+           -72.2205893,
+           43.6817019
+          ],
+          [
+           -72.2204968,
+           43.6819624
+          ],
+          [
+           -72.2206175,
+           43.6819846
+          ],
+          [
+           -72.2205866,
+           43.6820714
+          ],
+          [
+           -72.2207073,
+           43.6820936
+          ],
+          [
+           -72.2205839,
+           43.6824409
+          ],
+          [
+           -72.2207046,
+           43.6824631
+          ],
+          [
+           -72.2206738,
+           43.68255
+          ],
+          [
+           -72.2209151,
+           43.6825943
+          ],
+          [
+           -72.2208843,
+           43.6826812
+          ],
+          [
+           -72.2212463,
+           43.6827477
+          ],
+          [
+           -72.2212155,
+           43.6828346
+          ],
+          [
+           -72.2213361,
+           43.6828568
+          ],
+          [
+           -72.2213053,
+           43.6829436
+          ],
+          [
+           -72.2215466,
+           43.682988
+          ],
+          [
+           -72.2215158,
+           43.6830748
+          ],
+          [
+           -72.2216365,
+           43.683097
+          ],
+          [
+           -72.2215748,
+           43.6832706
+          ],
+          [
+           -72.2216955,
+           43.6832928
+          ],
+          [
+           -72.2216338,
+           43.6834665
+          ],
+          [
+           -72.2218751,
+           43.6835109
+          ],
+          [
+           -72.2218134,
+           43.6836845
+          ],
+          [
+           -72.2219341,
+           43.6837067
+          ],
+          [
+           -72.2219033,
+           43.6837936
+          ],
+          [
+           -72.2225067,
+           43.6839045
+          ],
+          [
+           -72.2224758,
+           43.6839913
+          ],
+          [
+           -72.2225965,
+           43.6840135
+          ],
+          [
+           -72.2225348,
+           43.6841872
+          ],
+          [
+           -72.2230175,
+           43.6842759
+          ],
+          [
+           -72.2229867,
+           43.6843628
+          ],
+          [
+           -72.223228,
+           43.6844071
+          ],
+          [
+           -72.2231972,
+           43.684494
+          ],
+          [
+           -72.2233179,
+           43.6845162
+          ],
+          [
+           -72.223287,
+           43.684603
+          ],
+          [
+           -72.2236491,
+           43.6846696
+          ],
+          [
+           -72.2236182,
+           43.6847564
+          ],
+          [
+           -72.2237389,
+           43.6847786
+          ],
+          [
+           -72.2237081,
+           43.6848654
+          ],
+          [
+           -72.2243115,
+           43.6849763
+          ],
+          [
+           -72.2242806,
+           43.6850632
+          ],
+          [
+           -72.224522,
+           43.6851076
+          ],
+          [
+           -72.2244911,
+           43.6851944
+          ],
+          [
+           -72.2247325,
+           43.6852388
+          ],
+          [
+           -72.2247017,
+           43.6853256
+          ],
+          [
+           -72.2248223,
+           43.6853478
+          ],
+          [
+           -72.2248532,
+           43.6852609
+          ],
+          [
+           -72.2254566,
+           43.6853719
+          ],
+          [
+           -72.2254874,
+           43.6852851
+          ],
+          [
+           -72.2257288,
+           43.6853294
+          ],
+          [
+           -72.2256979,
+           43.6854163
+          ],
+          [
+           -72.2277495,
+           43.6857934
+          ],
+          [
+           -72.2277187,
+           43.6858803
+          ],
+          [
+           -72.2283221,
+           43.6859912
+          ],
+          [
+           -72.2283529,
+           43.6859043
+          ],
+          [
+           -72.2287149,
+           43.6859709
+          ],
+          [
+           -72.2286841,
+           43.6860577
+          ],
+          [
+           -72.2294082,
+           43.6861908
+          ],
+          [
+           -72.229439,
+           43.686104
+          ],
+          [
+           -72.2298011,
+           43.6861706
+          ],
+          [
+           -72.2298319,
+           43.6860837
+          ],
+          [
+           -72.2299526,
+           43.6861059
+          ],
+          [
+           -72.2299834,
+           43.6860191
+          ],
+          [
+           -72.2301041,
+           43.6860413
+          ],
+          [
+           -72.2301349,
+           43.6859544
+          ],
+          [
+           -72.2303763,
+           43.6859988
+          ],
+          [
+           -72.2303455,
+           43.6860856
+          ],
+          [
+           -72.2313109,
+           43.6862631
+          ],
+          [
+           -72.2313418,
+           43.6861762
+          ],
+          [
+           -72.2314624,
+           43.6861984
+          ],
+          [
+           -72.2314933,
+           43.6861116
+          ],
+          [
+           -72.231614,
+           43.6861338
+          ],
+          [
+           -72.2316448,
+           43.6860469
+          ],
+          [
+           -72.2317655,
+           43.6860691
+          ],
+          [
+           -72.2317963,
+           43.6859823
+          ],
+          [
+           -72.231917,
+           43.6860045
+          ],
+          [
+           -72.2319478,
+           43.6859176
+          ],
+          [
+           -72.233758,
+           43.6862504
+          ],
+          [
+           -72.2337889,
+           43.6861635
+          ],
+          [
+           -72.2340302,
+           43.6862079
+          ],
+          [
+           -72.2340611,
+           43.6861211
+          ],
+          [
+           -72.2349059,
+           43.6862763
+          ],
+          [
+           -72.2349367,
+           43.6861895
+          ],
+          [
+           -72.2350574,
+           43.6862116
+          ],
+          [
+           -72.2350882,
+           43.6861248
+          ],
+          [
+           -72.2352089,
+           43.686147
+          ],
+          [
+           -72.2352397,
+           43.6860602
+          ],
+          [
+           -72.2358431,
+           43.6861711
+          ],
+          [
+           -72.2358739,
+           43.6860842
+          ],
+          [
+           -72.2359946,
+           43.6861064
+          ],
+          [
+           -72.2360254,
+           43.6860196
+          ],
+          [
+           -72.2361461,
+           43.6860417
+          ],
+          [
+           -72.236177,
+           43.6859549
+          ],
+          [
+           -72.2362976,
+           43.6859771
+          ],
+          [
+           -72.2363285,
+           43.6858903
+          ],
+          [
+           -72.2368112,
+           43.685979
+          ],
+          [
+           -72.236842,
+           43.6858921
+          ],
+          [
+           -72.2369627,
+           43.6859143
+          ],
+          [
+           -72.2369935,
+           43.6858275
+          ],
+          [
+           -72.2371142,
+           43.6858497
+          ],
+          [
+           -72.237145,
+           43.6857628
+          ],
+          [
+           -72.2372657,
+           43.685785
+          ],
+          [
+           -72.2372965,
+           43.6856982
+          ],
+          [
+           -72.2374172,
+           43.6857203
+          ],
+          [
+           -72.237448,
+           43.6856335
+          ],
+          [
+           -72.2376894,
+           43.6856779
+          ],
+          [
+           -72.2377202,
+           43.685591
+          ],
+          [
+           -72.2378409,
+           43.6856132
+          ],
+          [
+           -72.2378717,
+           43.6855264
+          ],
+          [
+           -72.2381131,
+           43.6855707
+          ],
+          [
+           -72.2382672,
+           43.6851366
+          ],
+          [
+           -72.2383879,
+           43.6851587
+          ],
+          [
+           -72.2384495,
+           43.6849851
+          ],
+          [
+           -72.2385702,
+           43.6850072
+          ],
+          [
+           -72.2388476,
+           43.6842257
+          ],
+          [
+           -72.2387269,
+           43.6842036
+          ],
+          [
+           -72.2387577,
+           43.6841167
+          ],
+          [
+           -72.2383957,
+           43.6840502
+          ],
+          [
+           -72.2384265,
+           43.6839634
+          ],
+          [
+           -72.2383058,
+           43.6839412
+          ],
+          [
+           -72.2383674,
+           43.6837675
+          ],
+          [
+           -72.2382468,
+           43.6837454
+          ],
+          [
+           -72.23837,
+           43.683398
+          ],
+          [
+           -72.2384907,
+           43.6834202
+          ],
+          [
+           -72.2385524,
+           43.6832465
+          ],
+          [
+           -72.238673,
+           43.6832687
+          ],
+          [
+           -72.2387347,
+           43.683095
+          ],
+          [
+           -72.2388554,
+           43.6831172
+          ],
+          [
+           -72.238917,
+           43.6829436
+          ],
+          [
+           -72.2390377,
+           43.6829657
+          ],
+          [
+           -72.2390685,
+           43.6828789
+          ],
+          [
+           -72.2391892,
+           43.6829011
+          ],
+          [
+           -72.23922,
+           43.6828142
+          ],
+          [
+           -72.2393407,
+           43.6828364
+          ],
+          [
+           -72.2393715,
+           43.6827496
+          ],
+          [
+           -72.2402162,
+           43.6829048
+          ],
+          [
+           -72.2401854,
+           43.6829916
+          ],
+          [
+           -72.2403061,
+           43.6830138
+          ],
+          [
+           -72.2402753,
+           43.6831006
+          ],
+          [
+           -72.240758,
+           43.6831893
+          ],
+          [
+           -72.2407888,
+           43.6831025
+          ],
+          [
+           -72.2409095,
+           43.6831247
+          ],
+          [
+           -72.2409403,
+           43.6830378
+          ],
+          [
+           -72.241061,
+           43.68306
+          ]
+         ]
+        ]
+       ]
+      },
+      "bbox": [
+       -72.2429971,
+       43.6782842,
+       -72.2171906,
+       43.6862763
+      ]
+     }
+    ],
+    "bbox": [
+     -72.2429971,
+     43.6782842,
+     -72.2171906,
+     43.6862763
+    ]
+   },
+   "reach_geojson": {
+    "type": "FeatureCollection",
+    "features": [
+     {
+      "id": "0",
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+       "type": "LineString",
+       "coordinates": [
+        [
+         -72.2353865373986,
+         43.68363989215404
+        ],
+        [
+         -72.23544,
+         43.68380999999998
+        ],
+        [
+         -72.23554,
+         43.68391999999999
+        ],
+        [
+         -72.23565,
+         43.684000000000026
+        ],
+        [
+         -72.23635,
+         43.68422000000003
+        ],
+        [
+         -72.23643,
+         43.68436999999997
+        ],
+        [
+         -72.23643,
+         43.68458999999997
+        ],
+        [
+         -72.23642,
+         43.684729999999966
+        ],
+        [
+         -72.23651,
+         43.68490000000006
+        ],
+        [
+         -72.23646000000001,
+         43.68496000000001
+        ],
+        [
+         -72.23635,
+         43.68503999999998
+        ],
+        [
+         -72.23629,
+         43.68512999999996
+        ],
+        [
+         -72.2363,
+         43.68522000000004
+        ],
+        [
+         -72.23637,
+         43.68545000000002
+        ],
+        [
+         -72.23643,
+         43.68565999999997
+        ],
+        [
+         -72.23671311564244,
+         43.6857838631605
+        ]
+       ]
+      },
+      "bbox": [
+       -72.23671311564244,
+       43.68363989215404,
+       -72.2353865373986,
+       43.6857838631605
+      ]
+     }
+    ],
+    "bbox": [
+     -72.23671311564244,
+     43.68363989215404,
+     -72.2353865373986,
+     43.6857838631605
+    ]
+   },
+   "drainage_area_sqkm": 1.0005,
+   "slope": 0.01,
+   "fcode": 46003,
+   "stream_order": 2,
+   "sinuosity": 1.061,
+   "watershedBasis": "site-engine",
+   "site_engine": {
+    "engineId": "site-engine",
+    "engineVersion": "0.5.0",
+    "status": "ok",
+    "reason": null,
+    "input": {
+     "lat": 43.685784,
+     "lon": -72.236713,
+     "config": {
+      "includeGeometry": true,
+      "landcoverBaseline": true,
+      "maxHops": 190,
+      "maxReaches": 3000,
+      "metricFamilies": [
+       "baseflow",
+       "dams",
+       "landcover",
+       "roads",
+       "runoff",
+       "soils",
+       "xsection"
+      ],
+      "reachLengthFt": 1000.0,
+      "snapTolFt": 150.0
+     }
+    },
+    "site": {
+     "network": "nhdplus-hr",
+     "nhdplusId": 10000900049512,
+     "gnisName": null,
+     "reachcode": "01080104003460",
+     "vpuid": "0108",
+     "snapLat": 43.685784,
+     "snapLon": -72.236713,
+     "snapDistFt": 0.0,
+     "drainageAreaSqkm": 1.0005,
+     "slope": 0.01,
+     "streamOrder": 2,
+     "fcode": 46003,
+     "sinuosity": 1.061,
+     "eromQamaCfs": 0.784792,
+     "ecoregionL3": {
+      "code": "58",
+      "name": "Northeastern Highlands"
+     }
+    },
+    "watershed": {
+     "status": "ok",
+     "method": "hr-catchment-aggregation",
+     "polygon": null,
+     "areaSqkm": 1.0005,
+     "vaaAreaSqkm": 1.0005,
+     "areaAgreement": 1.0,
+     "nReaches": 11,
+     "nHops": 7,
+     "warnings": [],
+     "reason": null
+    },
+    "reach": {
+     "lengthFt": 1000.0,
+     "geometry": null,
+     "warnings": []
+    },
+    "metrics": {
+     "baseflowIndexPct": {
+      "value": 48.0,
+      "unit": "%",
+      "source": "USGS base-flow index grid (Wolock 2003)",
+      "vintage": "USGS base-flow index grid, Wolock 2003 (1 km)",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "baseflowIndexCells": {
+      "value": 1,
+      "unit": "count",
+      "source": "USGS base-flow index grid (Wolock 2003)",
+      "vintage": "USGS base-flow index grid, Wolock 2003 (1 km)",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "damCount": {
+      "value": 0,
+      "unit": "count",
+      "source": "USACE NID, located per HR catchment (STAF data bundle)",
+      "vintage": "NID FeatureServer snapshot 2026-10-02",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "damDensityPerSqkm": {
+      "value": 0.0,
+      "unit": "count/km2",
+      "source": "USACE NID, located per HR catchment (STAF data bundle)",
+      "vintage": "NID FeatureServer snapshot 2026-10-02",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "damStorageAcreFt": {
+      "value": 0.0,
+      "unit": "acre-ft",
+      "source": "USACE NID, located per HR catchment (STAF data bundle), normal storage",
+      "vintage": "NID FeatureServer snapshot 2026-10-02",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "damStoragePerSqkm": {
+      "value": 0.0,
+      "unit": "acre-ft/km2",
+      "source": "USACE NID, located per HR catchment (STAF data bundle), normal storage",
+      "vintage": "NID FeatureServer snapshot 2026-10-02",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "damNidStorageAcreFt": {
+      "value": 0.0,
+      "unit": "acre-ft",
+      "source": "USACE NID, located per HR catchment (STAF data bundle), NID storage",
+      "vintage": "NID FeatureServer snapshot 2026-10-02",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "damNidStoragePerSqkm": {
+      "value": 0.0,
+      "unit": "acre-ft/km2",
+      "source": "USACE NID, located per HR catchment (STAF data bundle), NID storage",
+      "vintage": "NID FeatureServer snapshot 2026-10-02",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "imperviousPctWatershed": {
+      "value": 6.03,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "cropPctWatershed": {
+      "value": 0.0,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "hayPasturePctWatershed": {
+      "value": 2.11,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "forestPctWatershed": {
+      "value": 67.58,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "shrubPctWatershed": {
+      "value": 2.39,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "grasslandPctWatershed": {
+      "value": 0.0,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "woodyWetlandPctWatershed": {
+      "value": 11.81,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "herbWetlandPctWatershed": {
+      "value": 1.35,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "imperviousPct2001Watershed": {
+      "value": 5.5,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2001",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "imperviousPctRiparian": {
+      "value": 10.54,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "cropPctRiparian": {
+      "value": 0.0,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "hayPasturePctRiparian": {
+      "value": 4.69,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "forestPctRiparian": {
+      "value": 48.4,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "shrubPctRiparian": {
+      "value": 0.0,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "grasslandPctRiparian": {
+      "value": 0.0,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "woodyWetlandPctRiparian": {
+      "value": 20.43,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "herbWetlandPctRiparian": {
+      "value": 4.29,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2021",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "imperviousPct2001Riparian": {
+      "value": 9.77,
+      "unit": "percent",
+      "source": "NLCD, counted per HR catchment (STAF data bundle)",
+      "vintage": "2001",
+      "spatialSupport": "riparianBuffer",
+      "warnings": []
+     },
+     "roadLengthKm": {
+      "value": 1.706,
+      "unit": "km",
+      "source": "TIGER/Line roads, measured per HR catchment (STAF data bundle)",
+      "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "roadDensity": {
+      "value": 1.7055,
+      "unit": "km/km2",
+      "source": "TIGER/Line roads, measured per HR catchment (STAF data bundle)",
+      "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "roadCrossings": {
+      "value": 1,
+      "unit": "count",
+      "source": "TIGER/Line roads x NHDPlus HR flowlines, per HR catchment (STAF data bundle)",
+      "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "roadCrossingDensity": {
+      "value": 0.9995,
+      "unit": "crossings/km2",
+      "source": "TIGER/Line roads x NHDPlus HR flowlines, per HR catchment (STAF data bundle)",
+      "vintage": "TIGER/Line 2025 roads (2024 for counties 36059 and 48001)",
+      "spatialSupport": "pointWatershed",
+      "warnings": []
+     },
+     "meanAnnualFlowCfs": {
+      "value": 0.785,
+      "unit": "cfs",
+      "source": "NHDPlus HR EROM mean-annual flow",
+      "vintage": "NHDPlus HR VAA (live service)",
+      "spatialSupport": "reach",
+      "warnings": []
+     },
+     "runoffDepthMm": {
+      "value": 700.9,
+      "unit": "mm/yr",
+      "source": "NHDPlus HR EROM mean-annual flow over drainage area",
+      "vintage": "NHDPlus HR VAA (live service)",
+      "spatialSupport": "pointWatershed",
+      "warnings": [
+       "EROM-derived; not equivalent to StreamCat runoffws"
+      ]
+     },
+     "soilKFactor": {
+      "value": 0.307,
+      "unit": "dimensionless",
+      "source": "gNATSGO surface-horizon kwfact by 10 m cell, retired map units from current SSURGO, per HR catchment (STAF data bundle)",
+      "vintage": "gNATSGO July 2020 (Microsoft Planetary Computer); SSURGO patch 2026-10-04",
+      "spatialSupport": "pointWatershed",
+      "warnings": [
+       "29% of the watershed area has no surface-horizon K and is excluded from the mean"
+      ]
+     },
+     "entrenchmentRatio": {
+      "value": 1.54,
+      "unit": "ratio",
+      "source": "USGS 3DEP reach cross-sections, median of the sampled sections (engine reach)",
+      "vintage": "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull",
+      "spatialSupport": "reach",
+      "warnings": [
+       "DEM resolution 1 m"
+      ]
+     },
+     "bankHeightRatio": {
+      "value": 1.68,
+      "unit": "ratio",
+      "source": "USGS 3DEP reach cross-sections, median of the sampled sections (engine reach)",
+      "vintage": "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull",
+      "spatialSupport": "reach",
+      "warnings": [
+       "DEM resolution 1 m"
+      ]
+     },
+     "bankfullWidthM": {
+      "value": 3.12,
+      "unit": "m",
+      "source": "Bieger 2015 (Appalachian Highlands)",
+      "vintage": "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull",
+      "spatialSupport": "reach",
+      "warnings": []
+     }
+    },
+    "exclusions": [
+     {
+      "code": "epa-modeled-indices",
+      "reason": "The EPA watershed/catchment integrity components (hyd, sed, chem, conn, temp, habt) and prG_BMMI exist only as per-COMID EPA model outputs on the NHDPlus V2 network."
+     }
+    ],
+    "warnings": [],
+    "hrSource": {
+     "source": "bundle",
+     "built": "2026-10-03T00:56:05+00:00",
+     "regions": 226,
+     "format": 2,
+     "delivered": {
+      "release": "https://github.com/USACE-WRISES/staf/releases/download/staf-data-current/",
+      "packed": "2026-10-04T19:04:05+00:00",
+      "cache": "C:\\Users\\gtmen\\AppData\\Local\\Temp\\staf\\data_bundle"
+     },
+     "answeredBy": [
+      "bundle"
+     ]
+    }
+   },
+   "siteAnchor": {
+    "anchorSchemaVersion": 1,
+    "anchorKind": "hrSurrogate",
+    "clickedPoint": {
+     "lat": 43.6858,
+     "lon": -72.2367
+    },
+    "scoredReach": {
+     "network": "nhdplus-v2",
+     "comid": 9327042,
+     "gnisName": "Mink Brook",
+     "drainageAreaSqkm": 32.04,
+     "snapLat": 43.686994,
+     "snapLon": -72.2368263,
+     "snapDistFt": null
+    },
+    "notes": [
+     "COMID-keyed evidence describes the nearest downstream reach of the covered network."
+    ],
+    "clickedStream": {
+     "network": "nhdplus-hr",
+     "nhdplusId": 10000900049512,
+     "gnisName": null,
+     "reachcode": "01080104003460",
+     "drainageAreaSqkm": 1.0005,
+     "slope": 0.01,
+     "fcode": 46003,
+     "streamOrder": 2,
+     "vpuid": "0108",
+     "snapLat": 43.68578402974118,
+     "snapLon": -72.23671349639952,
+     "snapDistFt": 6.8
+    },
+    "routing": {
+     "method": "staf-data-bundle-v2-catchment",
+     "routedDistanceFt": 443.9,
+     "daRatio": 32.02,
+     "daRatioLimit": 10.0,
+     "declined": true,
+     "declineCode": "surrogate_da_ratio_exceeded",
+     "declineMessage": "The nearest covered reach drains 32.02 times the area of the clicked stream (limit 10). COMID-keyed evidence is unavailable here."
+    }
+   }
+  },
+  "siteAnchor": {
+   "anchorSchemaVersion": 1,
+   "anchorKind": "hrSurrogate",
+   "clickedPoint": {
+    "lat": 43.6858,
+    "lon": -72.2367
+   },
+   "scoredReach": {
+    "network": "nhdplus-v2",
+    "comid": 9327042,
+    "gnisName": "Mink Brook",
+    "drainageAreaSqkm": 32.04,
+    "snapLat": 43.686994,
+    "snapLon": -72.2368263,
+    "snapDistFt": null
+   },
+   "notes": [
+    "COMID-keyed evidence describes the nearest downstream reach of the covered network."
+   ],
+   "clickedStream": {
+    "network": "nhdplus-hr",
+    "nhdplusId": 10000900049512,
+    "gnisName": null,
+    "reachcode": "01080104003460",
+    "drainageAreaSqkm": 1.0005,
+    "slope": 0.01,
+    "fcode": 46003,
+    "streamOrder": 2,
+    "vpuid": "0108",
+    "snapLat": 43.68578402974118,
+    "snapLon": -72.23671349639952,
+    "snapDistFt": 6.8
+   },
+   "routing": {
+    "method": "staf-data-bundle-v2-catchment",
+    "routedDistanceFt": 443.9,
+    "daRatio": 32.02,
+    "daRatioLimit": 10.0,
+    "declined": true,
+    "declineCode": "surrogate_da_ratio_exceeded",
+    "declineMessage": "The nearest covered reach drains 32.02 times the area of the clicked stream (limit 10). COMID-keyed evidence is unavailable here."
+   }
+  }
+ },
+ "metric_scores": {
+  "catchment-hydrology-impervious-surface-area": {
+   "likert": "Agree",
+   "photos": [
+    {
+     "id": "p1",
+     "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABHklEQVR4nO3UwUlEARTF0C/HKcH+W7UGFzP3IYFUEEK+/Dwe4c0Svp+X5wnvlpBon+ks0RLtPz2toiXaPMOKNhfXOtykR0u0eYYVbS6udbhJj5Zo8wwr2lxc63CTHi3R5hlWtLm41uEmPVqizTOsaHNxrcNNerREm2dY0ebiWoeb9GiJNs+wos3FtQ436dESbZ5hRZuLax1u0qMl2jzDijYX1zrcpEdLtHmGFW0urnW4SY+WaPMMK9pcXOtwkx4t0eYZVrS5uNbhJj1aos0zrGhzca3DTXq0RJtnWNHm4lqHm/RoiTbPsKLNxbUON+nREm2eYUWbi2sdbtKjJdo8w4o2F9c63KRHS7R5hhVtLq51uEmPlmjzDCvaXNxf+QXoOHTDg0WxBgAAAABJRU5ErkJggg=="
+    },
+    {
+     "id": "p2",
+     "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAACMCAIAAABDIThGAAABJ0lEQVR4nO2VwWkEQBDDdGTuoarSf1cpIg+zIHADY1vjj7/84Ls6vsLDug6wBKxC7FkkiJ17SW/UF3UNmSVgFWLPIkHs3Et6o76oa8gsAasQexYJYude0hv1RV1DZglYhdizSBA795LeqC/qGjJLwCrEnkWC2LmX9EZ9UdeQWQJWIfYsEsTOvaQ36ou6hswSsAqxZ5Egdu4lvVFf1DVkloBViD2LBLFzL+mN+qKuIbMErELsWSSInXtJb9QXdQ2ZJWAVYs8iQezcS3qjvqhryCwBqxB7Fgli517SG/VFXUNmCViF2LNIEDv3kt6oL+oaMkvAKsSeRYLYuZf0Rn1R15BZAlYh9iwSxM69pDfqi7qGzBKwCrFnkSB27iW9UV/UNWSWgP+x4A+ZZ0DwDdqQ0wAAAABJRU5ErkJggg=="
+    }
+   ]
+  },
+  "catchment-hydrology-road-density": {
+   "likert": "Agree",
+   "note": "Roads along the valley floor."
+  }
+ },
+ "function_scores": {
+  "catchment-hydrology": {
+   "score": 11
+  },
+  "surface-water-storage": {
+   "score": 4,
+   "note": "Storage limited by the culverts."
+  }
+ },
+ "evidence": {
+  "catchment-hydrology-impervious-surface-area": {
+   "metric_id": "catchment-hydrology-impervious-surface-area",
+   "value": 6.0,
+   "value_text": "6.0% impervious, 2.1% agricultural land (HR reach watershed)",
+   "field_value_text": "Impervious 6.0% (HR reach watershed)",
+   "suggested_likert": "Agree",
+   "confidence": "H",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Land-cover indicators: impervious 6.0% (Agree), agricultural 2.1% (Strongly Agree). The more limiting one is suggested. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "streamcat",
+   "engine_version": "0.5.0",
+   "anchor_label": "Mink Brook (COMID 9327042), 446 ft downstream",
+   "fallback_reason": "The HR watershed was not available.",
+   "upgrade_pending": false
+  },
+  "catchment-hydrology-road-density": {
+   "metric_id": "catchment-hydrology-road-density",
+   "value": 1.71,
+   "value_text": "1.71 km/km2 road density (HR reach watershed)",
+   "field_value_text": "Roads 1.71 km/km2 (HR reach watershed)",
+   "suggested_likert": "Disagree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "TIGERweb primary + secondary + local roads clipped to the watershed. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "catchment-hydrology-impoundments": {
+   "metric_id": "catchment-hydrology-impoundments",
+   "value": 0,
+   "value_text": "0 NID dam(s) in the watershed, 0 acre-ft normal storage",
+   "field_value_text": "Dams 0 in watershed (HR reach watershed)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "surface-water-storage-wetland-coverage": {
+   "metric_id": "surface-water-storage-wetland-coverage",
+   "value": 13.2,
+   "value_text": "13.2% wetland (HR reach watershed)",
+   "field_value_text": "Wetlands 13.2% (HR reach watershed)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "reach-inflow-concentrated-flow-inputs": {
+   "metric_id": "reach-inflow-concentrated-flow-inputs",
+   "value": 1.0,
+   "value_text": "1 road-stream crossing(s), 1.00 crossings/km2 (HR reach watershed)",
+   "field_value_text": "Road crossings 1.00/km2 (HR reach watershed)",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "TIGERweb roads crossing the NHDPlus HR network in the watershed, a proxy for concentrated runoff inputs; outfalls and ditches need local layers. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "light-thermal-regime-riparian-canopy-cover": {
+   "metric_id": "light-thermal-regime-riparian-canopy-cover",
+   "value": 48.4,
+   "value_text": "48.4% forest in the 100 m riparian buffer",
+   "field_value_text": "Riparian forest 48.4% (HR reach watershed)",
+   "suggested_likert": "Disagree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "100 m buffer of the upstream network. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "carbon-processing-riparian-corridor-width-and-quality": {
+   "metric_id": "carbon-processing-riparian-corridor-width-and-quality",
+   "value": 73.1,
+   "value_text": "73.1% natural vegetation in the 100 m riparian buffer (forest + shrub + grassland + wetland)",
+   "field_value_text": "Riparian natural veg 73.1% (HR reach watershed)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "100 m buffer of the upstream network. In grassland or arid ecoregions the natural buffer is non-forest; verify on the aerial basemap. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "nutrient-cycling-vegetated-riparian-corridor-width": {
+   "metric_id": "nutrient-cycling-vegetated-riparian-corridor-width",
+   "value": 73.1,
+   "value_text": "73.1% natural vegetation in the 100 m riparian buffer (forest + shrub + grassland + wetland)",
+   "field_value_text": "Riparian natural veg 73.1% (HR reach watershed)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "100 m buffer of the upstream network. In grassland or arid ecoregions the natural buffer is non-forest; verify on the aerial basemap. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "community-dynamics-riparian-communities": {
+   "metric_id": "community-dynamics-riparian-communities",
+   "value": 73.1,
+   "value_text": "73.1% natural vegetation in the 100 m riparian buffer (forest + shrub + grassland + wetland)",
+   "field_value_text": "Riparian natural veg 73.1% (HR reach watershed)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "100 m buffer of the upstream network. In grassland or arid ecoregions the natural buffer is non-forest; verify on the aerial basemap. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "sediment-continuity-transport-capacity": {
+   "metric_id": "sediment-continuity-transport-capacity",
+   "value": 0.01,
+   "value_text": "channel slope 0.0100 m/m, watershed agriculture 2% (HR reach watershed), soil K 0.31 (HR reach watershed)",
+   "field_value_text": "Slope 0.0100 m/m",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Screening context; run the cross-section tool for a Shields transport-capacity analysis. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "nutrient-cycling-n-p-concentrations": {
+   "metric_id": "nutrient-cycling-n-p-concentrations",
+   "value": null,
+   "value_text": "observed median: TN 0.3 mg/L, TP 0.011 mg/L",
+   "field_value_text": "TN 0.3 / TP 0.011 mg/L",
+   "suggested_likert": null,
+   "confidence": "M",
+   "source": "EPA/USGS Water Quality Portal",
+   "source_url": "https://www.waterqualitydata.us/",
+   "status": "ok",
+   "note": "Observed medians; compare to ecoregion reference criteria to score (reference added in Phase 4).",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "channel-floodplain-dynamics-channel-pattern": {
+   "metric_id": "channel-floodplain-dynamics-channel-pattern",
+   "value": 1.061,
+   "value_text": "sinuosity 1.061",
+   "field_value_text": "Sinuosity 1.061",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "NHDPlus flowline geometry",
+   "source_url": "",
+   "status": "ok",
+   "note": "Compare planform to local reference (multi-date imagery / TopoView) to score.",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "watershed-connectivity-dewatered-or-intermittent-segments": {
+   "metric_id": "watershed-connectivity-dewatered-or-intermittent-segments",
+   "value": 46003,
+   "value_text": "NHD flow permanence: intermittent \u00b7 HYD integrity 0.98 (StreamCat, COMID 9327042) \u00b7 base-flow index 48% (HR reach watershed)",
+   "field_value_text": "Flow class intermittent",
+   "suggested_likert": null,
+   "confidence": "M",
+   "source": "NHDPlus FCODE + StreamCat HYD + STAF site engine base-flow index",
+   "source_url": "",
+   "status": "ok",
+   "note": "Natural intermittency is not artificial dewatering. Check NWIS zero-flow days and imagery. The HYD index is the EPA modeled hydrologic integrity of the NHDPlus V2 reach; the base-flow index is the share of streamflow that is base flow.",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "catchment-hydrology-land-use-change": {
+   "metric_id": "catchment-hydrology-land-use-change",
+   "value": 0.5,
+   "value_text": "impervious 5.5% (2001) \u2192 6.0% (2021), \u0394 +0.5 pts (HR reach watershed)",
+   "field_value_text": "Impervious change +0.5 pts (HR reach watershed)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "NLCD 2001 to 2021 impervious-cover change as a proxy for land conversion. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "streamflow-regime-flow-permanence": {
+   "metric_id": "streamflow-regime-flow-permanence",
+   "value": 0.0,
+   "value_text": "0.0% zero-flow days at gage 01140817 (1078 d)",
+   "field_value_text": "Zero-flow 0.0%",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "USGS NWIS 01140817 ELIZABETH MINE DISCHARGE NR S STRAFFORD, VT",
+   "source_url": "https://waterdata.usgs.gov/monitoring-location/01140817/",
+   "status": "ok",
+   "note": "Zero-flow-day fraction from the nearest comparable gage.",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "streamflow-regime-flow-permanence-statistics": {
+   "metric_id": "streamflow-regime-flow-permanence-statistics",
+   "value": 0.1,
+   "value_text": "Q10 0.2 / Q50 0.1 / Q90 0.07 cfs (gage 01140817)",
+   "field_value_text": "Q50 0.1 cfs",
+   "suggested_likert": null,
+   "confidence": "M",
+   "source": "USGS NWIS 01140817",
+   "source_url": "https://waterdata.usgs.gov/monitoring-location/01140817/",
+   "status": "ok",
+   "note": "Flow-duration percentiles (Qp = discharge exceeded p% of days).",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "streamflow-regime-channel-natural-flow-regime": {
+   "metric_id": "streamflow-regime-channel-natural-flow-regime",
+   "value": 0.0,
+   "value_text": "baseflow ratio Q90/Q50 = 0.583 (gage 01140817), upstream normal storage 0 m3/km2 (HR reach watershed)",
+   "field_value_text": "Baseflow ratio 0.583",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Compare to a reference or unregulated regime (TNC IHA) to judge alteration. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "streamflow-regime-artificial-structures-and-inputs": {
+   "metric_id": "streamflow-regime-artificial-structures-and-inputs",
+   "value": 0,
+   "value_text": "0 dam(s) within ~1 mi (also check NLD levees)",
+   "field_value_text": "Structures 0 dam(s)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "USACE NID (dams) + National Levee Database",
+   "source_url": "https://levees.sec.usace.army.mil/",
+   "status": "ok",
+   "note": "Dams from NID; add levees from the National Levee Database (deep-link).",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "watershed-connectivity-upstream-and-downstream-barriers": {
+   "metric_id": "watershed-connectivity-upstream-and-downstream-barriers",
+   "value": 0,
+   "value_text": "0 dam/barrier(s) within ~1 mi \u00b7 CONN integrity 0.97 (StreamCat, COMID 9327042)",
+   "field_value_text": "Barriers 0 dam(s)",
+   "suggested_likert": "Strongly Agree",
+   "confidence": "M",
+   "source": "USACE NID (+ National Aquatic Barrier Inventory) + StreamCat CONN",
+   "source_url": "https://connectivity.sarpdata.com/",
+   "status": "ok",
+   "note": "Dam count near the reach; add road-crossing / aquatic barriers for passability. The CONN index is the EPA modeled connectivity integrity of the NHDPlus V2 reach.",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "floodplain-connectivity-lateral-floodplain-inundation": {
+   "metric_id": "floodplain-connectivity-lateral-floodplain-inundation",
+   "value": 4.9,
+   "value_text": "4.9 ac of NWI wetland within 150 m of the reach (18.4% of the strip), 0.25 ac of it riverine \u00b7 entrenchment ratio 1.54 (reach median, 3DEP sections)",
+   "field_value_text": "Floodplain 4.9 ac NWI within 150 m",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "USFWS National Wetlands Inventory (STAF data bundle) + STAF site engine reach cross-sections",
+   "source_url": "https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper",
+   "status": "ok",
+   "note": "NWI wetland area within 150 m of the reach centerline, summed over the HR flowlines the reach runs along (each for the share of it the reach covers). Screening; confirm inundation with 3DEP.",
+   "origin": "pull",
+   "engine_version": null,
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "high-flow-dynamics-overbank-flow-frequency": {
+   "metric_id": "high-flow-dynamics-overbank-flow-frequency",
+   "value": 1.68,
+   "value_text": "bank height ratio 1.68 (reach median, 3DEP sections)",
+   "field_value_text": "BHR 1.68 (reach)",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Reach median of nine USGS 3DEP cross-sections on the assessment reach, bankfull from the Bieger 2015 regional regression. Screening geometry; the cross-section tool refines it. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  },
+  "high-flow-dynamics-peak-flow-capacity-morphological-check": {
+   "metric_id": "high-flow-dynamics-peak-flow-capacity-morphological-check",
+   "value": 1.54,
+   "value_text": "regional bankfull width 3.1 m, entrenchment ratio 1.54 (reach median, 3DEP sections)",
+   "field_value_text": "ER 1.54 (reach)",
+   "suggested_likert": null,
+   "confidence": "L",
+   "source": "STAF site engine v0.5.0 (HR reach watershed)",
+   "source_url": "https://usace-wrises.github.io/staf/computation-engines/",
+   "status": "ok",
+   "note": "Reach median of nine USGS 3DEP cross-sections on the assessment reach, bankfull from the Bieger 2015 regional regression. Screening geometry; the cross-section tool refines it. Watershed of the clicked NHD reach, HR catchments aggregated, 1.0005 km2, area agreement 1.0. NLCD 2021.",
+   "origin": "engine",
+   "engine_version": "0.5.0",
+   "anchor_label": "",
+   "fallback_reason": "",
+   "upgrade_pending": false
+  }
+ },
+ "scored": {
+  "functionScores": {
+   "catchment-hydrology": 11,
+   "surface-water-storage": 4
+  },
+  "subIndices": {
+   "physical": 0.09,
+   "chemical": 0.02,
+   "biological": 0.02
+  },
+  "subIndicesRaw": {
+   "physical": 0.09345794392523364,
+   "chemical": 0.022222222222222223,
+   "biological": 0.01818181818181818
+  },
+  "outcomes": {
+   "physical": {
+    "weighted": 15.0,
+    "max": 160.5,
+    "direct": 10,
+    "indirect": 7,
+    "subIndex": 0.09
+   },
+   "chemical": {
+    "weighted": 1.5,
+    "max": 67.5,
+    "direct": 3,
+    "indirect": 15,
+    "subIndex": 0.02
+   },
+   "biological": {
+    "weighted": 1.5,
+    "max": 82.5,
+    "direct": 4,
+    "indirect": 15,
+    "subIndex": 0.02
+   }
+  },
+  "categorySubIndices": {
+   "Hydrology": 0.5
+  },
+  "categoryLabels": {
+   "Hydrology": "Functioning-at-Risk"
+  },
+  "ecosystemConditionIndex": 0.04,
+  "ecosystemConditionIndexRaw": 0.04462066144309135
+ },
+ "scenario": [
+  "Restored riffle",
+  "Banks graded & replanted <2 yr>."
+ ],
+ "basemap": true
+}
