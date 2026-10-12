@@ -7,6 +7,7 @@
 import { cachedAsyncBuffer, type AsyncBuffer } from 'hyparquet'
 import { DataCache } from './cache'
 import { fetchPolitely, fetchRange, HttpError } from './range'
+import { SignedAddresses } from './signed'
 
 export interface ManifestFile {
   path: string
@@ -111,13 +112,16 @@ export class DataSource {
   /** Waits after the host refused (429) or was busy (503); `onBusy` is told of each, to show. */
   busyWaits = 0
   onBusy: ((ms: number) => void) | null = null
-  /** What earlier visits read (`DataCache`; off with `{cache: false}`). */
+  /** What earlier visits read (`DataCache`), and the signed addresses files redirected to within the
+   * hour (`SignedAddresses`); both off with `{cache: false}`. */
   readonly cache: DataCache
+  readonly signed: SignedAddresses
   private buffers = new Map<string, AsyncBuffer>()
 
   constructor(base: string, opts: { cache?: boolean } = {}) {
     this.base = base.endsWith('/') ? base : base + '/'
     this.cache = new DataCache(opts.cache ?? true)
+    this.signed = new SignedAddresses(opts.cache ?? true)
   }
 
   /** `fetch`, counted (requests, and bytes as the server reports them). */
@@ -196,19 +200,23 @@ export class DataSource {
 
   /** A range-read buffer over a logical file (its size comes from the manifest: no HEAD request).
    * Every range is held to the bytes asked for (`fetchRange`). When the data host redirects (Hugging
-   * Face sends each file to a signed CDN address), later ranges go to that address until it stops
-   * answering, then through the host again. */
+   * Face sends each file to a signed CDN address), later ranges go to that address, in this visit and
+   * the next ones within its hour (`SignedAddresses`), until it stops answering, then through the host
+   * again. */
   file(logical: string): AsyncBuffer {
     let b = this.buffers.get(logical)
     if (!b) {
       const e = this.entry(logical)
       const home = this.base + e.path
-      let at = home
+      let at = this.signed.get(e.path) ?? home
       const read = (url: string, start: number, end: number) => fetchRange(url, start, end, {
         ...this.polite(),
         fileSize: e.bytes,
         onResponse: (res) => {
-          if (res.redirected && res.url) at = res.url
+          if (res.redirected && res.url) {
+            at = res.url
+            this.signed.remember(e.path, res.url)
+          }
         },
       })
       const raw: AsyncBuffer = {
@@ -222,6 +230,7 @@ export class DataSource {
           } catch (err) {
             if (!(err instanceof HttpError)) throw err
             if (at === url) at = home // the signed address expired
+            this.signed.forget(e.path)
             return read(home, start, stop)
           }
         },
@@ -260,9 +269,23 @@ export class DataSource {
         // a damaged copy: read it again
       }
     }
+    let url = this.signed.get(e.path) ?? this.url(logical)
     for (let attempt = 0; attempt < 3; attempt++) {
-      const res = await fetchPolitely(this.url(logical), { cache: attempt === 0 ? 'default' : 'no-store' }, this.polite())
+      const res = await fetchPolitely(url, { cache: attempt === 0 ? 'default' : 'no-store' }, this.polite())
+      if (!res.ok && url !== this.url(logical)) {
+        // a remembered address the CDN refused: look the file up again
+        try {
+          await res.body?.cancel()
+        } catch {
+          // a body already gone
+        }
+        this.signed.forget(e.path)
+        url = this.url(logical)
+        attempt -= 1
+        continue
+      }
       if (!res.ok) throw new Error(`${logical}: HTTP ${res.status}`)
+      if (res.redirected && res.url) this.signed.remember(e.path, res.url)
       const buf = await res.arrayBuffer()
       if (e.encoding !== 'gzip') {
         if (buf.byteLength !== e.bytes) continue
