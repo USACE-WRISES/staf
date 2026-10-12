@@ -141,6 +141,99 @@ export function fsum(values: Iterable<number>): number {
   return hi
 }
 
+/** Dekker's error-free product (CPython's dl_mul without an FMA): [x*y, the rounding error]. */
+function dlMul(x: number, y: number): [number, number] {
+  const split = (v: number): [number, number] => {
+    const t = v * 134217729.0
+    const hi = t - (t - v)
+    return [hi, v - hi]
+  }
+  const [xh, xl] = split(x)
+  const [yh, yl] = split(y)
+  const p = xh * yh
+  const q = xh * yl + xl * yh
+  const z = p + q
+  return [z, p - z + q + xl * yl]
+}
+
+/** math.hypot(x, y) as CPython 3.12 computes it (vector_norm: lossless scaling and squaring, then a
+ * differential correction), which JavaScript's Math.hypot can miss by an ulp. */
+export function pyHypot(...coords: number[]): number {
+  const vec = coords.map((v) => Math.abs(v))
+  let max = 0.0
+  let nan = false
+  for (const v of vec) {
+    if (Number.isNaN(v)) nan = true
+    else if (v > max) max = v
+  }
+  if (max === Infinity) return max
+  if (nan) return NaN
+  if (max === 0.0 || vec.length <= 1) return max
+  // frexp(max): max = m * 2**e, 0.5 <= m < 1
+  const view = new DataView(new ArrayBuffer(8))
+  view.setFloat64(0, max)
+  const bits = (view.getUint32(0) >>> 20) & 0x7ff
+  if (bits === 0) {
+    const DBL_MIN = 2.2250738585072014e-308
+    return DBL_MIN * pyHypot(...vec.map((v) => v / DBL_MIN))
+  }
+  const maxE = bits - 1022
+  const scale = 2 ** -maxE
+  let csum = 1.0
+  let frac1 = 0.0
+  let frac2 = 0.0
+  for (let x of vec) {
+    x *= scale
+    const [prHi, prLo] = dlMul(x, x)
+    const s = csum + prHi
+    const sLo = (csum - s) + prHi
+    csum = s
+    frac1 += prLo
+    frac2 += sLo
+  }
+  let h = Math.sqrt(csum - 1.0 + (frac1 + frac2))
+  const [pHi, pLo] = dlMul(-h, h)
+  const s = csum + pHi
+  const sLo = (csum - s) + pHi
+  csum = s
+  frac1 += pLo
+  frac2 += sLo
+  const x = csum - 1.0 + (frac1 + frac2)
+  h += x / (2.0 * h)
+  return h / scale
+}
+
+/** Python 3.12's built-in sum() over a mix of ints and floats, an integral value taken for an int:
+ * ints added exactly until the first float, then the floats Neumaier-compensated while later ints are
+ * added plainly (CPython 3.12's int and float loops; sum([1e16, 1, 1, -1e16]) is 0.0 there). */
+export function pySumMixed(values: Iterable<number>): number {
+  let iResult = 0
+  let floatPhase = false
+  let f = 0
+  let c = 0
+  for (const x of values) {
+    if (!floatPhase) {
+      if (Number.isInteger(x)) iResult += x
+      else {
+        f = iResult + x
+        floatPhase = true
+      }
+      continue
+    }
+    if (Number.isInteger(x)) {
+      f += x
+      continue
+    }
+    const t = f + x
+    if (Math.abs(f) >= Math.abs(x)) c += (f - t) + x
+    else c += (x - t) + f
+    f = t
+  }
+  if (!floatPhase) return iResult
+  if (c && Number.isFinite(c)) f += c
+  return f
+}
+
 /** Python 3.12's built-in sum() of floats (from the default start 0): the first item exactly, then
  * Neumaier's compensated summation, the compensation added at the end (CPython builtin_sum_impl). */
 export function pySum(values: Iterable<number>): number {

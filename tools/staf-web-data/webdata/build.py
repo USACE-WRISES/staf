@@ -57,6 +57,11 @@ ENGINE = REPO / "libs" / "site_engine" / "site_engine"
 #: the site engine's own data files the browser reads, by their logical names
 ENGINE_FILES = (("bfi48grd.tif", "data/bfi48grd.tif"), ("ecoregions_l3.geojson", "_extracted/data/ecoregions_l3.geojson"),
                 ("physio_divisions.geojson", "_extracted/data/physio_divisions.geojson"))
+#: the data the tools ship that the browser reads, kept here as the static app's own copies
+#: (apps/staf-web/parity/copy_page.py copies them from the Shiny tools): logical name, file in ``OWN``
+#: (gzipped). DEEP's state polygons stamp a report's region (deep/geo.state_at).
+OWN = Path(__file__).resolve().parents[1] / "data"
+OWN_FILES = (("us_states.geojson", "us_states.geojson.gz"),)
 #: bundle files the browser never reads
 LEAVE_OUT = ("tables/dem1m_tiles.parquet", "tables/dem19_quads.parquet")
 #: files the app reads whole, stored gzipped (the host sends every file as it is): a third to a tenth the bytes
@@ -212,6 +217,30 @@ def engine_files(engine: Path = ENGINE) -> list:
     return out
 
 
+def own_files(cache: Path, own: Path | None = None) -> list:
+    """The copies in ``OWN`` (``OWN_FILES``), unzipped into ``cache`` (the store gzips them again, so the
+    manifest describes their content), written again when a copy changes."""
+    import gzip
+    own = OWN if own is None else own
+    out = []
+    for logical, rel in OWN_FILES:
+        src = Path(own) / rel
+        if not src.is_file():
+            continue
+        dst = Path(cache) / logical
+        stamp = dst.with_name(dst.name + ".json")
+        st = src.stat()
+        key = {"source_bytes": st.st_size, "source_mtime_ns": st.st_mtime_ns}
+        if not (dst.exists() and stamp.exists() and json.loads(stamp.read_text(encoding="utf-8")) == key):
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            tmp = dst.with_name(dst.name + ".tmp")
+            tmp.write_bytes(gzip.decompress(src.read_bytes()))
+            os.replace(tmp, dst)
+            stamp.write_text(json.dumps(key), encoding="utf-8")
+        out.append((logical, dst, "engine", None))
+    return out
+
+
 def dataset_regions(bundle_manifest: dict) -> dict:
     """What the app reads of a bundle dataset's manifest (``engine/bundle.ts`` datasetRegions): each
     region's bounds, grid, files, id and hydroseq ranges and vpuid."""
@@ -226,13 +255,16 @@ def dataset_regions(bundle_manifest: dict) -> dict:
     return out
 
 
-def app_index(manifest: dict, datasets: dict | None = None, bundle_sources: dict | None = None) -> bytes:
+def app_index(manifest: dict, datasets: dict | None = None, bundle_sources: dict | None = None,
+              bundle_identity: dict | None = None) -> bytes:
     """What the app reads of the manifest, gzipped: each file's stored path and bytes (and the sha256 of
     the library's content, which the app checks against its pins), the size of each file stored gzipped
     once unzipped (``gzip``), each parquet file's footer with its length and magic (``footers``: the
     first read of a file, made exactly), the regions, and the bundle datasets' regions (``datasets``:
     folder -> ``dataset_regions``) and the bundle's ``sources`` (its vintages), so the app needs neither
-    bundle manifest; about 130 KB where the manifests are 1.7 MB, since the host sends none compressed."""
+    bundle manifest; about 130 KB where the manifests are 1.7 MB, since the host sends none compressed.
+    ``bundle``: the bundle's identity as the site engine names its HR source (``bundle.describe``: when it
+    was built, its format, its region count)."""
     import gzip
     files = dict((k, [e["path"], e["bytes"]] + ([e.get("raw_sha256", e["sha256"])] if e["kind"] == "library" else []))
                  for k, e in manifest["files"].items())
@@ -240,7 +272,7 @@ def app_index(manifest: dict, datasets: dict | None = None, bundle_sources: dict
     footers = dict((k, e["footer"]) for k, e in manifest["files"].items() if e.get("footer"))
     body = json.dumps({"format": manifest["format"], "built": manifest["built"], "regions": manifest["regions"],
                        "files": files, "gzip": unzipped, "footers": footers, "datasets": datasets or {},
-                       "bundle_sources": bundle_sources or {}},
+                       "bundle_sources": bundle_sources or {}, "bundle": bundle_identity or {}},
                       separators=(",", ":")).encode("utf-8")
     return gzip.compress(body, compresslevel=9, mtime=0)
 
@@ -284,11 +316,15 @@ def build(out: Path = OUT, *, bundle: Path = BUNDLE, xs_release: Path = XS_RELEA
         groups.append(("library", lib + [(deep_regions.NAME, derived, "library", None)]))
         sources["library"] = {"files": len(lib)}
     eng = engine_files()
+    own = own_files(out / ".cache" / "own")
     if eng:
-        groups.append(("engine", eng))
         sys.path.insert(0, str(ENGINE.parent))
         from site_engine import ENGINE_VERSION
         sources["site-engine"] = {"version": ENGINE_VERSION, "files": len(eng)}
+    if own:
+        sources["own"] = {"files": [logical for logical, *_ in own]}
+    if eng or own:
+        groups.append(("engine", eng + own))
     # the files the browser reads a few rows of, written again with a page index (pages.py)
     from . import pages
     groups = [(prefix, [(logical, pages.paged(f"{prefix}/{logical}", src, out / ".cache" / "pages")
@@ -336,7 +372,9 @@ def build(out: Path = OUT, *, bundle: Path = BUNDLE, xs_release: Path = XS_RELEA
         if path.exists() and f"bundle/{folder}manifest.json" in files:
             datasets[f"bundle/{folder}"] = dataset_regions(json.loads(path.read_text(encoding="utf-8")))
     tmp = out / (INDEX + ".tmp")
-    tmp.write_bytes(app_index(manifest, datasets, bundle_manifest.get("sources") or {}))
+    identity = {"built": bundle_manifest.get("built"), "format": bundle_manifest.get("format"),
+                "regions": len(bundle_manifest.get("vpus") or {})}
+    tmp.write_bytes(app_index(manifest, datasets, bundle_manifest.get("sources") or {}, identity))
     os.replace(tmp, out / INDEX)
     tmp = out / (MANIFEST + ".tmp")
     tmp.write_text(json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")

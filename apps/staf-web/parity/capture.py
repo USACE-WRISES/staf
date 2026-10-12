@@ -20,6 +20,11 @@ Delineate and waits for the Basin step (or an error); ``--assess`` then presses 
 ``--actions FILE`` then runs a script of user actions on the page (``parity/actions/*.js``: an async
 function of the tool's key that clicks and types as a user would) and waits until the worksheet settles.
 
+``--open FILE`` opens a saved assessment file through the tool's Open (the header's file input, as a
+user picks a file) once the tool shows, and waits until it has loaded; ``--download DIR`` saves every file
+the page downloads (a click on Save, the report's or Get Forms' links, from either app) into DIR, and
+waits for the downloads to finish after ``--actions``.
+
 ``--perf`` also writes ``<stem>.perf.json``: the static app's step timings (its ``staf:`` performance
 measures) and every request the page made, with when and how many bytes (``parity/perf.py`` reads it).
 ``--throttle LATENCY_MS,MBPS`` slows the network to that, as a data host far away would be. The browser
@@ -219,9 +224,23 @@ def pretty(html: str) -> str:
     return html.replace("><", ">\n<")
 
 
+# an opened file has loaded (the tool's notification), or failed; its text, or null
+OPENED_JS = """(() => {
+  const texts = [...document.querySelectorAll('.shiny-notification-content-text')].map((e) => e.textContent.trim());
+  return texts.find((t) => t.startsWith('Assessment loaded') || t.startsWith('Could not load')) || null;
+})()"""
+
+
+def _downloads_settled(folder: Path, before: int) -> bool:
+    """Every download in ``folder`` written out (no partial files) and at least one new."""
+    files = [f for f in folder.iterdir() if f.is_file()]
+    return len(files) > before and not any(f.suffix in (".crdownload", ".tmp") for f in files)
+
+
 async def main(app: str, url: str, width: int, height: int, view=None, name: str = "",
                coverage: bool = False, click=None, delineate: bool = False, assess: bool = False,
-               tools=TOOLS, actions: str = "", perf: bool = False, throttle=None, query: str = "", visits: int = 1) -> None:
+               tools=TOOLS, actions: str = "", perf: bool = False, throttle=None, query: str = "", visits: int = 1,
+               open_file: str = "", download: str = "") -> None:
     out = HERE / app
     out.mkdir(parents=True, exist_ok=True)
     prof = Path(tempfile.mkdtemp(prefix="staf-capture-"))
@@ -241,8 +260,18 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
             except OSError:
                 pass
             time.sleep(0.2)
-        async with websockets.connect(pages[0]["webSocketDebuggerUrl"], max_size=1 << 27) as ws:
+        version = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{PORT}/json/version").read())
+        async with websockets.connect(version["webSocketDebuggerUrl"], max_size=1 << 27) as browser, \
+                websockets.connect(pages[0]["webSocketDebuggerUrl"], max_size=1 << 27) as ws:
             n = 0
+            if download:
+                # every download of the browser (a Shiny link's own tab too) saved into the folder, for as
+                # long as this connection is open
+                folder = Path(download).resolve()
+                folder.mkdir(parents=True, exist_ok=True)
+                await browser.send(json.dumps({"id": 1, "method": "Browser.setDownloadBehavior",
+                                               "params": {"behavior": "allow", "downloadPath": str(folder)}}))
+                await browser.recv()
 
             async def call(method, **params):
                 nonlocal n
@@ -281,6 +310,23 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                         break
                 await asyncio.sleep(3.0)                # the legend dock and the last tiles
                 stem = (f"{tool}-{name}" if view else tool) + (f"-visit{visit}" if visit > 1 else "")
+                if open_file:
+                    # the header's Open, as a user picks a file
+                    doc = await call("DOM.getDocument", depth=0)
+                    node = await call("DOM.querySelector", nodeId=doc["root"]["nodeId"], selector=f"#{tool}-load_session")
+                    await call("DOM.setFileInputFiles", files=[str(Path(open_file).resolve())], nodeId=node["nodeId"])
+                    said, end = None, time.monotonic() + 120
+                    while time.monotonic() < end and said is None:
+                        await asyncio.sleep(0.5)
+                        said = await js(OPENED_JS)
+                    print(f"{tool}: open says {said!r}")
+                    last, same, end = None, 0, time.monotonic() + 300
+                    while time.monotonic() < end and same < 3:
+                        await asyncio.sleep(1.0)
+                        text = await js(ASSESS_JS)
+                        same = same + 1 if text == last else 0
+                        last = text
+                    await asyncio.sleep(2.0)
                 if coverage:
                     await js("""(() => { const tool = document.documentElement.getAttribute('data-staf-tool');
                       const box = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .staf-coverage-toggle');
@@ -330,11 +376,18 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                 if actions:
                     # what a user does on the page (an async function over the page's elements), then
                     # the worksheet settled again
+                    before = len([f for f in Path(download).iterdir() if f.is_file()]) if download else 0
                     said = await js(f'({actions})({json.dumps(tool)})')
                     # what the script returns is kept beside the capture (<stem>.actions.txt), so a
                     # script can collect what it saw along the way for compare.py
                     (out / f"{stem}.actions.txt").write_text(str(said), encoding="utf-8", newline="\n")
                     print(f"{tool}: actions say {str(said)[:200]!r}")
+                    if download:
+                        end = time.monotonic() + 120
+                        while time.monotonic() < end and not _downloads_settled(Path(download), before):
+                            await asyncio.sleep(0.5)
+                        await asyncio.sleep(1.0)
+                        print(f"{tool}: downloads {sorted(f.name for f in Path(download).iterdir())}")
                     last, same, end = None, 0, time.monotonic() + 300
                     while time.monotonic() < end and same < 3:
                         await asyncio.sleep(1.0)
@@ -371,7 +424,9 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
             (out / "styles.json").write_text(json.dumps(styles, indent=1), encoding="utf-8", newline="\n")
             text = json.dumps(dialogs, indent=1, ensure_ascii=False) + "\n"
             (out / "dialogs.json").write_text(text, encoding="utf-8", newline="\n")
-            if app == "shiny":
+            # the app's About and Help come from a plain capture of every tool (one with --open or
+            # --actions leaves the page in another state)
+            if app == "shiny" and set(dialogs) == set(TOOLS) and not open_file and not actions:
                 CONTENT.parent.mkdir(parents=True, exist_ok=True)
                 CONTENT.write_text(text, encoding="utf-8", newline="\n")
     finally:
@@ -397,6 +452,8 @@ if __name__ == "__main__":
                     help="also write <stem>.perf.json: the page's staf: timings and every request it made")
     ap.add_argument("--throttle", help="LATENCY_MS,MBPS: the network made that slow (a data host far away)")
     ap.add_argument("--query", default="", help="more of the address's query, e.g. data=http://localhost:5181/data/")
+    ap.add_argument("--open", default="", help="a saved assessment file to open through the tool's Open first")
+    ap.add_argument("--download", default="", help="a folder every download is saved into")
     ap.add_argument("--visits", type=int, default=1,
                     help="run each tool's steps this many times in one browser profile (later runs: <stem>-visit2, ...)")
     a = ap.parse_args()
@@ -405,4 +462,5 @@ if __name__ == "__main__":
     asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage, c,
                      a.delineate, a.assess, tuple(a.tools),
                      Path(a.actions).read_text(encoding="utf-8").strip() if a.actions else "", a.perf,
-                     tuple(float(x) for x in a.throttle.split(",")) if a.throttle else None, a.query, a.visits))
+                     tuple(float(x) for x in a.throttle.split(",")) if a.throttle else None, a.query, a.visits,
+                     a.open, a.download))

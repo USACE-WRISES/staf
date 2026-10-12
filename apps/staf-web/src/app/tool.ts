@@ -10,15 +10,24 @@ import type { DeepWorksheet } from '../tools/deep/worksheet'
 import type { EasiWorksheet } from '../tools/easi/worksheet'
 import type { SfariWorksheet } from '../tools/sfari/worksheet'
 import { Basin } from './basin'
-import { assessPane, type Covering, coveringRefs, loadRef } from './deepAssess'
+import { assessPane, type Covering, coveringRefs, defaultRefFor, loadRef, parseAssessmentRef, refExists } from './deepAssess'
+import { changeDialog } from './deepChange'
 import { esc, flowLoading, FLOW_ZOOM, identifyPane, legend, readout, START, type ToolKey, zoomCue } from './markup'
 import { Identify } from './identify'
 import { makeMap, type ToolMap } from './map'
 import { notify } from './notify'
 import { pyFixed } from './pyfmt'
+import { pyCopy, pySet } from './pyjson'
 import * as shim from './shim'
 import { shownTool } from './shell'
 import { type Networks, StreamLayers } from './streams'
+import { flowlineAt, type FlowlineRecord } from '../engine/bundle'
+import { registerDownload } from '../files/download'
+import { CLEARS, newDialog } from '../session/dialogs'
+import { readText } from '../session/file'
+import { stateFingerprint, UnsavedGuard } from '../session/guard'
+import { removeModal, showModal } from '../shared/modal'
+import { resolveSiteRegions } from '../engine/ecoregion'
 
 const FLOWLINE_COLOR = '#1f6feb'
 const HR_FLOWLINE_COLOR = '#22b8cf'
@@ -68,12 +77,23 @@ export class Tool {
   private loaded: Record<string, any> | null = null
   /** the pick was ready at the last change (its regions were asked for then) */
   private warmed = false
+  /** the leave-page guard: the work against the last Save or Open */
+  readonly guard: UnsavedGuard
 
   constructor(key: ToolKey, private nets: Networks, private data: AppData) {
     this.key = key
     const root = document.querySelector<HTMLElement>(`.easi-shell[data-staf-tool="${key}"]`)
     if (!root) throw new Error(`no section for ${key}`)
     this.root = root
+    this.guard = new UnsavedGuard(key, () => this.workFingerprint())
+    // Save (save_session): the assessment file
+    registerDownload(`${key}-save_session`, { filename: `${key}-assessment.json`, mime: 'application/json', build: () => this.saveText() })
+    // Open (load_session): a chosen file is read in the page, as Shiny's file input uploads it
+    document.getElementById(`${key}-load_session`)?.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement
+      const file = input.files?.[0]
+      if (file) void this.openFile(input, file)
+    })
   }
 
   private out(id: string): HTMLElement {
@@ -116,7 +136,10 @@ export class Tool {
     })
     if (this.key === 'easi') void this.loadEasi().catch(() => {})
     if (this.key === 'sfari') void this.loadSfari().catch(() => {})
-    if (this.key === 'deep') void this.loadDeep().catch(() => {})
+    if (this.key === 'deep') {
+      void this.loadDeep().catch(() => {})
+      void this.ingestLink()
+    }
     map.on('zoomend moveend', () => this.viewChanged())
     map.on('click', (e: L.LeafletMouseEvent) => this.mapClick(e))
     this.viewChanged()
@@ -214,13 +237,16 @@ export class Tool {
     this.renderBusy()
     this.viewChanged()
     this.sendCoverageCurrent()
+    this.guard.soon()
   }
 
   /** DEEP's regions hear the assessment in use and whether they take clicks (Identify only), whenever
    * either changes (app.py _send_coverage_current). */
   private sendCoverageCurrent(): void {
     if (this.key !== 'deep') return
-    shim.send('deep_coverage_current', { assessmentId: this.loaded?.assessmentId ?? null, identify: this.step === 'identify', focus: false })
+    const focus = this.focusOnce
+    this.focusOnce = false
+    shim.send('deep_coverage_current', { assessmentId: this.loaded?.assessmentId ?? null, identify: this.step === 'identify', focus })
   }
 
   /** The busy line, and Delineate off while it runs (_toggle_delineate). */
@@ -260,7 +286,8 @@ export class Tool {
       this.sfari = new SfariWorksheet({
         root: this.root, data: this.data, step: () => this.step, delin: () => basin.delin,
         engineState: () => basin.engineState, engineLine: () => basin.engineLine(), lookupStatus: () => identify.lookupStatus(),
-        sourceReady: () => identify.ready(), setStep: (s) => this.setStep(s),
+        sourceReady: () => identify.ready(), setStep: (s) => this.setStep(s), lookupBusy: () => identify.busy(),
+        engineProgress: () => basin.engineProgress(),
       })
       if (this.step === 'basin') this.sfari.pullAhead()
       return this.sfari
@@ -315,7 +342,7 @@ export class Tool {
       if (!['identify', 'basin', 'measure', 'report'].includes(target)) return
       const allowed = target === 'identify' || (hasDelin && (target === 'basin' || !!this.loaded))
       if (!allowed) notify('Finish the earlier steps first.', { seconds: 2 })
-      else if (target === 'report') notify('The report is not in the web app yet.', { seconds: 4 })
+      else if (target === 'report') void this.loadDeep().then((ws) => ws.requestReport())
       else if (target === 'measure') void this.loadDeep().then(() => this.setStep('measure'))
       else this.setStep(target)
       return
@@ -366,6 +393,292 @@ export class Tool {
     this.loaded = null
     this.covering = []
     this.setStep('identify')
+    removeModal()
+  }
+
+  // ------------------------------------------------------------------- the assessment file
+
+  /** The report being prepared will not open (each app.py _cancel_report). */
+  private cancelReport(): void {
+    this.easi?.cancelReport()
+    this.sfari?.cancelReport()
+    this.deep?.cancelReport()
+  }
+
+  /** _work_fp: the work the leave-page guard compares with the last Save or Open (null: nothing to lose). */
+  private workFingerprint(): string | null {
+    const delin = this.basin?.delin ?? null
+    if (this.key === 'easi') {
+      if (this.easi) return this.easi.workFingerprint(delin)
+      return delin ? stateFingerprint('easi', ['comid', 'snapped_lat', 'snapped_lon'].map((k) => (delin.delineation ?? {})[k] ?? null)) : null
+    }
+    if (this.key === 'sfari') {
+      if (this.sfari) return this.sfari.workFingerprint(delin)
+      return delin ? stateFingerprint('sfari', ['nhdplusid', 'comid', 'snapped_lat', 'snapped_lon'].map((k) => (delin.delineation ?? {})[k] ?? null)) : null
+    }
+    if (this.deep) return this.deep.workFingerprint(delin)
+    return delin ? stateFingerprint('deep', ['nhdplusid', 'comid', 'snapped_lat', 'snapped_lon'].map((k) => (delin.delineation ?? {})[k] ?? null)) : null
+  }
+
+  /** Save: the file's text (each app.py save_session: the saved work is marked first). */
+  private async saveText(): Promise<string> {
+    const delin = this.basin?.delin ?? null
+    if (this.key === 'easi') {
+      const ws = await this.loadEasi()
+      this.guard.markSaved()
+      return ws.saveText(delin)
+    }
+    if (this.key === 'sfari') {
+      const ws = await this.loadSfari()
+      this.guard.markSaved()
+      return ws.saveText(delin)
+    }
+    // DEEP: the region the site falls in is stamped into the provenance (_site_region)
+    const ws = await this.loadDeep()
+    const dd = delin?.delineation ?? {}
+    const region = await resolveSiteRegions(this.data.src, dd.snapped_lat ?? null, dd.snapped_lon ?? null)
+    this.guard.markSaved()
+    return ws.saveText(delin, this.loaded, region)
+  }
+
+  /** The file input shows the chosen file as Shiny's does once its upload completes. */
+  private fileChosen(input: HTMLInputElement, name: string): void {
+    const box = input.closest('.input-group')?.querySelector<HTMLInputElement>('input[type="text"]')
+    if (box) box.value = name
+    const progress = document.getElementById(`${this.key}-load_session_progress`)
+    const bar = progress?.querySelector<HTMLElement>('.progress-bar')
+    if (progress && bar) {
+      progress.style.visibility = 'visible'
+      progress.classList.remove('active')
+      bar.classList.remove('progress-bar-danger')
+      bar.style.width = '100%'
+      bar.textContent = 'Upload complete'
+    }
+    input.value = ''
+  }
+
+  /** Open (each app.py _load_session): the file is read and checked before anything changes; a file this
+   * tool cannot open says why and changes nothing. */
+  private async openFile(input: HTMLInputElement, file: File): Promise<void> {
+    this.fileChosen(input, file.name)
+    let text: string
+    try {
+      text = readText(new Uint8Array(await file.arrayBuffer()))
+    } catch (err) {
+      notify(`Could not load assessment: ${err instanceof Error ? err.message : String(err)}`, { type: 'error', seconds: 6 })
+      return
+    }
+    try {
+      if (this.key === 'easi') await this.openEasi(text)
+      else if (this.key === 'sfari') await this.openSfari(text)
+      else await this.openDeep(text)
+    } catch (err) {
+      notify(`Could not load assessment: ${err instanceof Error ? err.message : String(err)}`, { type: 'error', seconds: 6 })
+    }
+    this.guard.soon()
+  }
+
+  /** The V2 reach a saved site names, for its glow (each app's source_geometry_task). */
+  private async findReach(comid: number): Promise<FlowlineRecord | null> {
+    const [hit] = await this.data.v2.find('by_id', [comid])
+    return hit ? flowlineAt(this.data.src, 'bundle/v2/', hit.region, hit.rows[0]) : null
+  }
+
+  /** EASI's _load_session. */
+  private async openEasi(text: string): Promise<void> {
+    const ws = await this.loadEasi()
+    const [{ load, savedPoint, methodChanged }, { screened }, { scoringMethod }] = await Promise.all([
+      import('../session/easi'), import('../tools/easi/worksheet'), import('../tools/easi/identity')])
+    const st = load(text)
+    const d = st.delineation
+    const point = savedPoint(d)
+    this.cancelReport()
+    this.basin!.invalidate()                     // late results of the last pick are dropped
+    const has = Object.keys(d).length > 0
+    const anchor = point ? (d.siteAnchor ?? null) : null
+    const screening = st.screening
+    const base = has && screening ? screened(d, screening.huc12 ?? null, screening.report) : null
+    if (has) this.basin!.restore(d, point ? [point[0], point[1]] : null)
+    this.identify!.restore(point, anchor, point ? [point[0], point[1]] : null, (c) => this.findReach(c))
+    ws.restore(base, st.notes, st.scenarios)
+    this.guard.markSaved()                       // just opened: nothing unsaved yet
+    this.setStep(base ? 'assess' : has ? 'basin' : 'identify')
+    notify('Assessment loaded. Resuming.', { type: 'message', seconds: 4 })
+    const changed = methodChanged(st.method, scoringMethod())
+    if (changed && base) notify(changed, { type: 'warning', seconds: 12 })
+  }
+
+  /** _with_anchor: the saved site's source attached to its delineation (existing keys keep their place). */
+  private attachAnchor(d: Record<string, any>, anchor: Record<string, any>, cid: number | null): Record<string, any> {
+    const out = pyCopy(d)
+    pySet(out, 'siteAnchor', anchor)
+    const ci = pyCopy(d.ctx_inputs ?? {})
+    pySet(ci, 'siteAnchor', anchor)
+    pySet(ci, 'comid', cid)
+    pySet(out, 'ctx_inputs', ci)
+    const dl = pyCopy(d.delineation ?? {})
+    pySet(dl, 'comid', cid)
+    pySet(out, 'delineation', dl)
+    return out
+  }
+
+  /** SFARI's _load_session: the site and its source as saved (a site whose source was never resolved is
+   * resolved again from its point), the evidence and the entries; the worksheet shows. */
+  private async openSfari(text: string): Promise<void> {
+    const ws = await this.loadSfari()
+    const s = await import('../session/sfari')
+    const st = s.load(text)
+    let d = st.delineation
+    const anchor = s.savedAnchor(d)
+    const pt = s.savedPoint(d)
+    this.cancelReport()
+    this.basin!.invalidate()
+    if (anchor && pt && Object.keys(d).length) d = this.attachAnchor(d, anchor, s.comid(anchor))
+    const dd = d.delineation ?? {}
+    if (Object.keys(d).length) this.basin!.restore(d)
+    this.identify!.restore(pt, anchor, dd.snapped_lat != null ? [dd.snapped_lat, dd.snapped_lon] : null, (c) => this.findReach(c))
+    ws.restore(st.evidence, st.cross_section, st.scenarios)
+    this.guard.markSaved()
+    if (!anchor && pt) this.identify!.resnap(pt[0], pt[1])
+    this.setStep('review')
+    notify('Assessment loaded. Resuming.', { type: 'message', seconds: 4 })
+  }
+
+  /** DEEP's _load_session: the site, its source and the assessment as saved (a site whose source was never
+   * resolved is resolved again), every scenario's values; the desktop values are computed again; the
+   * worksheet shows when the file carries an assessment, else the Basin step. */
+  private async openDeep(text: string): Promise<void> {
+    const ws = await this.loadDeep()
+    const [s, sf] = await Promise.all([import('../session/deep'), import('../session/sfari')])
+    const st = s.load(text)
+    this.cancelReport()
+    this.basin!.invalidate()
+    let d = st.delineation
+    const point = s.savedLookupPoint(d, sf.comid, (a) => a.anchorKind === 'hrSurrogate')
+    let anchor: Record<string, any> | null = d.siteAnchor ?? null
+    if (sf.comid(anchor) === null) anchor = (d.ctx_inputs ?? {}).siteAnchor ?? null
+    if (sf.comid(anchor) === null) anchor = sf.synthetic((d.delineation ?? {}).comid) ?? sf.synthetic((d.ctx_inputs ?? {}).comid)
+    if (!s.validLookupPoint(point)) anchor = null
+    const cid = sf.comid(anchor)
+    if (cid !== null && anchor && Object.keys(d).length) d = this.attachAnchor(d, anchor, cid)
+    const raw = st.assessment
+    this.loaded = null
+    this.selectedRef = null
+    this.covering = []
+    if (Object.keys(raw).length) {
+      this.loaded = raw
+      this.selectedRef = s.sessionRef(st, raw)
+    }
+    if (Object.keys(d).length) this.basin!.restore(d)
+    this.identify!.restore(point, anchor, point ? [point[0], point[1]] : null, (c) => this.findReach(c))
+    ws.restore(st.scenarios)
+    this.guard.markSaved()
+    if (point && cid === null) this.identify!.resnap(point[0], point[1])
+    this.setStep(this.loaded ? 'measure' : 'basin')
+    // the assessments covering the site, for the Basin pane and Change (the saved one stays chosen)
+    if (Object.keys(d).length) void this.resolveAssessment()
+    notify('Assessment loaded. Resuming.', { type: 'message', seconds: 4 })
+  }
+
+  /** New: a fresh assessment, asked first while there is work to lose (each app.py _new_assessment). */
+  private navNew(): void {
+    this.cancelReport()
+    const delin = this.basin?.delin
+    const lose = this.key === 'easi' ? !!delin || !!this.easi?.base
+      : this.key === 'sfari' ? !!delin || !!this.sfari?.hasEntries()
+        : !!delin || !!this.deep?.hasValues() || this.loaded !== null
+    if (!lose) {
+      this.clear()
+      return
+    }
+    showModal(newDialog(this.key, CLEARS[this.key]))
+  }
+
+  // ------------------------------------------------------------------- DEEP's Change and link
+
+  /** The covering list the open Change dialog shows (covering_cache: its picks index into it). */
+  private coveringShown: Covering[] = []
+  /** the ?assessment= link (main.ts), read once DEEP shows (_ingest_url_params) */
+  linkedAssessment: string | null = null
+  private linkRead = false
+  /** the map frames the linked region once (_coverage["focus"]) */
+  private focusOnce = false
+
+  /** _change_assessment: a card per covering assessment, each with its versions. */
+  private openChange(): void {
+    this.cancelReport()
+    this.coveringShown = this.covering
+    showModal(changeDialog(this.coveringShown, this.selectedRef))
+  }
+
+  /** A card's Select (_make_pick_handler): the version its chooser shows. */
+  private async pickAssessment(i: number): Promise<void> {
+    const entry = this.coveringShown[i]
+    if (!entry) return
+    const select = document.getElementById(`deep-assess_ver_${i}`) as HTMLSelectElement | null
+    const ref = select?.value || entry.defaultRef
+    if (await this.loadRefIntoState(ref || entry.defaultRef)) removeModal()
+  }
+
+  /** _load_ref_into_state: the version loaded, its values empty, the scenarios reset. */
+  private async loadRefIntoState(ref: string, quiet = false): Promise<boolean> {
+    let la: Record<string, any>
+    try {
+      la = await loadRef(this.data.src, ref)
+    } catch (err) {
+      notify(`Could not load assessment: ${err instanceof Error ? err.message : String(err)}`, { type: 'error', seconds: 6 })
+      return false
+    }
+    this.loaded = la
+    this.selectedRef = ref
+    this.deep?.assessmentLoaded()
+    if (!quiet) notify(`Selected ${la.assessmentName ?? la.assessmentId ?? ''}.`, { type: 'message', seconds: 3 })
+    this.assessmentChanged()
+    return true
+  }
+
+  /** What reads the loaded assessment draws again: the Basin pane, the worksheet, the map's region. */
+  private assessmentChanged(): void {
+    const slot = this.maybe('assess_pane')
+    if (slot && this.step === 'basin') slot.innerHTML = '\n' + assessPane(this.loaded, this.covering) + '\n'
+    if (this.step === 'measure' || this.step === 'report') {
+      this.deep?.render()
+      this.deep?.maybeCompute()
+    } else if (this.step === 'basin') this.deep?.computeAhead()
+    this.sendCoverageCurrent()
+    this.guard.soon()
+  }
+
+  /** _ingest_url_params: ?assessment=<id> or <id>@<version>, once; a version not available loads the
+   * default one, with a warning. */
+  private async ingestLink(): Promise<void> {
+    if (this.linkRead || !this.linkedAssessment) return
+    this.linkRead = true
+    const [aid, req] = parseAssessmentRef(this.linkedAssessment)
+    if (!aid) return
+    const src = this.data.src
+    const requested = req !== null ? `${aid}@v${req}` : null
+    const resolved = requested && await refExists(src, requested).catch(() => false) ? requested : await defaultRefFor(src, aid).catch(() => null)
+    if (!resolved) {
+      notify(`Could not open the linked assessment ${pyRepr(aid)}.`, { type: 'error', seconds: 8 })
+      return
+    }
+    let la: Record<string, any>
+    try {
+      la = await loadRef(src, resolved)
+    } catch (err) {
+      notify(`Could not open the linked assessment: ${err instanceof Error ? err.message : String(err)}`, { type: 'error', seconds: 8 })
+      return
+    }
+    this.loaded = la
+    this.selectedRef = resolved
+    this.focusOnce = true
+    this.deep?.assessmentLoaded()
+    this.setStep('identify')
+    const name = la.assessmentName ?? la.assessmentId ?? ''
+    if (requested && resolved !== requested) {
+      notify(`Requested v${req} of ${name} is not available; loaded ${resolved.split('@').pop()} instead.`, { type: 'warning', seconds: 7 })
+    } else notify(`Loaded ${name} from link.`, { type: 'message', seconds: 4 })
   }
 
   /** DEEP adopts an assessment once there is a basin for it (app.py _resolve_assessment). */
@@ -594,7 +907,13 @@ export class Tool {
         if (this.basin?.delin && this.identify?.ready()) void this.loadEasi().then((ws) => ws.runScreening())
         break
       case 'change_assessment':
-        notify('Changing the assessment comes with the Assessment step.', { seconds: 4 })
+        this.openChange()
+        break
+      case 'nav_new':
+        this.navNew()
+        break
+      case 'confirm_new':
+        this.clear()
         break
       case 'step_nav':
         // a link's key, or field-review.js's {key}
@@ -615,10 +934,14 @@ export class Tool {
         // starts only then (it asks again when DEEP shows)
         if (this.key === 'deep' && shownTool() === 'deep') this.sendCoverage()
         break
-      default:
-        if (!this.easi?.input(name, value) && !this.sfari?.input(name, value)) this.deep?.input(name, value)
+      default: {
+        const pick = /^assess_pick_(\d+)$/.exec(name)
+        if (pick && this.key === 'deep') void this.pickAssessment(Number(pick[1]))
+        else if (!this.easi?.input(name, value) && !this.sfari?.input(name, value)) this.deep?.input(name, value)
         break
+      }
     }
+    this.guard.soon()
   }
 
   // ------------------------------------------------------------------- DEEP's assessment regions
@@ -641,6 +964,12 @@ export class Tool {
       this.coverageSent = false
     })
   }
+}
+
+/** repr() of a str as Python writes it in a message. */
+function pyRepr(s: string): string {
+  if (s.includes("'") && !s.includes('"')) return `"${s}"`
+  return `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
 }
 
 /** Photon's first US place for a query (geocode._photon; the as-you-type list asks it too). */

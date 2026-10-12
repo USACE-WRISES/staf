@@ -1,0 +1,508 @@
+{
+ "name": "neh",
+ "bundle": "apps/library/assessments/northeastern-highlands/v10/assessment.deep.json",
+ "ref": "",
+ "measured": {
+  "spring-pctimp2019ws": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  },
+  "spring-pctag2019ws": {
+   "value": 12.75,
+   "origin": "desktop",
+   "basis": "streamcat",
+   "engine": false,
+   "source": "StreamCat PCTIMP2019WS"
+  },
+  "spring-pctwet2019ws": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  },
+  "spring-rddensws": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  },
+  "spring-bfiws": {
+   "value": 12.75,
+   "origin": "desktop",
+   "basis": "streamcat",
+   "engine": false,
+   "source": "StreamCat PCTIMP2019WS"
+  },
+  "spring-dorws": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  },
+  "spring-phab-bfwd-rat": {
+   "value": 7.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xembed": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "spring-phab-xbka": {
+   "value": 12.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xcdenmid": {
+   "value": 17.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-chem-turb": {
+   "value": 22.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xfc-nat": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "spring-bent-tolrpind": {
+   "value": 27.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-nid-dams-1mi": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  }
+ },
+ "delineation": {
+  "delineation": {
+   "network": "nhdplus-v2",
+   "comid": 9327042,
+   "snapped_lat": "43.7",
+   "snapped_lon": "-72.2",
+   "reach_length_ft": "1234.5",
+   "gnis_name": null,
+   "drainage_area_sqkm": 3.0,
+   "watershed_area_sqkm": 11.98,
+   "huc8": "01080104"
+  },
+  "watershedBasis": "nhdplus-v2-basin-of-surrogate",
+  "watershed_geojson": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "properties": {},
+     "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+       [
+        [
+         -72.21822,
+         43.6858
+        ],
+        [
+         -72.21746,
+         43.687244
+        ],
+        [
+         -72.217681,
+         43.688688
+        ],
+        [
+         -72.21843,
+         43.69004
+        ],
+        [
+         -72.219205,
+         43.691364
+        ],
+        [
+         -72.219773,
+         43.69278
+        ],
+        [
+         -72.220297,
+         43.694313
+        ],
+        [
+         -72.221182,
+         43.69578
+        ],
+        [
+         -72.22278,
+         43.696843
+        ],
+        [
+         -72.225123,
+         43.697182
+        ],
+        [
+         -72.22788,
+         43.696712
+        ],
+        [
+         -72.230537,
+         43.695688
+        ],
+        [
+         -72.232691,
+         43.694612
+        ],
+        [
+         -72.234261,
+         43.693996
+        ],
+        [
+         -72.235479,
+         43.694098
+        ],
+        [
+         -72.2367,
+         43.6948
+        ],
+        [
+         -72.238156,
+         43.695695
+        ],
+        [
+         -72.239834,
+         43.696331
+        ],
+        [
+         -72.241549,
+         43.696459
+        ],
+        [
+         -72.243147,
+         43.696144
+        ],
+        [
+         -72.24468,
+         43.695673
+        ],
+        [
+         -72.246399,
+         43.695335
+        ],
+        [
+         -72.248566,
+         43.695213
+        ],
+        [
+         -72.251202,
+         43.695127
+        ],
+        [
+         -72.253943,
+         43.694748
+        ],
+        [
+         -72.256147,
+         43.69382
+        ],
+        [
+         -72.257198,
+         43.692319
+        ],
+        [
+         -72.256848,
+         43.690476
+        ],
+        [
+         -72.255376,
+         43.688635
+        ],
+        [
+         -72.253457,
+         43.687058
+        ],
+        [
+         -72.25182,
+         43.6858
+        ],
+        [
+         -72.250876,
+         43.684736
+        ],
+        [
+         -72.250546,
+         43.683698
+        ],
+        [
+         -72.250385,
+         43.682624
+        ],
+        [
+         -72.2499,
+         43.681602
+        ],
+        [
+         -72.248872,
+         43.68078
+        ],
+        [
+         -72.24748,
+         43.680206
+        ],
+        [
+         -72.246152,
+         43.679721
+        ],
+        [
+         -72.245263,
+         43.679007
+        ],
+        [
+         -72.244873,
+         43.677765
+        ],
+        [
+         -72.24468,
+         43.675927
+        ],
+        [
+         -72.244203,
+         43.673763
+        ],
+        [
+         -72.243074,
+         43.671787
+        ],
+        [
+         -72.241247,
+         43.670521
+        ],
+        [
+         -72.238991,
+         43.67023
+        ],
+        [
+         -72.2367,
+         43.6708
+        ],
+        [
+         -72.234644,
+         43.671827
+        ],
+        [
+         -72.232848,
+         43.672856
+        ],
+        [
+         -72.231166,
+         43.673634
+        ],
+        [
+         -72.229481,
+         43.674218
+        ],
+        [
+         -72.22788,
+         43.674888
+        ],
+        [
+         -72.226649,
+         43.675918
+        ],
+        [
+         -72.226084,
+         43.677378
+        ],
+        [
+         -72.226232,
+         43.679068
+        ],
+        [
+         -72.22676,
+         43.680642
+        ],
+        [
+         -72.227048,
+         43.68182
+        ],
+        [
+         -72.226503,
+         43.682557
+        ],
+        [
+         -72.224893,
+         43.68306
+        ],
+        [
+         -72.22251,
+         43.683646
+        ],
+        [
+         -72.220041,
+         43.684549
+        ],
+        [
+         -72.21822,
+         43.6858
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  "reach_geojson": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "properties": {},
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        -72.2407,
+        43.6838
+       ],
+       [
+        -72.2377,
+        43.6853
+       ],
+       [
+        -72.2367,
+        43.6858
+       ],
+       [
+        -72.2347,
+        43.6873
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "scored": {
+  "functionScores": {
+   "catchment-hydrology": 13.314375,
+   "reach-inflow": 5.8500000000000005,
+   "streamflow-regime": 8.459202127659575,
+   "low-flow-baseflow-dynamics": 8.449334720740783,
+   "high-flow-dynamics": 13.605,
+   "floodplain-connectivity": 14.050265186162418,
+   "channel-evolution": 14.050265186162418,
+   "channel-floodplain-dynamics": 10.5,
+   "light-thermal-regime": 5.358479685172231,
+   "water-soil-quality": 0.0,
+   "community-dynamics": 0.0,
+   "watershed-connectivity": 0.0
+  },
+  "subIndices": {
+   "physical": 0.71,
+   "chemical": 0.33,
+   "biological": 0.21
+  },
+  "subIndicesRaw": {
+   "physical": 0.7090637929375517,
+   "chemical": 0.32612238867229315,
+   "biological": 0.20808204867977206
+  },
+  "outcomes": {
+   "physical": {
+    "weighted": 88.28,
+    "max": 124.5,
+    "direct": 8,
+    "indirect": 3,
+    "unassessedDirect": 0,
+    "unassessedIndirect": 0,
+    "subIndex": 0.71,
+    "bounds": [
+     0.71,
+     0.71
+    ]
+   },
+   "chemical": {
+    "weighted": 14.19,
+    "max": 43.5,
+    "direct": 2,
+    "indirect": 9,
+    "unassessedDirect": 0,
+    "unassessedIndirect": 0,
+    "subIndex": 0.33,
+    "bounds": [
+     0.33,
+     0.33
+    ]
+   },
+   "biological": {
+    "weighted": 9.36,
+    "max": 45.0,
+    "direct": 2,
+    "indirect": 10,
+    "unassessedDirect": 0,
+    "unassessedIndirect": 0,
+    "subIndex": 0.21,
+    "bounds": [
+     0.21,
+     0.21
+    ]
+   }
+  },
+  "categorySubIndices": {
+   "Hydrology": 0.61,
+   "Hydraulics": 0.8,
+   "Geomorphology": 0.82,
+   "Physicochemistry": 0.18,
+   "Biology": 0.0
+  },
+  "categoryLabels": {
+   "Hydrology": "Functioning-at-Risk",
+   "Hydraulics": "Functioning",
+   "Geomorphology": "Functioning",
+   "Physicochemistry": "Non-Functioning",
+   "Biology": "Non-Functioning"
+  },
+  "ecosystemConditionIndex": 0.41,
+  "ecosystemConditionIndexRaw": 0.41442274342987234,
+  "ecosystemConditionIndexBounds": [
+   0.41,
+   0.41
+  ],
+  "subIndicesOverScored": {
+   "physical": 0.71,
+   "chemical": 0.33,
+   "biological": 0.21
+  },
+  "subIndicesOverScoredRaw": {
+   "physical": 0.7090637929375517,
+   "chemical": 0.32612238867229315,
+   "biological": 0.20808204867977206
+  },
+  "ecosystemConditionIndexOverScored": 0.41,
+  "ecosystemConditionIndexOverScoredRaw": 0.41442274342987234,
+  "assessable": true,
+  "unassessedFunctions": [],
+  "nUnassessed": 0,
+  "nFunctions": 20
+ },
+ "region": {
+  "level3": {
+   "code": "58",
+   "name": "Northeastern Highlands"
+  },
+  "state": null
+ },
+ "scenario": [
+  "Existing Conditions",
+  ""
+ ],
+ "basemap": true
+}

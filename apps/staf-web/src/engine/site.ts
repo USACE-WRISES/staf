@@ -3,6 +3,7 @@
 // its area check) and the assessment reach (reach.derive_reach). Never throws: a failure is the
 // record's status and reason. Progress events are the engine's (progress.py), for the busy line.
 import { pyFixed } from '../app/pyfmt'
+import { floatKeys } from '../app/pyjson'
 import { metadata, readColumns } from '../data/parquet'
 import type { DataSource } from '../data/source'
 import { hrFeatures, type Network } from '../streams/network'
@@ -10,6 +11,7 @@ import { lineLength } from '../streams/geom'
 import { albersForward } from '../xs/projExact'
 import type { FlowlineRecord } from './bundle'
 import type { Dataset } from './dataset'
+import { level3At } from './ecoregion'
 import { computeAll } from './metrics'
 import { deriveReachHr, geoSeries, type GeoSeriesJson, type LineGeometry } from './reach'
 import type { ValueTables } from './values'
@@ -44,6 +46,23 @@ export interface EngineData {
 /** Each record's reach lines (anchor first), kept beside the record: the cross-section family reads
  * their grid sections. */
 export const reachLineIds = new WeakMap<object, number[]>()
+
+/** A record's reach lines; a record read from a saved file has none kept, so its reach is traced again
+ * from its site (the same reach: the anchored line, the snapped point, the configured length). */
+export async function engineLineIds(d: { hr: Dataset }, record: any): Promise<number[]> {
+  if (!record) return []
+  const known = reachLineIds.get(record)
+  if (known) return known
+  const site = record.site ?? {}
+  if (!site.nhdplusId || site.snapLat == null || site.snapLon == null) return []
+  const anchor = await d.hr.flowline('by_id', Number(site.nhdplusId)).catch(() => null)
+  if (!anchor) return [Number(site.nhdplusId)]
+  const lengthFt = Number(record.input?.config?.reachLengthFt ?? record.reach?.lengthFt ?? 1000)
+  const reach = await deriveReachHr(d.hr, anchor, site.snapLat, site.snapLon, lengthFt).catch(() => null)
+  const ids = reach?.lineIds ?? [anchor.nhdplusid]
+  reachLineIds.set(record, ids)
+  return ids
+}
 
 const pyRound = (x: number, n: number): number => Number(pyFixed(x, n))
 
@@ -103,6 +122,8 @@ export async function siteContext(d: EngineData, lat: number, lon: number, snapT
       reason: `nearest HR flowline is ${pyFixed(distFt, 0)} ft away (tolerance ${pyFixed(snapTolFt, 0)} ft)`,
     }
   }
+  // the Level III ecoregion at the snapped point, read while the reach's record is
+  const ecoregion = level3At(d.src, sLat, sLon)
   const hit = lines.find((l) => l.id === nid)
   const anchor = hit ? (await d.hr.records(hit.region, [hit.row]))[0] ?? null : null
   if (!anchor) return { status: 'failed', reason: 'anchored reach not resolvable', anchor: null, site: null }
@@ -122,9 +143,9 @@ export async function siteContext(d: EngineData, lat: number, lon: number, snapT
     fcode: anchor.fcode,
     sinuosity,
     eromQamaCfs: anchor.qama ?? null,
-    // EPA Level III ecoregion (context.ecoregion_l3_at): its polygons are not in the published data yet
-    ecoregionL3: null,
+    ecoregionL3: await ecoregion,
   }
+  floatKeys(site, 'snapLat', 'snapLon', 'snapDistFt', 'drainageAreaSqkm', 'slope', 'sinuosity', 'eromQamaCfs')
   return { status: 'ok', reason: null, anchor, site }
 }
 
@@ -185,6 +206,7 @@ export async function delineateWatershed(d: EngineData, anchor: FlowlineRecord, 
     out.warnings.push('published drainage area unavailable; union not validated')
   }
   out.status = 'ok'
+  floatKeys(out, 'areaSqkm', 'vaaAreaSqkm', 'areaAgreement')
   return out
 }
 
@@ -200,6 +222,8 @@ export interface SiteRecord {
   metrics: Record<string, unknown>
   exclusions: { code: string, reason: string }[]
   warnings: string[]
+  /** what answered the HR calls (bundle.describe and the sources used): the bundle, from the mirror */
+  hrSource?: Record<string, unknown>
   /** the anchored reach (not in the Python record: the app keeps it for the reach's attributes) */
   anchor?: FlowlineRecord | null
 }
@@ -219,7 +243,8 @@ export async function computeSite(d: EngineData, lat: number, lon: number, confi
   cfg.landcoverBaseline = Boolean(cfg.landcoverBaseline)
   const record: SiteRecord = {
     engineId: ENGINE_ID, engineVersion: ENGINE_VERSION, status: 'failed', reason: null,
-    input: { lat: pyRound(lat, 6), lon: pyRound(lon, 6), config: Object.fromEntries(Object.keys(cfg).sort().map((k) => [k, (cfg as any)[k]])) },
+    input: floatKeys({ lat: pyRound(lat, 6), lon: pyRound(lon, 6),
+      config: floatKeys(Object.fromEntries(Object.keys(cfg).sort().map((k) => [k, (cfg as any)[k]])), 'reachLengthFt', 'snapTolFt') }, 'lat', 'lon'),
     site: null, watershed: null, reach: null, metrics: {}, exclusions: PERMANENT_EXCLUSIONS.map((e) => ({ ...e })), warnings: [],
   }
   try {
@@ -245,7 +270,7 @@ export async function computeSite(d: EngineData, lat: number, lon: number, confi
     }
     notify(progress, { stage: 'reach' })
     const reach = await deriveReachHr(d.hr, ctx.anchor, ctx.site.snapLat, ctx.site.snapLon, cfg.reachLengthFt)
-    record.reach = { lengthFt: reach.lengthFt, geometry: reach.geojson, warnings: reach.warnings }
+    record.reach = floatKeys({ lengthFt: reach.lengthFt, geometry: reach.geojson, warnings: reach.warnings }, 'lengthFt')
     reachLineIds.set(record, reach.lineIds ?? [ctx.anchor.nhdplusid])
     // Layer B: the metric families over the watershed and the reach
     notify(progress, { stage: 'metrics' })
@@ -260,5 +285,10 @@ export async function computeSite(d: EngineData, lat: number, lon: number, confi
   } catch (err) {
     record.reason = `engine error: ${err instanceof Error ? err.message : err}`
     return record
+  } finally {
+    // which HR source answered (engine 0.5.0): the bundle's identity, as the data mirror delivers it
+    const b = d.src.manifest?.bundle
+    record.hrSource = { source: 'bundle', built: b?.built ?? null, regions: b?.regions ?? null, format: b?.format ?? null,
+      delivered: { mirror: d.src.base }, answeredBy: ['bundle'] }
   }
 }

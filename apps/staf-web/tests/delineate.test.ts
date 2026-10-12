@@ -67,7 +67,7 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
       const e = c.engine
       const rec = await computeSite(d, e.input[0], e.input[1], { ...INTERACTIVE_CONFIG, reachLengthFt: ref.reachFt })
       expect(rec.status, `${c.name}: ${rec.reason}`).toBe('ok')
-      expect({ ...rec.site, ecoregionL3: e.site.ecoregionL3 }, c.name).toEqual(e.site)
+      expect(rec.site, c.name).toEqual(e.site)
       const { polygon, ...wsRest } = rec.watershed!
       const { polygon: wantPolygon, ...wantRest } = e.watershed
       expect(wsRest, c.name).toEqual(wantRest)
@@ -145,8 +145,9 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
       const rec = want.ctx_inputs.watershedEngine?.record
       if (rec) {
         // the reference leaves the engine's metrics out (tests/metrics.test.ts checks them)
-        got.ctx_inputs.watershedEngine.record.site.ecoregionL3 = rec.site.ecoregionL3
         got.ctx_inputs.watershedEngine.record.metrics = {}
+        // the HR source names the machine's data (the mirror here, a local copy or the release there)
+        delete got.ctx_inputs.watershedEngine.record.hrSource
       }
       expect(got, c.name).toEqual(want)
     }
@@ -157,7 +158,7 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
     const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), values: new ValueTables(src) }
     for (const c of cases) {
       const rec = await computeSite(d, c.lat, c.lon, { ...INTERACTIVE_CONFIG, includeGeometry: true, metricFamilies: [] })
-      rec.site!.ecoregionL3 = c.sfari.record.site.ecoregionL3
+      delete rec.hrSource
       const got = delineateFromEngine(rec, c.lat, c.lon, ref.reachFt)
       const want = structuredClone(c.sfari.result)
       expectNear(got.reach_geojson, want.reach_geojson, c.name)

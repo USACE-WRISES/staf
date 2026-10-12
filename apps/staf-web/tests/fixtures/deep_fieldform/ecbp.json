@@ -1,0 +1,90 @@
+{
+ "name": "ecbp",
+ "bundle": "apps/library/assessments/eastern-corn-belt-plains/v6/assessment.deep.json",
+ "ref": "eastern-corn-belt-plains@6",
+ "measured": {
+  "spring-pctag2019ws": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  },
+  "spring-pctimp2019ws": {
+   "value": 12.75,
+   "origin": "desktop",
+   "basis": "streamcat",
+   "engine": false,
+   "source": "StreamCat PCTIMP2019WS"
+  },
+  "spring-pctwet2019ws": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  },
+  "spring-rddensws": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  },
+  "spring-bfiws": {
+   "value": 12.75,
+   "origin": "desktop",
+   "basis": "streamcat",
+   "engine": false,
+   "source": "StreamCat PCTIMP2019WS"
+  },
+  "spring-dorws": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  },
+  "spring-phab-bfwd-rat": {
+   "value": 7.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-pct-safn": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "spring-phab-sinu": {
+   "value": 12.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xcdenmid": {
+   "value": 17.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-nid-dams-1mi": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  }
+ },
+ "delineation": {
+  "delineation": {
+   "network": "nhdplus-hr",
+   "nhdplus_id": 10000100012345,
+   "comid": 9327042,
+   "snapped_lat": 43.68581234,
+   "snapped_lon": -72.23671234,
+   "reach_length_ft": 1000.0,
+   "gnis_name": "Mink Brook",
+   "drainage_area_sqkm": 12.43
+  },
+  "watershedBasis": "site-engine",
+  "siteEngine": {
+   "engineVersion": "0.5.0",
+   "status": "ok"
+  }
+ }
+}

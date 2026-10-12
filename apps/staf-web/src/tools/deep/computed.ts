@@ -8,7 +8,7 @@ import type { DataSource } from '../../data/source'
 import { bankfullGeometry } from '../../engine/bieger'
 import type { Dataset } from '../../engine/dataset'
 import type { PointTables } from '../../engine/points'
-import { reachLineIds } from '../../engine/site'
+import { engineLineIds } from '../../engine/site'
 import { streamcatRow } from '../../engine/streamcat'
 import { crossSectionQuality, gridReachGeometry, type ReachGeometry } from '../../engine/xsreach'
 import { describes } from '../sfari/anchorText'
@@ -81,7 +81,7 @@ class Ctx {
       const coords = reach.features?.[0]?.geometry?.coordinates ?? []
       if (coords.length < 2) return null
       const bf = await bankfullGeometry(this.d.src, da, this.lat, this.lon)
-      const ids = (this.record && reachLineIds.get(this.record)) ?? []
+      const ids = await engineLineIds(this.d, this.record)
       return (await gridReachGeometry(this.d.src, this.d.hr, ids, coords, bf.extrapolated)).geom
     })().catch(() => null)
     return this.geom

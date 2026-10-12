@@ -24,12 +24,26 @@ import {
   fnNav, metricAboutTip, metricLive, methodBody, methodCriteria, observedEditor, observedValue, OBSERVED_INPUTS, output, rateSelect,
   rollupRail, scorecard, stepper,
 } from './markup'
-import { functions, loadMethod, metricDefinition, metricsById } from './method'
+import { functions, loadMethod, method, metricDefinition, metricsById } from './method'
 import { resolve } from './methods'
 import { ctxFromInputs, type EasiAssessData, prefetch } from './prefetch'
 import { reportBody, reportFooter, summaryBlock, summaryRows } from './report'
 import { easiComparison, emptyState, normalized, scoredFor, type ScoreState, xsBlock, xsCandidate } from './state'
 import { plotly } from './xsplot'
+import * as easiSession from '../../session/easi'
+import { scenarioSet, scenariosBlock } from '../../session/file'
+import { stateFingerprint } from '../../session/guard'
+import { scoringMethod } from './identity'
+import { buildCsv, buildGeojson } from './exports'
+import { displaySimplify } from '../../engine/simplify'
+import { svg } from '../../shared/reportmap'
+import { pyCopy, pySet } from '../../app/pyjson'
+import { fromBase64 } from '../../files/bytes'
+import { registerDownload } from '../../files/download'
+import { scenarioSuffix, XLSX_MEDIA_TYPE } from '../../shared/downloads'
+import { available as calculatorAvailable, blankFilename, buildFilled, entryCells, filledFilename } from './calculator'
+import { todayIso } from '../../files/xlsx/calcfill'
+import { formsModal } from './forms'
 import {
   buildCrossSection, type CardState, defaultHeights, type Geometry, hasProfile, pullContent, pullProfile, reportImageSpec, sourceFigure,
   windowRange, xsCaption, xsEditor, XsPlot, xsReachTable, xsReadonly, xsSelector, xsSummary,
@@ -65,9 +79,12 @@ function boxValue(el: HTMLInputElement | null): number | null {
 /** session_io.screened: the result the page scores (the delineation without the run's inputs, with
  * the HUC12, the report and the twelve EROM monthly flows). */
 export function screened(delin: Record<string, any>, huc12: string | null, report: Record<string, any>): Record<string, any> {
-  const merged: Record<string, any> = {}
-  for (const [k, v] of Object.entries(delin)) if (k !== 'ctx_inputs') merged[k] = v
-  merged.delineation = { ...(delin.delineation || {}), huc12 }
+  // the delineation without the run's inputs; copies keep each number's int or float (dict(**x))
+  const merged = pyCopy(delin)
+  delete merged.ctx_inputs
+  const dl = pyCopy(delin.delineation || {})
+  pySet(dl, 'huc12', huc12)
+  merged.delineation = dl
   merged.report = report
   const erom = (delin.ctx_inputs || {}).erom
   const flows: number[] = []
@@ -118,16 +135,43 @@ export class EasiWorksheet {
   private ahead: { delin: Record<string, any>, p: Promise<{ ctx: Record<string, any>, cross: Obj | null }> } | null = null
 
   private reportCounter = 0
+  /** the report being prepared (its request id), until it opens */
+  private pendingReport: number | null = null
 
   constructor(private host: EasiHost) {
-    // the report's downloads come with Phase 6: a click says so (the links would open the page again)
-    document.addEventListener('click', (e) => {
-      const a = (e.target as Element | null)?.closest?.('#easi-dl_pdf, #easi-dl_csv, #easi-dl_geojson, #easi-dl_workbook')
-      if (!a) return
-      e.preventDefault()
-      e.stopPropagation()
-      notify('The report downloads are not in the web app yet.', { type: 'message', seconds: 4 })
-    }, true)
+    // the report's downloads (each named for the scenario shown)
+    const suffix = () => scenarioSuffix(this.scenarios)
+    registerDownload('easi-dl_csv', { filename: () => `easi-report${suffix()}.csv`, mime: 'text/csv', build: () => {
+      const res = this.exportResult()
+      return res ? buildCsv(res) : null
+    } })
+    registerDownload('easi-dl_geojson', { filename: () => `easi-report${suffix()}.geojson`, mime: 'application/geo+json', build: () => {
+      const res = this.exportResult()
+      return res ? buildGeojson(res) : null
+    } })
+    // the report's PDF (report.build_pdf): the summary plot and the cross-section drawn as matplotlib lays them out
+    registerDownload('easi-dl_pdf', { filename: () => `easi-report${suffix()}.pdf`, mime: 'application/pdf', build: async () => {
+      const res = this.exportResult()
+      if (!res) return null
+      const spec = reportImageSpec(res.report.crossSection)
+      const [{ buildPdf }, { summaryPlotPng }, xsUrl] = await Promise.all([import('./reportpdf'), import('./summaryplot'),
+        spec ? import('./xsimage').then((m) => m.xsImage(spec)).catch(() => null) : Promise.resolve(null)])
+      const xsPng = xsUrl ? fromBase64(xsUrl.slice(xsUrl.indexOf(',') + 1)) : null
+      return buildPdf(res, this.reportScenario(), { summaryPng: await summaryPlotPng(res.report), xsPng })
+    } })
+    // Get Forms: the adopted method's own calculator, blank, byte for byte
+    registerDownload('easi-dl_forms_blank', { filename: () => blankFilename(), mime: XLSX_MEDIA_TYPE, build: () => method().calculator })
+    // Get Forms: the desktop metrics list as a PDF (report.build_desktop_metrics_pdf)
+    registerDownload('easi-dl_forms_pdf', { filename: 'easi-desktop-metrics.pdf', mime: 'application/pdf', build: async () => {
+      const res = this.exportResult()
+      if (!res) return null
+      const [{ buildDesktopMetricsPdf }, cells] = await Promise.all([import('./reportpdf'), calculatorAvailable() ? entryCells() : Promise.resolve({})])
+      return buildDesktopMetricsPdf(res, cells)
+    } })
+    // the completed workbook: Get Forms' and the report footer's copy
+    for (const id of ['easi-dl_forms_filled', 'easi-dl_workbook']) {
+      registerDownload(id, { filename: () => filledFilename(), mime: XLSX_MEDIA_TYPE, build: () => this.workbookBytes() })
+    }
     // the cross-section card's height boxes post as Shiny's number inputs do: typing after a 250 ms
     // pause, a change at once; its unit as a radio group; its Pull from 3DEP button
     const box = (e: Event): HTMLInputElement | null => {
@@ -279,9 +323,17 @@ export class EasiWorksheet {
     this.ahead = null
     const { ctx, cross } = await timed('easi:prefetch', ahead ?? this.prepare(d))
     this.progress.waiting = {}
-    const report = timedSync('easi:score', () => scoreContext(ctx as any, null, null, () => { this.progress.done += 1 }))
-    if (cross) report.crossSection = cross
-    return { status: 'ok', report, huc12: ctx.huc12, xsUnpublished: !cross && ctx.extras.xsPicked?.covered === false }
+    const scoredReport = timedSync('easi:score', () => scoreContext(ctx as any, null, null, () => { this.progress.done += 1 }))
+    // the cross-section block takes its place before the basin and the strata, as assess.py builds the report
+    const report: Obj = {}
+    for (const [k, v] of Object.entries(scoredReport)) {
+      if (k === 'basin' && cross) report.crossSection = cross
+      if (k !== 'crossSection') report[k] = v
+    }
+    if (cross && !('crossSection' in report)) report.crossSection = cross
+    else if (!cross && 'crossSection' in scoredReport) report.crossSection = scoredReport.crossSection
+    return { status: 'ok', report, huc12: ctx.huc12, xsUnpublished: !cross && ctx.extras.xsPicked?.covered === false,
+      metricAnchors: ctx.extras.siteAnchor?.metricAnchors ?? null }
   }
 
   private done(d: Record<string, any>, res: Record<string, any>): void {
@@ -294,6 +346,12 @@ export class EasiWorksheet {
       return
     }
     this.status = 'success'
+    // assess stamps a routed site's per-metric table onto the anchor of the inputs it ran on, the same
+    // object as the delineation's own anchor while the pick is the page's (the saved file carries it)
+    if (res.metricAnchors && d.ctx_inputs?.siteAnchor) {
+      if (d.siteAnchor === d.ctx_inputs.siteAnchor) d.siteAnchor.metricAnchors = res.metricAnchors
+      d.ctx_inputs.siteAnchor.metricAnchors = res.metricAnchors
+    }
     this.base = screened(d, res.huc12 ?? null, res.report)
     this.clearEdits()
     this.xsUnpublished = !!res.xsUnpublished
@@ -338,8 +396,18 @@ export class EasiWorksheet {
   exportResult(): Record<string, any> | null {
     const sc = this.scored()
     if (!this.base || !sc) return null
-    const rows = sc.metricRows.map((r: Record<string, any>) => ({ ...r, userNote: this.notes[r.metricId] ?? '' }))
-    return { ...this.base, report: { ...sc, metricRows: rows, crossSection: this.xsRender() || sc.crossSection } }
+    // copies as dict(**x) makes them: each key keeps its place, each number its int or float
+    const rows = sc.metricRows.map((r: Record<string, any>) => {
+      const row = pyCopy(r)
+      row.userNote = this.notes[r.metricId] ?? ''
+      return row
+    })
+    const report = pyCopy(sc)
+    report.metricRows = rows
+    report.crossSection = this.xsRender() || sc.crossSection
+    const out = pyCopy(this.base)
+    out.report = report
+    return out
   }
 
   // ---------------------------------------------------------------- the cross-section card
@@ -1047,11 +1115,7 @@ export class EasiWorksheet {
         this.select(1)
         return true
       case 'forms_evt':
-        if (!this.exportResult()) {
-          notify('The desktop metrics are still being computed. Get Forms opens when they finish.', { type: 'message', seconds: 4 })
-          return true
-        }
-        notify('Get Forms is not in the web app yet.', { type: 'message', seconds: 4 })
+        void this.openForms()
         return true
       case 'staf_scenario_evt':
         this.scenarioEvent(ev)
@@ -1076,6 +1140,86 @@ export class EasiWorksheet {
     this.xsMount()
   }
 
+  // ---------------------------------------------------------------- the assessment file
+
+  /** _session_scenarios: every scenario's rating state, the shown one's read live. */
+  sessionScenarios(): Record<string, any> {
+    return scenariosBlock(this.scenarios, this.captureState())
+  }
+
+  /** Save (save_session): the file's text for this delineation. */
+  saveText(delin: Record<string, any> | null): string {
+    return easiSession.dump(delin, this.base, { ...this.notes }, scoringMethod(), this.sessionScenarios())
+  }
+
+  /** _work_fp: the site, whether it was screened, the notes and every scenario's ratings (null: nothing
+   * to lose). */
+  workFingerprint(delin: Record<string, any> | null): string | null {
+    const s = this.scenarios
+    if (!delin && !this.base && !s.hasAlternatives() && !s.baseline.description) return null
+    const dd = (delin ?? {}).delineation ?? {}
+    const site = ['comid', 'snapped_lat', 'snapped_lon'].map((k) => dd[k] ?? null)
+    const live = this.scoreState()
+    const rows = s.items.map((sc) => [sc.id, sc.name, sc.description, easiSession.fingerprintState(sc.id === s.active ? live : sc.state)])
+    return stateFingerprint(site, this.base !== null, this.notes, rows)
+  }
+
+  /** Open (_load_session's part): the file's screening as it was saved (scored from the stored report,
+   * no network call), its notes and every scenario's ratings, the saved one shown. */
+  restore(base: Record<string, any> | null, notes: Record<string, string>, scenarios: Record<string, any> | null): void {
+    this.reset()
+    this.base = base
+    this.status = base ? 'success' : 'initial'
+    // _analysis_runs: a restored screening is this pick's; a site saved before it ran screens on the step
+    this.launched = base ? this.pickGen : null
+    this.notes = { ...notes }
+    const sset = scenarioSet(scenarios)
+    this.scenarios = sset
+    this.xsIn = null
+    this.xsHeights = null
+    this.applyState(sset.current.state)
+    this.currentFn = 0
+    if (base) void plotly().catch(() => {})
+  }
+
+  /** _cancel_report: a report still being prepared will not open. */
+  /** _workbook_bytes: the scenario workbook, or the single calculator when it cannot be assembled (never
+   * a failed download); nothing before the screening has run. */
+  private async workbookBytes(): Promise<Uint8Array | null> {
+    const res = this.exportResult()
+    if (!res || !this.base) return null
+    const today = todayIso()
+    try {
+      const { buildWorkbook } = await import('./workbook')
+      return await buildWorkbook(this.base, this.scenarioReports(), { ...this.notes }, today)
+    } catch (err) {
+      console.warn('EASI: the scenario workbook failed; serving the single calculator', err)
+      return buildFilled(res, today)
+    }
+  }
+
+  /** _open_forms: the Get Forms dialog for the screening (a snapshot, as the report is). */
+  private async openForms(): Promise<void> {
+    const res = this.exportResult()
+    if (!res) {
+      notify('The desktop metrics are still being computed. Get Forms opens when they finish.', { type: 'message', seconds: 4 })
+      return
+    }
+    // a report still being prepared would open over this dialog and replace it
+    this.cancelReport()
+    const has = calculatorAvailable()
+    const cells = has ? await entryCells().catch(() => ({})) : {}
+    showModal(formsModal(res, cells, has))
+  }
+
+  cancelReport(): void {
+    const pending = this.pendingReport
+    if (pending === null) return
+    this.pendingReport = null
+    this.reportCounter += 1
+    shim.send('staf-report-state', { requestId: pending, busy: false, opened: false, ns: 'easi' })
+  }
+
   /** _report_title: the scenario shown names the report once there are alternatives. */
   private reportTitle(): string {
     const s = this.scenarios
@@ -1098,17 +1242,22 @@ export class EasiWorksheet {
     }
     const id = ++this.reportCounter
     const base = this.base
+    this.pendingReport = id
     shim.send('staf-report-state', { requestId: id, busy: true, ns: 'easi' })
     // the cross-section's image first (the Shiny EASI draws its PNG before sending the report)
     const spec = reportImageSpec(res.report.crossSection)
     const image = spec ? import('./xsimage').then((m) => m.xsImage(spec)).catch(() => null) : Promise.resolve(null)
-    void image.then((png) => {
+    // the basin map over its basemap (reportmap.svg, read once and kept for the PDF)
+    const ws = res.watershed_geojson ? displaySimplify(res.watershed_geojson, 700) : null
+    const minimap = svg(ws, res.reach_geojson).catch(() => '')
+    void Promise.all([image, minimap]).then(([png, map]) => {
       if (id !== this.reportCounter || this.base !== base) return
+      this.pendingReport = null
       const summary = h.div(h.div('Assessment summary', { class: 'easi-section-title' }), summaryBlock(summaryRows(res), this.reportScenario()),
         { class: 'staf-report-summary' })
       const title = new TagList(this.reportTitle(), h.span('Close to review the Assessment', { class: 'easi-modal-hint' }),
         actionButton('easi-close_modal_x', '✕', 'easi-modal-x'))
-      showModal(modal(reportBody(res, this.notes, summary, (rep) => xsReadonly(rep, png)),
+      showModal(modal(reportBody(res, this.notes, summary, (rep) => xsReadonly(rep, png), map),
         { title, footer: reportFooter(), size: 'xl', easyClose: true }))
       shim.send('staf-report-state', { requestId: id, busy: false, opened: true, ns: 'easi' })
     })

@@ -1,0 +1,101 @@
+{
+ "name": "neh",
+ "bundle": "apps/library/assessments/northeastern-highlands/v10/assessment.deep.json",
+ "ref": "",
+ "measured": {
+  "spring-pctimp2019ws": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  },
+  "spring-pctag2019ws": {
+   "value": 12.75,
+   "origin": "desktop",
+   "basis": "streamcat",
+   "engine": false,
+   "source": "StreamCat PCTIMP2019WS"
+  },
+  "spring-pctwet2019ws": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  },
+  "spring-rddensws": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  },
+  "spring-bfiws": {
+   "value": 12.75,
+   "origin": "desktop",
+   "basis": "streamcat",
+   "engine": false,
+   "source": "StreamCat PCTIMP2019WS"
+  },
+  "spring-dorws": {
+   "value": "0.4",
+   "origin": "desktop",
+   "engine": true,
+   "source": "Computed"
+  },
+  "spring-phab-bfwd-rat": {
+   "value": 7.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xembed": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "spring-phab-xbka": {
+   "value": 12.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xcdenmid": {
+   "value": 17.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-chem-turb": {
+   "value": 22.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-phab-xfc-nat": {
+   "value": null,
+   "na": true,
+   "origin": "field"
+  },
+  "spring-bent-tolrpind": {
+   "value": 27.5,
+   "origin": "field",
+   "source": ""
+  },
+  "spring-nid-dams-1mi": {
+   "value": 3.0,
+   "origin": "desktop",
+   "basis": "site-engine",
+   "engine": true,
+   "source": "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+  }
+ },
+ "delineation": {
+  "delineation": {
+   "network": "nhdplus-v2",
+   "comid": 9327042,
+   "snapped_lat": "43.7",
+   "snapped_lon": "-72.2",
+   "reach_length_ft": "1234.5",
+   "gnis_name": null,
+   "drainage_area_sqkm": 3.0
+  },
+  "watershedBasis": "nhdplus-v2-basin-of-surrogate"
+ }
+}

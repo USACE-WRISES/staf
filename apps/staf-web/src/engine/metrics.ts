@@ -7,6 +7,7 @@
 // warnings; the families run in name order, so the record is the same whatever order a tool asks.
 import { GeoTIFF } from 'geotiff'
 import { pyFixed } from '../app/pyfmt'
+import { floatKeys } from '../app/pyjson'
 import type { DataSource } from '../data/source'
 import { albersForward } from '../xs/projExact'
 import { bankfullGeometry } from './bieger'
@@ -52,7 +53,8 @@ const pyRound = (x: number, n: number): number => Number(pyFixed(x, n))
 
 export function metricEntry(value: any, unit: string, source: string, vintage: string, spatialSupport: string,
   warnings: string[] = []): MetricEntry {
-  return { value, unit, source, vintage, spatialSupport, warnings: [...warnings] }
+  const entry = { value, unit, source, vintage, spatialSupport, warnings: [...warnings] }
+  return unit === 'count' ? entry : floatKeys(entry, 'value')
 }
 
 export interface MetricsData {

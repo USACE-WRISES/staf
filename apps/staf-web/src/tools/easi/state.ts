@@ -1,6 +1,7 @@
 // What one EASI scenario holds and its scores (easi/scenario_state.py), and the scenarios side by side
 // (easi/workbook.py comparison and scenario_scores). A scenario changes ratings only: overrides, the
 // cross-section (the shown section and its heights) and the observations; the screening is shared.
+import { pyClone } from '../../app/pyjson'
 import { buildComparison, type Comparison, type ScenarioScores } from '../../shared/scenarios'
 import { applyObservedEvidence, rescore } from './assess'
 import { functions } from './method'
@@ -23,7 +24,7 @@ const KINDS: Record<keyof ScoreState, 'object' | 'array' | 'string' | null> = {
   overrides: 'object', observed: 'object', geomOwned: 'array', geomText: 'object', geomScoring: 'object', geomReason: 'string',
   xsSel: null, xsHeights: null,
 }
-const copy = <T>(x: T): T => (x === undefined ? x : JSON.parse(JSON.stringify(x)))
+const copy = <T>(x: T): T => pyClone(x)
 
 /** normalized: a copy with every field present and of the right kind. */
 export function normalized(state: any): ScoreState {

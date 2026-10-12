@@ -4,6 +4,7 @@
 // stream's reach (routing.reanchor_inputs) and its HR reach watershed from the engine
 // (watershed.compute_reach_watershed). Also the map's frame for them (delineation.geojson_bounds).
 import { pyFixed } from '../app/pyfmt'
+import { floatKeys, pyCopy } from '../app/pyjson'
 import { readColumns } from '../data/parquet'
 import { albersForward } from '../xs/projExact'
 import type { FlowlineRecord } from './bundle'
@@ -48,9 +49,16 @@ export function geojsonBounds(...fcs: (GeoSeriesJson | null | undefined)[]): [[n
 
 /** The engine record without its polygon and reach geometry (engine_prefill.strip_geometry). */
 export function stripGeometry(record: SiteRecord): Result {
-  const { anchor: _anchor, ...out } = record as SiteRecord & Result
-  if (out.watershed) out.watershed = { ...out.watershed, polygon: null }
-  if (out.reach) out.reach = { ...out.reach, geometry: null }
+  const out = pyCopy(record) as SiteRecord & Result
+  delete out.anchor
+  if (out.watershed) {
+    out.watershed = pyCopy(out.watershed)
+    out.watershed.polygon = null
+  }
+  if (out.reach) {
+    out.reach = pyCopy(out.reach)
+    out.reach.geometry = null
+  }
   // the reach's lines go with the copy (the cross-section grid reads them)
   const ids = reachLineIds.get(record)
   if (ids) reachLineIds.set(out, ids)
@@ -80,9 +88,11 @@ export function delineateFromEngine(record: SiteRecord, lat: number, lon: number
     slope: site.slope ?? null, fcode: site.fcode ?? null, stream_order: site.streamOrder ?? null, sinuosity: site.sinuosity ?? null,
     watershedBasis: BASIS_SITE_ENGINE, site_engine: stripped,
   }
+  floatKeys(delin, 'drainage_area_sqkm', 'slope', 'sinuosity', 'snapped_lat', 'snapped_lon', 'watershed_area_sqkm', 'reach_length_ft')
+  floatKeys(ctxInputs, 'lat', 'lon', 'drainage_area_sqkm', 'slope', 'sinuosity')
   return {
     status: 'ok', watershedBasis: BASIS_SITE_ENGINE, siteEngine: stripped,
-    input: { lat, lon, reach_length_ft: reachLengthFt }, delineation: delin,
+    input: floatKeys({ lat, lon, reach_length_ft: reachLengthFt }, 'lat', 'lon', 'reach_length_ft'), delineation: delin,
     watershed_geojson: ws?.polygon ?? null, reach_geojson: reach?.geometry ?? null, ctx_inputs: ctxInputs,
   }
 }
@@ -115,9 +125,11 @@ export function delineateWithoutWatershed(anchor: Anchor | null, lat: number, lo
     warnings: ["the STAF site engine could not compute the HR reach watershed; watershed values describe the StreamCat reach's NHDPlus V2 basin"],
   }
   const basis = routed ? BASIS_SURROGATE_BASIN : BASIS_V2_BASIN
+  floatKeys(delin, 'drainage_area_sqkm', 'slope', 'sinuosity', 'snapped_lat', 'snapped_lon', 'watershed_area_sqkm', 'reach_length_ft')
   return {
     status: 'ok', watershedBasis: basis, siteAnchor: anchor, siteEngine: engine ? { ...engine } : null,
-    input: { lat, lon, reach_length_ft: reachLengthFt }, delineation: delin, watershed_geojson: null, reach_geojson: null,
+    input: floatKeys({ lat, lon, reach_length_ft: reachLengthFt }, 'lat', 'lon', 'reach_length_ft'), delineation: delin,
+    watershed_geojson: null, reach_geojson: null,
     ctx_inputs: {
       lat: delin.snapped_lat, lon: delin.snapped_lon, comid, huc8: delin.huc8, watershed_geojson: null, reach_geojson: null,
       drainage_area_sqkm: delin.drainage_area_sqkm, slope: delin.slope, fcode: delin.fcode, stream_order: delin.stream_order,

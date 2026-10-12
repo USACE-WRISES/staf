@@ -3,6 +3,7 @@
 // then the alternatives a user adds; the chip on the score rail, its dialogs and the comparison.
 import { type Child, h, HTML, type Tag } from '../app/htm'
 import { pyFixed, pySigned } from '../app/pyfmt'
+import { pyClone } from '../app/pyjson'
 import { actionButton, inputSelect, inputText, inputTextArea, modal, modalButton } from './shinyui'
 
 export const BASELINE_ID = 'existing'
@@ -40,7 +41,7 @@ export function sheetNameProblem(name: string, taken: string[] = []): string | n
 // ------------------------------------------------------------------ model/scenarios.py
 export interface Scenario { id: string, name: string, description: string, state: any }
 
-const clone = <T>(x: T): T => (x === undefined ? x : JSON.parse(JSON.stringify(x)))
+const clone = <T>(x: T): T => pyClone(x)
 
 export class ScenarioSet {
   items: Scenario[]

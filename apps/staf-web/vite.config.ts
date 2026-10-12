@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 // The STAF static web app's build and dev server.
 //
 // The app is a section of the STAF website (GitHub Pages from docs/, Jekyll): `npm run build` writes
@@ -105,6 +106,8 @@ export default defineConfig(({ command, isPreview }) => ({
   publicDir: PAGE,
   plugins: [localData(), stafSite()],
   server: { port: 5180, strictPort: true },
+  // the PDF and workbook goldens build whole files: room for them when the suite runs in parallel
+  test: { testTimeout: 30_000 },
   preview: { https: HTTPS },
   build: {
     outDir: OUT,

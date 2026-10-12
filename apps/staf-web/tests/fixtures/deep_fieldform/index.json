@@ -1,0 +1,31 @@
+{
+ "computable": [
+  "catchment-hydrology-anthropogenic-land-cover",
+  "catchment-hydrology-effective-impervious-cover",
+  "catchment-hydrology-impervious-cover",
+  "catchment-hydrology-percent-impervious-cover",
+  "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+  "channel-evolution-width-depth-ratio",
+  "floodplain-connectivity-entrenchment-ratio-er",
+  "spring-bank-height-ratio",
+  "spring-bfiws",
+  "spring-damdensws",
+  "spring-dorws",
+  "spring-natural-riparian-cover",
+  "spring-nid-dams-1mi",
+  "spring-pctag2019ws",
+  "spring-pctcrop2019ws",
+  "spring-pcthbwet2019ws",
+  "spring-pctimp2019ws",
+  "spring-pctwdwet2019ws",
+  "spring-pctwet2019ws",
+  "spring-rdcrsws",
+  "spring-rddensws"
+ ],
+ "cases": [
+  "wgcp",
+  "wy",
+  "neh",
+  "ecbp"
+ ]
+}

@@ -8,6 +8,7 @@
 // drainage-area ratio ("hrSurrogate"). Key order and rounding follow the Python, so a saved file
 // carries the same payload.
 import { pyFixed, pyFloat } from '../app/pyfmt'
+import { floatKeys } from '../app/pyjson'
 import type { DataSource } from '../data/source'
 import { FT_PER_M } from '../streams/display'
 import { albersForward } from '../xs/projExact'
@@ -103,8 +104,8 @@ export async function routeFromHr(src: DataSource, clickedLat: number, clickedLo
   const clickedDa = clickedStream.drainageAreaSqkm
   const surrogateDa = scored.drainageAreaSqkm
   const daRatio = clickedDa && surrogateDa ? pyRound(surrogateDa / clickedDa, 2) : null
-  const routing: Anchor = { method: snap.method || ROUTING_METHOD, routedDistanceFt: routedFt, daRatio,
-                            daRatioLimit: DA_RATIO_MAX, declined: false }
+  const routing: Anchor = floatKeys({ method: snap.method || ROUTING_METHOD, routedDistanceFt: routedFt, daRatio,
+                            daRatioLimit: DA_RATIO_MAX, declined: false }, 'routedDistanceFt', 'daRatio', 'daRatioLimit')
   const anchor = payload('hrSurrogate', clickedLat, clickedLon, { clickedStream, scoredReach: scored, routing, notes: [ROUTED_NOTE] })
   if (policy === 'easi') return { anchor }
   const limit = Number.isInteger(DA_RATIO_MAX) ? String(DA_RATIO_MAX) : pyFloat(DA_RATIO_MAX)

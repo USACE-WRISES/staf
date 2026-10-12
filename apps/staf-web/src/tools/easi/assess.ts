@@ -2,6 +2,7 @@
 // each row's anchor, the rollup with its coverage and evidence profile, and the instant re-scorings
 // the worksheet makes (overrides, observations, edited cross-section heights). Key for key and in the
 // Python's key order.
+import { floatKeys } from '../../app/pyjson'
 import { pyFixed, pyFloat } from '../../app/pyfmt'
 import { deriveFromStages } from '../../engine/geomorph'
 import { BANK_EROSION_ID, CHANNEL_EVOL_ID, CHANNELIZED_FCODES, type EasiCtx, ENTRENCHMENT_ID, FLOODPLAIN_ENGAGEMENT_ID, metricAnchor,
@@ -172,16 +173,19 @@ export function finalize(rows: Obj[], totalCount: number, overridesApplied: Iter
       if (VALID.has(row.rating)) availableWeight += weight
     }
     const fraction = selectedWeight > 0 ? availableWeight / selectedWeight : null
-    outcomeCoverage[outcome] = { availableWeight: pyRound(availableWeight, 3), selectedWeight: pyRound(selectedWeight, 3),
-      fraction: fraction === null ? null : pyRound(fraction, 4) }
+    // round() of a float is a float (1.0, not 1), as Python writes it
+    outcomeCoverage[outcome] = floatKeys({ availableWeight: pyRound(availableWeight, 3), selectedWeight: pyRound(selectedWeight, 3),
+      fraction: fraction === null ? null : pyRound(fraction, 4) }, 'availableWeight', 'selectedWeight', 'fraction')
   }
   const limited: string[] = []
   if (overallFraction !== null && overallFraction < 0.70) limited.push('overall')
   for (const [outcome, item] of Object.entries(outcomeCoverage)) if (item.fraction !== null && item.fraction < 0.70) limited.push(outcome)
   const coverage: Obj = {
-    overall: { rated: ratedRows.length, selected: selectedRows.length, fraction: overallFraction === null ? null : pyRound(overallFraction, 4) },
+    overall: floatKeys({ rated: ratedRows.length, selected: selectedRows.length, fraction: overallFraction === null ? null : pyRound(overallFraction, 4) },
+      'fraction'),
     outcomes: outcomeCoverage, threshold: 0.70, provisional: limited.length > 0, limited,
   }
+  floatKeys(coverage, 'threshold')
   const evidenceProfile: Record<string, number> = { observed: 0, connectedNearby: 0, publishedModel: 0, screeningProxy: 0, manual: 0, unavailable: 0 }
   const familyRows: Record<string, Obj[]> = {}
   const TIERS: Record<string, string> = { observed: 'observed', 'connected-nearby': 'connectedNearby', 'published-model': 'publishedModel',

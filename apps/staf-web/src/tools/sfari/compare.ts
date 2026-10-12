@@ -5,7 +5,7 @@ import type { FunctionRecord } from './markup'
 import { FN_LIST, scoreAssessment } from './method'
 
 /** workbook.scenario_scores: a scenario's scores as the comparison reads them (empty before any score). */
-function scenarioScores(fs: Record<string, FunctionRecord>): ScenarioScores {
+export function scenarioScores(fs: Record<string, FunctionRecord>): ScenarioScores {
   const raw = Object.fromEntries(Object.entries(fs ?? {}).map(([fid, v]) => [fid, v?.score ?? null]))
   const scored = Object.entries(raw).filter(([, s]) => s !== null) as [string, number][]
   if (!scored.length) return { eci: {}, sub: {}, functions: {} }

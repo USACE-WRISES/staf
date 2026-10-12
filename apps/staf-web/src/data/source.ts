@@ -33,6 +33,8 @@ export interface WebManifest {
   datasets?: Record<string, Record<string, any>>
   /** the app's index only: the bundle manifest's sources (its vintages) */
   bundleSources?: Record<string, any>
+  /** the app's index only: the bundle's identity (when built, its format, its region count) */
+  bundle?: { built: string | null, format: number | null, regions: number }
 }
 
 /** A small file is read whole at its first read, in one request. Hugging Face answers a request in 0.15
@@ -165,7 +167,7 @@ export class DataSource {
       const text = await new Response(idx.body.pipeThrough(new DecompressionStream('gzip'))).text()
       const raw = JSON.parse(text) as { format: number, built: string, regions: string[], files: Record<string, [string, number, string?]>,
         gzip?: Record<string, number>, footers?: Record<string, number>, datasets?: Record<string, Record<string, any>>,
-        bundle_sources?: Record<string, any> }
+        bundle_sources?: Record<string, any>, bundle?: { built: string | null, format: number | null, regions: number } }
       const files: Record<string, ManifestFile> = {}
       for (const [logical, [path, bytes, sha256]] of Object.entries(raw.files)) {
         files[logical] = { path, bytes, sha256: sha256 ?? '' }
@@ -175,7 +177,8 @@ export class DataSource {
         if (footer !== undefined) files[logical].footer = footer
       }
       this.manifest = { format: raw.format, built: raw.built, sources: {}, regions: raw.regions, files, datasets: raw.datasets,
-        bundleSources: raw.bundle_sources && Object.keys(raw.bundle_sources).length ? raw.bundle_sources : undefined }
+        bundleSources: raw.bundle_sources && Object.keys(raw.bundle_sources).length ? raw.bundle_sources : undefined,
+        bundle: raw.bundle && Object.keys(raw.bundle).length ? raw.bundle : undefined }
       return this.manifest
     }
     try {

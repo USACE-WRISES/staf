@@ -3,7 +3,7 @@
 // (the first's default version), and what the pane states about it. The library comes from the data
 // mirror: the catalog (library.json, read as deep/remote_library.py reads it) and the version's bundle.
 import type { DataSource } from '../data/source'
-import { parseJson } from './pyjson'
+import { parseJson, pyCopy, pySet } from './pyjson'
 import { deepAssessPane, deepNoAssessment } from './markup'
 
 const ELIGIBLE = ['draft', 'preliminary', 'certified']
@@ -20,16 +20,22 @@ const TIER_LABELS: Record<string, string> = {
 /** The STAF framework's functions (deep config.functions_by_id), for a bundle that declares no coverage. */
 const FRAMEWORK_FUNCTIONS = 20
 
-interface Version { id: string, version: number, status: string, bundle: string }
+interface Version { id: string, version: number, status: string, bundle: string, calculator: string | null, contentDigest: string | null }
 export interface Covering {
   assessmentId: string
+  /** the default version's assessment and region names (Change's cards) */
+  assessmentName: string
+  regionName: string
   defaultRef: string
   refs: string[]
   lifecycleByRef: Record<string, string>
   versionByRef: Record<string, number>
+  /** each version's reference tier (least_disturbed, best_available, ...; null before the stamp) */
+  referenceTierByRef: Record<string, string | null>
   hasCertified: boolean
 }
-type Feature = { assessmentId: string, version?: number | null, geometry?: { type: string, coordinates: any } }
+type Feature = { assessmentId: string, version?: number | null, geometry?: { type: string, coordinates: any },
+  assessmentName?: string, regionName?: string, referenceTierByRef?: Record<string, string | null> }
 
 const asInt = (v: unknown): number | null => {
   if (typeof v === 'boolean') return null
@@ -61,7 +67,9 @@ function catalog(src: DataSource): Promise<Version[]> {
         const visible = raw.visibleInDeep !== false
         const bundle = raw.assets?.bundle?.name
         if (ELIGIBLE.includes(status) && visible && typeof bundle !== 'string') continue
-        byNumber.set(number, ELIGIBLE.includes(status) && visible ? { id: aid, version: number, status, bundle } : null)
+        const calculator = typeof raw.assets?.calculator?.name === 'string' ? raw.assets.calculator.name : null
+        byNumber.set(number, ELIGIBLE.includes(status) && visible
+          ? { id: aid, version: number, status, bundle, calculator, contentDigest: normDigest(raw.contentDigest) } : null)
       }
       for (const n of [...byNumber.keys()].sort((a, b) => a - b)) {
         const v = byNumber.get(n)
@@ -112,14 +120,70 @@ export async function coveringRefs(src: DataSource, regions: Feature[], lat: num
     let refs = ordered.map((r) => `${r.id}@v${r.version}`)
     if (refs.includes(defaultRef)) refs = [defaultRef, ...refs.filter((r) => r !== defaultRef)]
     out.push({
-      assessmentId: f.assessmentId, defaultRef, refs,
+      assessmentId: f.assessmentId, assessmentName: f.assessmentName ?? f.assessmentId, regionName: f.regionName ?? '', defaultRef, refs,
       lifecycleByRef: Object.fromEntries(ordered.map((r) => [`${r.id}@v${r.version}`, r.status])),
       versionByRef: Object.fromEntries(ordered.map((r) => [`${r.id}@v${r.version}`, r.version])),
+      referenceTierByRef: Object.fromEntries(ordered.map((r) => [`${r.id}@v${r.version}`, f.referenceTierByRef?.[`${r.id}@v${r.version}`] ?? null])),
       hasCertified: ordered.some((r) => r.status === 'certified'),
     })
   }
   out.sort((a, b) => (a.hasCertified ? 0 : 1) - (b.hasCertified ? 0 : 1) || (a.assessmentId < b.assessmentId ? -1 : a.assessmentId > b.assessmentId ? 1 : 0))
   return out
+}
+
+/** _norm_digest: ``sha256:<hex>`` and ``<hex>`` compare equal. */
+function normDigest(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null
+  const text = value.trim().toLowerCase()
+  return text.startsWith('sha256:') ? text.slice(7) : text
+}
+
+/** calculator.template_for: the library file of the loaded version's Excel calculator, or null. It
+ * belongs to the version only when the catalog's content digest (else its bundle's own) is the loaded
+ * bundle's, so a workbook built for other curves is never offered. */
+export async function calculatorFor(src: DataSource, bundle: Record<string, any> | null): Promise<string | null> {
+  if (!bundle) return null
+  const ref = String(bundle.assessmentRef || '')
+  const at = ref.lastIndexOf('@v')
+  if (at < 0) return null
+  const digest = bundle.contentDigest
+  if (!digest) return null
+  const v = (await catalog(src)).find((x) => x.id === ref.slice(0, at) && x.version === Number(ref.slice(at + 2)))
+  if (!v || !v.calculator) return null
+  const entry = v.contentDigest || normDigest(bundle.contentDigest)
+  if (!entry || normDigest(digest) !== entry) return null
+  const logical = `library/${v.calculator}`
+  return src.has(logical) ? logical : null
+}
+
+/** config.default_ref_for: an assessment's default version (the newest Final, else Preliminary, else
+ * Draft), or null when it has none DEEP runs. */
+export async function defaultRefFor(src: DataSource, aid: string): Promise<string | null> {
+  const recs = (await catalog(src)).filter((v) => v.id === aid)
+  for (const status of TIER_ORDER) {
+    const vs = recs.filter((r) => r.status === status).map((r) => r.version)
+    if (vs.length) return `${aid}@v${Math.max(...vs)}`
+  }
+  return null
+}
+
+/** config.load_ref(ref) is not None: the version is one DEEP runs. */
+export async function refExists(src: DataSource, ref: string): Promise<boolean> {
+  return (await catalog(src)).some((v) => `${v.id}@v${v.version}` === ref)
+}
+
+/** _parse_assessment_ref: a ?assessment= value as [id, version or null]. */
+export function parseAssessmentRef(raw: string | null): [string | null, number | null] {
+  if (!raw) return [null, null]
+  const ref = raw.trim()
+  if (ref.includes('@')) {
+    const at = ref.lastIndexOf('@')
+    const aid = ref.slice(0, at).trim()
+    const ver = ref.slice(at + 1).trim()
+    const req = /^[+-]?\d+$/.test(ver) ? Number(ver) : null
+    return [aid || null, req]
+  }
+  return [ref || null, null]
 }
 
 const bundles = new Map<string, Promise<Record<string, any>>>()
@@ -134,7 +198,12 @@ export function loadRef(src: DataSource, ref: string): Promise<Record<string, an
       if (!rec) throw new Error(`unknown assessment ref ${ref}`)
       // parsed keeping each number's text: DEEP writes a curve's points back as Python wrote them
       const bundle = parseJson(new TextDecoder().decode(await src.bytesOf(`library/${rec.bundle}`)))
-      return { ...bundle, version: rec.version, lifecycle: rec.status, assessmentRef: ref }
+      // remote_library's stamp: dict(bundle) with the version, its status and its ref (each number kept int or float)
+      const out = pyCopy(bundle)
+      pySet(out, 'version', rec.version)
+      out.lifecycle = rec.status
+      out.assessmentRef = ref
+      return out
     })()
     got.catch(() => bundles.delete(ref))
     bundles.set(ref, got)

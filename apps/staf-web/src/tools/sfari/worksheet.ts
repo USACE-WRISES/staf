@@ -16,8 +16,27 @@ import {
 } from '../../shared/scenarios'
 import { removeModal, showModal } from '../../shared/modal'
 import { sfariComparison } from './compare'
+import * as shim from '../../app/shim'
+import { level3At } from '../../engine/ecoregion'
+import { displaySimplify } from '../../engine/simplify'
+import { pageFile, registerDownload } from '../../files/download'
+import { scenarioSuffix, XLSX_MEDIA_TYPE } from '../../shared/downloads'
+import {
+  BLANK_FILENAME, BLANK_URL, FIELD_FORMS_FILENAME, FIELD_FORMS_URL, ffPreview, ffSite, ffStatus, ffTable, formsModal, type PullState,
+} from './forms'
+import { todayIso } from '../../files/xlsx/calcfill'
+import { buildCalculator, calculatorFilename } from './calculator'
+import type { SummaryInfo } from '../../shared/summary'
+import { svg } from '../../shared/reportmap'
+import { regionsForL3, reportScenario, summaryRows, summarySection } from '../../shared/summary'
+import { buildCsv, buildGeojson, reportModal } from './report'
+import { attachEvidence, listenBoxes, openGeometry, readBoxes, type XsGeom, xsModal, xsView } from './xstool'
+import { pyClone } from '../../app/pyjson'
+import * as sfariSession from '../../session/sfari'
+import { scenarioSet, scenariosBlock } from '../../session/file'
+import { stateFingerprint } from '../../session/guard'
 import { type Evidence, type EngineState, mergePulledEvidence, pull, type PullData } from './evidence'
-import { FN_BY_ID, FN_IDS, likertToScore, METRICS_BY_FN, scoreAssessment } from './method'
+import { FN_BY_ID, FN_IDS, likertToScore, METRICS_BY_FN, type Scored, scoreAssessment } from './method'
 import {
   fnNav, type FunctionRecord, metricRow, type MetricRecord, output, rollupRail, scoreCard, stepper, suggestionLine, HYDRAULICS_FNS,
 } from './markup'
@@ -37,13 +56,16 @@ export interface WorksheetHost {
   sourceReady(): boolean
   /** go to a step */
   setStep(step: string): void
+  /** the StreamCat lookup runs (snapping, finding, retrying); the engine's progress line while it runs */
+  lookupBusy(): boolean
+  engineProgress(): string | null
 }
 
 /** The Add dialog's line under Start from (app.py _ADD_HINT). */
 const ADD_HINT = 'A copy brings its scores and notes; photos stay with the original. Blank starts with no scores.'
 
 interface Entries { metric_scores: Record<string, MetricRecord>, function_scores: Record<string, FunctionRecord> }
-const copy = <T>(x: T): T => JSON.parse(JSON.stringify(x ?? {}))
+const copy = <T>(x: T): T => pyClone(x ?? ({} as T))
 const strip = (s: string) => s.replace(/^\s+|\s+$/g, '')
 
 /** _without_photos: a scenario's entries without photos (an alternative is a plan, not a site visit). */
@@ -58,17 +80,28 @@ export class SfariWorksheet {
   functionScores: Record<string, FunctionRecord> = {}
   currentFn = 0
   evidence: Record<string, Evidence> = {}
+  /** the cross-section hydraulics tool's geometry (xs_geom: set when the tool opens), saved with the file */
+  xsGeom: Record<string, any> | null = null
   private pulling = false
   private pullGen = 0
   private progress = { done: 0, total: 0 }
   /** the desktop evidence pulled ahead for a delineation (pullAhead), with its progress */
   private ahead: { delin: Record<string, any>, progress: { done: number, total: number }, p: Promise<Record<string, Evidence>> } | null = null
   private poll: ReturnType<typeof setInterval> | null = null
+  /** the pull for this site: none yet (initial), running, or done (failed when it threw) */
+  private pullStatus: 'initial' | 'running' | 'done' = 'initial'
+  private pullFailed = false
+  /** counts every change of the evidence, so Get Forms redraws its table only then */
+  private evidenceRev = 0
+  /** Get Forms while it is open: its refresh timer and what its outputs show */
+  private forms: { timer: ReturnType<typeof setInterval>, rev: number, status: string } | null = null
   /** Existing Conditions and the alternatives; the shown one's entries live in the two score maps */
   scenarios = new ScenarioSet()
   private dialog: 'new' | 'edit' | null = null
 
-  constructor(private host: WorksheetHost) {}
+  constructor(private host: WorksheetHost) {
+    this.registerDownloads()
+  }
 
   private el(id: string): HTMLElement | null {
     return document.getElementById(`sfari-${id}`)
@@ -76,15 +109,55 @@ export class SfariWorksheet {
 
   /** A new pick or a reset: the scores, the evidence and the place in the list go (_invalidate_selection). */
   reset(): void {
+    this.cancelReport()
     this.pullGen += 1
     this.ahead = null
     this.stopPoll()
     this.pulling = false
+    this.pullStatus = 'initial'
+    this.pullFailed = false
     this.metricScores = {}
     this.functionScores = {}
     this.currentFn = 0
     this.evidence = {}
+    this.evidenceRev += 1
+    this.xsGeom = null
     this.scenarios = new ScenarioSet()
+  }
+
+  // ---------------------------------------------------------------- the assessment file
+
+  /** _session_scenarios: every scenario's entries, the shown one's read live. */
+  private sessionScenarios(): Record<string, any> {
+    return scenariosBlock(this.scenarios, this.entriesNow())
+  }
+
+  /** Save (save_session): the file's text for this delineation. */
+  saveText(delin: Record<string, any> | null): string {
+    return sfariSession.dump(delin ?? {}, this.evidence, this.xsGeom, this.sessionScenarios())
+  }
+
+  /** _work_fp: the site and every scenario's entries (null: nothing to lose). */
+  workFingerprint(delin: Record<string, any> | null): string | null {
+    const dd = (delin ?? {}).delineation ?? {}
+    const s = this.scenarios
+    if (!Object.keys(dd).length && !this.hasEntries() && !s.hasAlternatives() && !s.baseline.description) return null
+    const site = ['nhdplusid', 'comid', 'snapped_lat', 'snapped_lon'].map((k) => dd[k] ?? null)
+    const rows = this.scenarioEntries().map(([sc, e]) => [sc.id, sc.name, sc.description, e])
+    return stateFingerprint(site, rows)
+  }
+
+  /** Open (_load_session's part): the pulled evidence (no pull runs again), the hydraulics geometry and
+   * every scenario's entries, the saved one shown. */
+  restore(evidence: Record<string, any>, xsGeom: unknown, scenarios: Record<string, any> | null): void {
+    this.reset()
+    this.evidence = evidence as Record<string, Evidence>
+    this.evidenceRev += 1
+    this.xsGeom = (xsGeom ?? null) as Record<string, any> | null
+    const sset = scenarioSet(scenarios)
+    this.scenarios = sset
+    this.showEntries(sset.current.state)
+    this.currentFn = 0
   }
 
   private shown(): boolean {
@@ -338,6 +411,8 @@ export class SfariWorksheet {
   private launch(d: Record<string, any>, state: EngineState): void {
     const gen = ++this.pullGen
     this.pulling = true
+    this.pullStatus = 'running'
+    this.pullFailed = false
     const ahead = this.ahead?.delin === d ? this.ahead : null
     this.ahead = null
     this.progress = ahead ? ahead.progress : { done: 0, total: 0 }
@@ -365,9 +440,15 @@ export class SfariWorksheet {
 
   private finish(got: Record<string, Evidence> | null): void {
     this.pulling = false
+    this.pullStatus = 'done'
+    this.pullFailed = got === null
     this.stopPoll()
-    if (got) this.evidence = mergePulledEvidence(this.evidence, got) as Record<string, Evidence>
+    if (got) {
+      this.evidence = mergePulledEvidence(this.evidence, got) as Record<string, Evidence>
+      this.evidenceRev += 1
+    }
     if (this.shown()) this.setOutput('fn_panel', this.panel())
+    this.refreshForms()
   }
 
   // ---------------------------------------------------------------- the edit bridge
@@ -428,10 +509,16 @@ export class SfariWorksheet {
         this.requestReport()
         return true
       case 'desktop_metrics_evt':
-        notify('Get Forms is not in the web app yet.', { type: 'message', seconds: 4 })
+        this.openForms()
+        return true
+      case 'ff_retry':
+        this.retryPull()
         return true
       case 'xs_open_evt':
-        notify('The cross-section hydraulics tool is not in the web app yet.', { type: 'message', seconds: 4 })
+        void this.openXs()
+        return true
+      case 'xs_attach_evt':
+        this.attachXs()
         return true
       case 'staf_scenario_evt':
         this.scenarioEvent(ev)
@@ -447,6 +534,108 @@ export class SfariWorksheet {
     }
   }
 
+  // ---------------------------------------------------------------- Get Forms
+  /** What Get Forms' status line reads from (the pull's, the engine's and the lookup's state). */
+  private pullState(): PullState {
+    const engine = this.host.engineProgress()
+    return { engineRunning: engine !== null, engineText: engine ?? '', finding: this.host.lookupBusy(),
+      pull: this.pullStatus === 'running' ? 'running' : this.pullStatus === 'initial' ? 'initial' : this.pullFailed ? 'failed' : 'ok',
+      done: this.progress.done, total: this.progress.total }
+  }
+
+  /** _open_desktop_metrics: the dialog's shell with its outputs; while it is open, the status line is
+   * drawn again each second (ff_status polls while the engine or the pull runs) and the table when the
+   * evidence changes. */
+  private openForms(): void {
+    this.cancelReport()
+    this.closeForms()
+    const status = ffStatus(this.evidence, this.pullState())
+    const el = showModal(formsModal(ffSite(this.host.delin()), status, ffTable(this.evidence), ffPreview()))
+    this.forms = { timer: setInterval(() => this.refreshForms(), 1000), rev: this.evidenceRev, status: outputHtml(status) }
+    el.addEventListener('hidden.bs.modal', () => this.closeForms(), { once: true })
+  }
+
+  private closeForms(): void {
+    if (this.forms) clearInterval(this.forms.timer)
+    this.forms = null
+  }
+
+  /** Get Forms' outputs drawn again where they changed (nothing when the dialog is closed). */
+  private refreshForms(): void {
+    const f = this.forms
+    if (!f) return
+    if (!document.getElementById('sfari-ff_status')) {
+      this.closeForms()
+      return
+    }
+    const status = outputHtml(ffStatus(this.evidence, this.pullState()))
+    if (status !== f.status) {
+      f.status = status
+      this.setOutput('ff_status', new HTML(status))
+    }
+    if (f.rev !== this.evidenceRev) {
+      f.rev = this.evidenceRev
+      this.setOutput('ff_table', ffTable(this.evidence))
+    }
+  }
+
+  /** _ff_retry: the pull again, once the source is resolved for this site. */
+  private retryPull(): void {
+    const d = this.host.delin()
+    if (!d || !this.host.sourceReady()) {
+      notify('Resolve the StreamCat lookup before pulling desktop evidence.', { type: 'warning', seconds: 5 })
+      return
+    }
+    if (!d.ctx_inputs || this.pulling) return
+    this.launch(d, this.host.engineState() ?? { status: 'idle' })
+    notify('Retrying desktop evidence pull…', { id: 'pull', type: 'message', seconds: 0 })
+    this.refreshForms()
+  }
+
+  // ---------------------------------------------------------------- the cross-section hydraulics tool
+  private xsStop: (() => void) | null = null
+
+  /** _xs_open: the synthetic bankfull section at the site's drainage area, in its dialog. */
+  private async openXs(): Promise<void> {
+    this.cancelReport()
+    const dl = (this.host.delin() ?? {}).delineation ?? {}
+    if (dl.drainage_area_sqkm === null || dl.drainage_area_sqkm === undefined) {
+      notify('Delineate a reach first.', { type: 'warning', seconds: 3 })
+      return
+    }
+    const geom = await openGeometry(this.host.data.src, dl)
+    if (!geom) return
+    this.xsGeom = geom
+    const el = showModal(xsModal(geom, null))
+    // xs_view, as the server draws it once the dialog's boxes are bound, then on each change
+    this.xsRedraw()
+    this.xsStop?.()
+    this.xsStop = listenBoxes(() => this.xsRedraw())
+    el.addEventListener('hidden.bs.modal', () => {
+      this.xsStop?.()
+      this.xsStop = null
+    })
+  }
+
+  private xsRedraw(): void {
+    const view = document.getElementById('sfari-xs_view')
+    if (view) view.innerHTML = outputHtml(xsView(this.xsGeom as XsGeom | null, readBoxes()))
+  }
+
+  /** _xs_attach: the solution written into the four hydraulics metrics' evidence. */
+  private attachXs(): void {
+    const ev = attachEvidence(this.xsGeom as XsGeom | null, readBoxes(), this.evidence)
+    if (!ev) {
+      notify('Enter a valid slope and discharge first.', { type: 'warning', seconds: 3 })
+      return
+    }
+    this.evidence = ev as Record<string, Evidence>
+    this.evidenceRev += 1
+    notify('Cross-section results attached to the hydraulics metrics.', { type: 'message', seconds: 4 })
+    removeModal()
+    if (this.shown()) this.setOutput('fn_panel', this.panel())
+  }
+
   private move(i: number): void {
     this.currentFn = Math.max(0, Math.min(FN_IDS.length - 1, i))
     if (!this.shown()) return
@@ -454,17 +643,142 @@ export class SfariWorksheet {
     this.setOutput('fn_panel', this.panel())
   }
 
+  /** Entries to lose (New's question): any metric or function entry. */
+  hasEntries(): boolean {
+    return Object.keys(this.metricScores).length > 0 || Object.keys(this.functionScores).length > 0
+  }
+
   anyScored(): boolean {
     return Object.values(this.functionScores).some((v) => v.score !== null && v.score !== undefined)
   }
 
-  /** _request_report: the report needs a scored function. */
+  // ---------------------------------------------------------------- the report
+
+  private reportSerial = 0
+  /** the report being prepared: its request id and what it was asked for (_report_request) */
+  private pendingReport: { id: number, delin: Record<string, any>, step: string } | null = null
+
+  /** _finish_report: report-ready.js hears the request settle (opened or not). */
+  private finishReport(opened = false): void {
+    const req = this.pendingReport
+    if (!req) return
+    this.pendingReport = null
+    shim.send('staf-report-state', { requestId: req.id, busy: false, opened, ns: 'sfari' })
+  }
+
+  /** _cancel_report */
+  cancelReport(): void {
+    if (this.pendingReport) this.finishReport()
+  }
+
+  /** _report_title: the scenario shown names the report once there are alternatives. */
+  private reportTitle(): string {
+    const s = this.scenarios
+    return s.hasAlternatives() ? `SFARI Report · ${s.current.name}` : 'SFARI Report'
+  }
+
+  /** workbook.summary_info: the site's rows, its Level III ecoregion from the engine's site (else the
+   * polygons at its point). */
+  private async summaryInfo(d: Record<string, any>): Promise<SummaryInfo> {
+    const dl = d.delineation ?? {}
+    let l3 = (((d.siteEngine ?? {}).site ?? {}).ecoregionL3 ?? {}).code ?? null
+    if (l3 === null && dl.snapped_lat !== null && dl.snapped_lat !== undefined) {
+      l3 = (await level3At(this.host.data.src, dl.snapped_lat, dl.snapped_lon) ?? {} as any).code ?? null
+    }
+    return { app: 'SFARI', reachName: dl.gnis_name, reachLengthFt: dl.reach_length_ft, drainageAreaSqkm: dl.drainage_area_sqkm,
+      streamOrder: dl.stream_order, regions: regionsForL3(l3) }
+  }
+
+  private async summaryRows(d: Record<string, any>): Promise<[string, string][]> {
+    return summaryRows(await this.summaryInfo(d))
+  }
+
+  /** _workbook_bytes: the scenario workbook, or the single calculator when it cannot be assembled
+   * (never a failed download). */
+  private async workbookBytes(): Promise<Uint8Array> {
+    const d = this.host.delin() ?? {}
+    const entries = this.scenarioEntries()
+    const today = todayIso()
+    try {
+      const { buildWorkbook } = await import('./workbook')
+      return await buildWorkbook(d, entries, await this.summaryInfo(d), today)
+    } catch (err) {
+      console.warn('SFARI: the scenario workbook failed; serving the single calculator', err)
+      const ec = entries[0][1]
+      return buildCalculator(d, ec.metric_scores ?? {}, ec.function_scores ?? {}, today)
+    }
+  }
+
+  /** _request_report: the report needs a scored function; it opens once its basin map is drawn. */
   requestReport(): void {
-    if (!this.host.delin()) return
+    const d = this.host.delin()
+    if (!d) return
     if (!this.anyScored()) {
       notify('Score at least one function before viewing the report.', { type: 'message', seconds: 4 })
       return
     }
-    notify('The report is not in the web app yet.', { type: 'message', seconds: 4 })
+    const step = this.host.step()
+    if (this.pendingReport && this.pendingReport.delin === d && this.pendingReport.step === step) return
+    this.cancelReport()
+    const id = ++this.reportSerial
+    this.pendingReport = { id, delin: d, step }
+    shim.send('staf-report-state', { requestId: id, busy: true, opened: false, ns: 'sfari' })
+    void (async () => {
+      let minimap = ''
+      let rows: [string, string][] = []
+      try {
+        ;[minimap, rows] = await Promise.all([svg(displaySimplify(d.watershed_geojson, 700), d.reach_geojson), this.summaryRows(d)])
+      } catch {
+        if (this.pendingReport?.id === id) {
+          notify('Could not prepare the report. Please try again.', { type: 'error', seconds: 5 })
+          this.finishReport()
+        }
+        return
+      }
+      const req = this.pendingReport
+      if (!req || req.id !== id) return
+      if (this.host.delin() !== d) {
+        this.finishReport()
+        return
+      }
+      if (!this.anyScored()) {
+        notify('Score at least one function before viewing the report.', { type: 'message', seconds: 4 })
+        this.finishReport()
+        return
+      }
+      const summary = summarySection(rows, reportScenario(this.scenarios))
+      showModal(reportModal({ delin: d, sc: this.scored(), ms: this.metricScores, fs: this.functionScores, ev: this.evidence, minimap, summary,
+        title: this.reportTitle() }))
+      this.finishReport(true)
+    })()
+  }
+
+  /** scored(): every function counts, a blank one as zero. */
+  private scored(): Scored {
+    const scores = Object.fromEntries(Object.entries(this.functionScores).map(([fid, v]) => [fid, v.score ?? null]))
+    return scoreAssessment(scores)
+  }
+
+  /** The report's downloads (dl_csv, dl_geojson), named for the scenario shown. */
+  private registerDownloads(): void {
+    const suffix = () => scenarioSuffix(this.scenarios)
+    registerDownload('sfari-dl_csv', { filename: () => `sfari-report${suffix()}.csv`, mime: 'text/csv',
+      build: () => buildCsv(this.host.delin() ?? {}, this.metricScores, this.functionScores, this.evidence, this.scored()) })
+    registerDownload('sfari-dl_geojson', { filename: () => `sfari-report${suffix()}.geojson`, mime: 'application/geo+json',
+      build: () => buildGeojson(this.host.delin() ?? {}, this.functionScores, this.scored()) })
+    // the report's PDF and Get Forms' desktop metrics PDF (report.build_pdf, build_desktop_metrics_pdf)
+    registerDownload('sfari-dl_pdf', { filename: () => `sfari-report${suffix()}.pdf`, mime: 'application/pdf', build: async () => {
+      const { buildPdf } = await import('./reportpdf')
+      return buildPdf(this.host.delin() ?? {}, this.metricScores, this.functionScores, this.evidence, this.scored(), reportScenario(this.scenarios))
+    } })
+    registerDownload('sfari-dl_desktop_metrics', { filename: 'sfari-desktop-metrics.pdf', mime: 'application/pdf', build: async () => {
+      const { buildDesktopMetricsPdf } = await import('./reportpdf')
+      return buildDesktopMetricsPdf(this.host.delin() ?? {}, this.evidence)
+    } })
+    // Get Forms' files that never change: the field forms and the blank calculator, as SFARI ships them
+    registerDownload('sfari-dl_field_forms', { filename: FIELD_FORMS_FILENAME, mime: 'application/pdf', build: () => pageFile(FIELD_FORMS_URL) })
+    registerDownload('sfari-dl_calc_blank', { filename: BLANK_FILENAME, mime: XLSX_MEDIA_TYPE, build: () => pageFile(BLANK_URL) })
+    // the completed workbook (Get Forms and the report's footer)
+    registerDownload('sfari-dl_calc_filled', { filename: calculatorFilename(), mime: XLSX_MEDIA_TYPE, build: () => this.workbookBytes() })
   }
 }

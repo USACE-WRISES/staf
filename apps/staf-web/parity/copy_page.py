@@ -7,7 +7,9 @@ Vite's public folder: served at the app's root in development and copied into ``
 - **From the Shiny apps** (the page's look and its shared scripts, while those apps exist): each tool's
   ``www/styles.css`` (and DEEP's ``deep.css``), the shared ``staf.css`` and ``metric-rows.css`` and page
   scripts (``libs/staf_workbook/assets``), DEEP's ``coverage.js``, the shell's ``staf-shell.css`` and
-  favicon (``apps/staf/www/shell``).
+  favicon (``apps/staf/www/shell``); SFARI's field forms PDF and blank calculator (``forms/sfari/``, Get
+  Forms' downloads); DEEP's state polygons (``data/us_states.geojson.gz``, kept with the data mirror's
+  builder, ``tools/staf-web-data/data/``, which publishes them as ``engine/us_states.geojson``).
 - **From the Python packages the Shiny app runs on** (the repo's .venv): py-shiny's Bootstrap build, its
   fonts cut to the latin and latin-ext faces (every character the apps show), htmltools' ``fill.css``,
   ``shinywidgets.css``; matplotlib's DejaVu Sans cut to what EASI's report cross-section image draws
@@ -81,6 +83,10 @@ FROM_REPO = {
     "js/easi/report-controls.js": "apps/easi/www/report-controls.js",
     "js/easi/report-edit.js": "apps/easi/www/report-edit.js",
     "js/easi/worksheet.js": "apps/easi/www/worksheet.js",
+    "js/staf/unsaved-guard.js": "libs/staf_workbook/assets/unsaved-guard.js",
+    "forms/sfari/SFARI_Field_Form_v1.0.pdf": "apps/sfari/data/FieldForm/SFARI_Field_Form_v1.0.pdf",
+    "forms/sfari/SFARI_Calculator_Draft_2026-06-29.xlsx": "apps/sfari/data/calculator/SFARI_Calculator_Draft_2026-06-29.xlsx",
+    "data/us_states.geojson.gz": "apps/deep/data/us_states.geojson.gz",
 }
 #: EASI's tables that live in Python modules, kept as JSON (``content/easi/config.json``): the metric
 #: registry, definitions and calculation notes of the active (regional) criteria, and the watershed
@@ -100,8 +106,13 @@ TEXT = (".css", ".js", ".svg", ".json", ".txt")
 
 
 def dest(path: str) -> Path:
-    """Where a copy lives: ``content/...`` beside the app's code, everything else in ``page/``."""
-    return APP / "src" / "app" / path if path.startswith("content/") else PAGE / path
+    """Where a copy lives: ``content/...`` beside the app's code, ``data/...`` with the data mirror's
+    builder (tools/staf-web-data/data: files it publishes), everything else in ``page/``."""
+    if path.startswith("content/"):
+        return APP / "src" / "app" / path
+    if path.startswith("data/"):
+        return REPO / "tools" / "staf-web-data" / path
+    return PAGE / path
 
 
 def sha256(data: bytes) -> str:
@@ -145,12 +156,121 @@ def _easi_config() -> bytes | None:
     return (json.dumps(data, indent=1, ensure_ascii=False) + "\n").encode("utf-8")
 
 
+def _easi_acquisition() -> bytes | None:
+    """EASI's acquisition digest (``method_package.acquisition_digest``: the identity of the code and
+    assets that gather a site's evidence), which a saved screening and its exports record. It hashes the
+    Python sources, so the static app keeps the digest of the EASI it was certified against. None once
+    EASI is gone."""
+    root = REPO / "apps" / "easi"
+    if not (root / "easi" / "method_package.py").is_file():
+        return None
+    sys.path.insert(0, str(root))
+    try:
+        from easi import method_package
+        digest = method_package.acquisition_digest()
+    finally:
+        sys.path.remove(str(root))
+    data = {"acquisitionDigest": digest,
+            "note": "apps/easi easi.method_package.acquisition_digest(): the EASI the static app's port is certified against"}
+    return (json.dumps(data, indent=1) + "\n").encode("utf-8")
+
+
 #: the sizes (points) EASI's report cross-section image sets its texts in (easi/xsplot.py), at the figure's
 #: own 100 dpi (where tight_layout measures it) and the 130 dpi it is saved at
 XSPLOT_SIZES = (6.5, 8, 9, 10)
 XSPLOT_DPIS = (100, 130)
 #: the characters it draws: printable ASCII and the minus sign of negative tick labels
 XSPLOT_CHARS = "".join(chr(c) for c in range(0x20, 0x7F)) + "−"
+
+
+#: EASI's report summary plot (easi/report.py _summary_plots_png): its texts' sizes per weight at the 100
+#: dpi tight_layout measures at and the 150 dpi the figure is saved at, and the characters it draws
+#: (printable ASCII and the em dash of a missing score)
+SUMMARY_SIZES = {"normal": (7, 7.2, 8, 10), "bold": (7.2, 8, 9.5)}
+SUMMARY_DPIS = (100, 150)
+SUMMARY_CHARS = "".join(chr(c) for c in range(0x20, 0x7F)) + "—"
+
+
+def _ft_metrics(path, pairs, chars) -> dict:
+    """``{"<dpi>:<points>": {ascent, descent, glyphs, ligatures, kern}}``: the font at each resolution and
+    size as matplotlib's FT2Font sets it (FreeType's default hinting), every pair's kerning as the shaper
+    places it."""
+    from matplotlib import ft2font
+    from matplotlib.backends.backend_agg import get_hinting_flag
+    flags = get_hinting_flag()
+    sizes = {}
+    for dpi, pt in pairs:
+        font = ft2font.FT2Font(str(path))
+        font.set_size(pt, dpi)
+        os2 = font.get_sfnt_table("OS/2")
+        scale = pt * dpi / 72 / font.get_sfnt_table("head")["unitsPerEm"]
+        def metrics_of(g):
+            x0, y0, x1, y1 = g.bbox
+            empty = x0 == x1 or y0 == y1
+            return [g.horiAdvance / 64, 0 if empty else y0 / 64, 0 if empty else y1 / 64]
+        glyphs = dict((ch, metrics_of(font.load_char(ord(ch), flags=flags))) for ch in chars)
+        kern, ligatures = {}, {}
+        for a in chars:
+            for b in chars:
+                items = font._layout(a + b, flags=flags)
+                if len(items) == 1:      # a ligature (DejaVu's fi, fl): one glyph for the pair
+                    ligatures[a + b] = metrics_of(font.load_glyph(items[0].glyph_index, flags=flags))
+                elif abs(items[1].x - glyphs[a][0]) > 1e-9:
+                    kern[a + b] = items[1].x - glyphs[a][0]
+        # the kerning on either side of a ligature (keyed by the two texts, the ligature's in full)
+        for lig in ligatures:
+            for c in chars:
+                before = font._layout(c + lig, flags=flags)
+                if len(before) == 2 and abs(before[1].x - glyphs[c][0]) > 1e-9:
+                    kern[c + lig] = before[1].x - glyphs[c][0]
+                after = font._layout(lig + c, flags=flags)
+                if len(after) == 2 and abs(after[1].x - ligatures[lig][0]) > 1e-9:
+                    kern[lig + c] = after[1].x - ligatures[lig][0]
+        sizes[f"{dpi}:{pt:g}"] = {"ascent": os2["sTypoAscender"] * scale, "descent": -os2["sTypoDescender"] * scale,
+                                  "glyphs": glyphs, "ligatures": ligatures, "kern": kern}
+    return sizes
+
+
+def _woff2(path, chars) -> bytes:
+    """The font cut to ``chars``, as woff2 (its names, kerning and ligatures kept)."""
+    import io
+
+    from fontTools import subset
+    options = subset.Options()
+    options.flavor = "woff2"
+    options.name_IDs = ["*"]
+    options.notdef_outline = True
+    options.layout_features = ["kern", "liga"]
+    font = subset.load_font(str(path), options)
+    sub = subset.Subsetter(options)
+    sub.populate(unicodes=[ord(c) for c in chars])
+    sub.subset(font)
+    buf = io.BytesIO()
+    subset.save_font(font, buf, options)
+    return buf.getvalue()
+
+
+def _summaryplot_text() -> tuple[dict, dict] | None:
+    """EASI's report summary plot as matplotlib sets its text: DejaVu Sans and DejaVu Sans Bold metrics
+    per ``"<weight>:<dpi>:<points>"`` (as _ft_metrics), and both faces cut to the plot's characters. None
+    without matplotlib."""
+    try:
+        import matplotlib
+        import fontTools  # noqa: F401
+    except ImportError:
+        return None
+    ttf = Path(matplotlib.get_data_path()) / "fonts" / "ttf"
+    faces = {"normal": ttf / "DejaVuSans.ttf", "bold": ttf / "DejaVuSans-Bold.ttf"}
+    sizes = {}
+    for weight, path in faces.items():
+        pairs = [(d, p) for d in SUMMARY_DPIS for p in SUMMARY_SIZES[weight]]
+        for key, m in _ft_metrics(path, pairs, SUMMARY_CHARS).items():
+            sizes[f"{weight}:{key}"] = m
+    metrics = {"source": f"matplotlib {matplotlib.__version__}: DejaVu Sans and DejaVu Sans Bold set with FreeType's default "
+                         "hinting (per weight:dpi:points, each glyph's advance and ink bottom and top; pair kerning)",
+               "sizes": sizes}
+    return metrics, {"fonts/dejavu-sans-summary.woff2": _woff2(faces["normal"], SUMMARY_CHARS),
+                     "fonts/dejavu-sans-bold.woff2": _woff2(faces["bold"], SUMMARY_CHARS)}
 
 
 def _xsplot_text() -> tuple[dict, dict] | None:
@@ -218,6 +338,41 @@ def _xsplot_text() -> tuple[dict, dict] | None:
     return metrics, {"fonts/dejavu-sans.woff2": buf.getvalue(), "fonts/dejavu-sans-license.txt": license_}
 
 
+def _pdf_fonts() -> bytes | None:
+    """reportlab's standard-14 font data and its single-byte codecs (``content/pdf/fonts.json``): each
+    font's encoding, its 256 widths in that encoding, its face's ascent and descent and the fonts it
+    falls back on; each codec as {code point: byte} over the Basic Multilingual Plane. The PDF writers
+    measure and encode text with these, as reportlab's pure-Python paths do."""
+    try:
+        import codecs
+
+        import reportlab
+        from reportlab.pdfbase import _fontdata, pdfmetrics
+    except ImportError:
+        return None
+    fonts = {}
+    for name in _fontdata.standardFonts:
+        f = pdfmetrics.getFont(name)
+        fonts[name] = {"encoding": f.encName, "widths": list(f.widths), "ascent": f.face.ascent, "descent": f.face.descent,
+                       "substitution": [s.fontName for s in f.substitutionFonts], "notdef": [f._notdefFont.fontName, f._notdefChar.decode("latin-1")]}
+    encodings = {}
+    for enc in ("WinAnsiEncoding", "SymbolEncoding", "ZapfDingbatsEncoding", "pdfdoc", "extpdfdoc"):
+        codec = codecs.lookup(enc)
+        table = {}
+        for cp in range(0x10000):
+            if 0xD800 <= cp <= 0xDFFF:
+                continue
+            try:
+                b = codec.encode(chr(cp))[0]
+            except UnicodeEncodeError:
+                continue
+            if len(b) == 1:
+                table[str(cp)] = b[0]
+        encodings[enc] = table
+    doc = {"reportlab": reportlab.Version, "fonts": fonts, "encodings": encodings}
+    return (json.dumps(doc, separators=(",", ":")) + "\n").encode("utf-8")
+
+
 def sources() -> tuple[dict, dict]:
     """``({published path: (source label, bytes)}, versions)`` for every copy, from where it comes now;
     a source that is gone is left out."""
@@ -238,6 +393,9 @@ def sources() -> tuple[dict, dict]:
     easi = _easi_config()
     if easi is not None:
         out["content/easi/config.json"] = ("apps/easi/easi/config.py + watershed.py (regional criteria)", easi)
+    acquisition = _easi_acquisition()
+    if acquisition is not None:
+        out["content/easi/acquisition.json"] = ("apps/easi/easi/method_package.py: acquisition_digest()", acquisition)
     try:
         # the template every plotly.py figure carries (EASI's cross-section plot is one)
         import plotly
@@ -247,6 +405,24 @@ def sources() -> tuple[dict, dict]:
                                                     (json.dumps(template, indent=1) + "\n").encode("utf-8"))
     except ImportError:
         print("plotly is not installed here: its template stays as it is")
+    pdf_fonts = _pdf_fonts()
+    if pdf_fonts is None:
+        print("reportlab is not installed here: the PDF font tables stay as they are")
+    else:
+        import reportlab
+        out["content/pdf/fonts.json"] = (f"reportlab {reportlab.Version}: the standard-14 fonts' widths and codecs", pdf_fonts)
+    summary_text = _summaryplot_text()
+    if summary_text is None:
+        print("matplotlib or fontTools is not installed here: the summary plot's fonts stay as they are")
+    else:
+        import matplotlib
+        metrics, files = summary_text
+        out["content/easi/summaryplot-text.json"] = (f"matplotlib {matplotlib.__version__}: DejaVu Sans (normal, bold) text metrics "
+                                                     "at 100 and 150 dpi",
+                                                     (json.dumps(metrics, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
+        for rel, data in files.items():
+            out[rel] = (f"matplotlib {matplotlib.__version__}: mpl-data/fonts/ttf ("
+                        + ("DejaVu Sans Bold" if "bold" in rel else "DejaVu Sans") + ", cut to the summary plot's characters)", data)
     xsplot_text = _xsplot_text()
     if xsplot_text is None:
         print("matplotlib or fontTools is not installed here: the cross-section image's font stays as it is")
