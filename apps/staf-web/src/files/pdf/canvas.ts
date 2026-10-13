@@ -432,10 +432,11 @@ function imageXObject(name: string, image: ImageData, mask: string | null): PDFI
   const x = new PDFImageXObject(name)
   x.width = image.width
   x.height = image.height
-  if (image.jpeg) {
+  if (image.jpeg) {                                    // loadImageFromJPEG: the file's own bytes
     x.bitsPerComponent = 8
     x.colorSpace = image.mode === 'L' ? 'DeviceGray' : image.mode === 'RGB' ? 'DeviceRGB' : 'DeviceCMYK'
-    x.streamContent = Base85Encode.encode(image.data) as string
+    if (image.mode === 'CMYK') x.decode = [1, 0, 1, 0, 1, 0, 1, 0]   // _dotrans: Adobe's inverted CMYK
+    x.streamContent = Base85Encode.encode(image.jpeg) as string
     x.filters = ['ASCII85Decode', 'DCTDecode']
     return x
   }

@@ -4,7 +4,9 @@ with a watershed and a reach, a region and a scenario.
 
 The report is built with reportlab's invariant mode switched on (DEEP builds it with the download's
 date) and the basemap fetch replaced: one case draws a fixed palette PNG (``basemap.png``, the format the
-USGS export returns), one has none (the outline, a frame and the "unavailable" caption). Each case writes
+USGS export returns), one has none (the outline, a frame and the "unavailable" caption); "photos" adds JPEG
+site photos to two measured metrics (tests/fixtures/jpeg: Edge's canvas encoder, gray, CMYK, progressive),
+which reportlab names after the samples Pillow decodes. Each case writes
 ``tests/fixtures/deep_pdf/<case>.json`` (inputs and the scored result) and ``<case>.report.pdf`` and
 ``<case>.metrics.pdf``.
 
@@ -72,7 +74,17 @@ CASES = [
     ("wgcp", "wgcp", True, ("Culvert removed", "The road crossing replaced by a span."), REGION),
     ("ecbp", "ecbp", False, None, None),
     ("neh", "neh", True, ("Existing Conditions", ""), {"level3": {"code": "58", "name": "Northeastern Highlands"}, "state": None}),
+    ("photos", "wgcp", True, None, REGION),
 ]
+
+#: the JPEG photos of the "photos" case, two measured metrics' worth
+JPEGS = [["edge-photo-300", "pil-photo-gray"], ["pil-photo-cmyk", "pil-photo-s2-prog"]]
+
+
+def jpeg_photo(name: str) -> str:
+    import base64
+    data = (HERE.parent / "tests" / "fixtures" / "jpeg" / f"{name}.jpg").read_bytes()
+    return "data:image/jpeg;base64," + base64.b64encode(data).decode("ascii")
 
 
 def main() -> None:
@@ -86,6 +98,10 @@ def main() -> None:
         bundle = json.loads((REPO / case["bundle"]).read_text(encoding="utf-8"))
         la = assessments.LoadedAssessment.from_dict(bundle)
         measured = case["measured"]
+        if name == "photos":
+            measured = json.loads(json.dumps(measured))
+            for mid, files in zip([k for k, v in measured.items() if isinstance(v, dict)][:2], JPEGS):
+                measured[mid]["photos"] = [{"id": f, "uri": jpeg_photo(f)} for f in files]
         delin = site(case["delineation"] or ff.SITE)
         sc, _fr = curves.score_site(la, measure.measured_from_state(measured))
         reportmap.topo_png = (lambda *a, **k: png) if with_map else (lambda *a, **k: None)
