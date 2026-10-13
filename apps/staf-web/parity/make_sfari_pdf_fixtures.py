@@ -4,7 +4,8 @@ app opens it), in reportlab's invariant mode with the basemap fetch replaced.
 
 Cases: the saved file as it is (its watershed, the fixed basemap PNG); the same with an alternative
 scenario named and described, two PNG photos and a borrowed evidence mark; the same with no geometry and
-no basemap. Each writes ``tests/fixtures/sfari_pdf/<case>.json`` (the state the builders read: delineation,
+no basemap; the same with JPEG photos (from tests/fixtures/jpeg: Edge's canvas encoder, gray, CMYK,
+progressive), which reportlab names after the samples Pillow decodes. Each writes ``tests/fixtures/sfari_pdf/<case>.json`` (the state the builders read: delineation,
 metric and function scores, evidence, the scored rollup, the scenario) and ``<case>.report.pdf`` and
 ``<case>.metrics.pdf``.
 
@@ -43,6 +44,15 @@ def png_photo(w: int, h: int, seed: int) -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+def jpeg_photo(name: str) -> str:
+    data = (HERE.parent / "tests" / "fixtures" / "jpeg" / f"{name}.jpg").read_bytes()
+    return "data:image/jpeg;base64," + base64.b64encode(data).decode("ascii")
+
+
+#: the JPEG photos of the "photos" case, two metrics' worth
+JPEGS = [["edge-photo-300", "pil-photo-gray"], ["pil-photo-cmyk", "pil-photo-s2-prog"]]
+
+
 def main(saved: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     png = dp.basemap_png()
@@ -62,8 +72,11 @@ def main(saved: str) -> None:
     third = json.loads(json.dumps(base))
     for k in ("watershed_geojson", "reach_geojson"):
         third["delin"][k] = None
+    fourth = json.loads(json.dumps(base))
+    for mid, files in zip(list(fourth["metric_scores"])[:2], JPEGS):
+        fourth["metric_scores"][mid]["photos"] = [{"id": f, "uri": jpeg_photo(f)} for f in files]
     cases = [("saved", base, None, True), ("scenario", second, ("Restored riffle", "Banks graded & replanted <2 yr>."), True),
-             ("nomap", third, None, False)]
+             ("nomap", third, None, False), ("photos", fourth, None, True)]
     names = []
     for name, c, scenario, with_map in cases:
         sc = scoring.score_assessment({fid: v.get("score") for fid, v in c["function_scores"].items()})

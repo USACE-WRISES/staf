@@ -233,6 +233,11 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   `tests/xsimage.test.ts` hold its layout to matplotlib's; `parity/xsimage_compare.py` compares the pixels.
 - **Files** (`src/files/`, `src/session/`): Save and Open, Get Forms and the report downloads, made in
   the page (the assessment file, CSV, GeoJSON, workbooks, the reportlab PDFs).
+- **Site photos in the PDFs** (`src/shared/photos.ts`): a JPEG photo is drawn as its own bytes, and
+  reportlab names it after the samples Pillow decodes. `src/files/pdf/jpeg.ts` decodes as Pillow's
+  libjpeg-turbo does (its SIMD integer IDCT included), so the names are the Shiny PDF's.
+  `parity/make_jpeg_fixtures.py` + `tests/jpeg.test.ts` hold it to Pillow on about 200 files: Pillow's and
+  Edge's encoders, unusual sampling, damaged data. The SFARI and DEEP report goldens include JPEG photos.
 - **Downloads in their own tab** (`src/files/download.ts`, `page/download-sw.js`): a click on a
   download link opens its tab, as the Shiny links do (`target="_blank"`), at `download/<token>/<name>`.
   A service worker scoped to `download/` answers that tab with the file the page made, sent as an

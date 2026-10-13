@@ -155,7 +155,8 @@ export function decodePng(png: Uint8Array): ImageData {
 }
 
 /** A JPEG's size and components (pdfutils.readJPEGInfo), its bytes kept to draw as they are. ``rgb``:
- * its decoded samples, which reportlab digests for the XObject's name. */
+ * its decoded samples, which reportlab digests for the XObject's name. Throws where PIL cannot open it
+ * (JpegImagePlugin's SOF: 8-bit samples, one, three or four components). */
 export function jpegImage(jpeg: Uint8Array, rgb: Uint8Array): ImageData {
   let p = 2
   while (p < jpeg.length) {
@@ -170,6 +171,8 @@ export function jpegImage(jpeg: Uint8Array, rgb: Uint8Array): ImageData {
       const height = (jpeg[p + 5] << 8) | jpeg[p + 6]
       const width = (jpeg[p + 7] << 8) | jpeg[p + 8]
       const comps = jpeg[p + 9]
+      if (jpeg[p + 4] !== 8) throw new Error(`cannot handle ${jpeg[p + 4]}-bit layers`)
+      if (comps !== 1 && comps !== 3 && comps !== 4) throw new Error(`cannot handle ${comps}-layer images`)
       return makeImage(width, height, comps === 1 ? 'L' : comps === 3 ? 'RGB' : 'CMYK', rgb, null, jpeg)
     }
     p += 2 + len
