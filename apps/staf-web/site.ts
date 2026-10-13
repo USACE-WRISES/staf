@@ -12,6 +12,12 @@
 // paint, and the head's inline script (which waits for them) turns the other tools' off. The shared
 // page scripts call window.Shiny, which the static app stands in for (src/app/shim.ts). Each link
 // carries a ?v= content hash, as the Shiny app's assets do.
+//
+// The map's stylesheets (the Jupyter widget rules, Leaflet's and jupyter-leaflet's) are written into
+// the page as style elements, where the Shiny page has them (its map widget writes them in). Their
+// relative url()s are rewritten to point from the page. On the USACE network (its cloud-isolated
+// browsing, CBII) the page came up without Leaflet's stylesheet while it was a separate file: the
+// tiles sat out of place and the map's controls were gone (2026-10-12).
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -22,10 +28,11 @@ import { ORDER, page, TOOLS, type ToolKey } from './src/app/markup'
 /** The page's own files (Vite's public folder). */
 export const PAGE = fileURLToPath(new URL('./page', import.meta.url))
 
-interface Item { path: string, tool?: ToolKey }
+interface Item { path: string, tool?: ToolKey, inline?: boolean }
 
 /** The page's stylesheets, in the Shiny page's order (its busy-indicator styles left out; the
- * Jupyter widget rules and Leaflet's, which the Shiny page gets from the map widget, after its own). */
+ * Jupyter widget rules and Leaflet's, which the Shiny page gets from the map widget, after its own,
+ * and in the page). */
 export const STYLES: Item[] = [
   { path: 'css/shiny/bootstrap.min.css' },
   { path: 'css/easi/styles.css', tool: 'easi' },
@@ -37,9 +44,9 @@ export const STYLES: Item[] = [
   { path: 'css/shell/staf-shell.css' },
   { path: 'css/shiny/shinywidgets.css' },
   { path: 'css/shiny/fill.css' },
-  { path: 'css/shiny/jupyter.css' },
-  { path: 'css/leaflet/leaflet.css' },
-  { path: 'css/shiny/jupyter-leaflet.css' },
+  { path: 'css/shiny/jupyter.css', inline: true },
+  { path: 'css/leaflet/leaflet.css', inline: true },
+  { path: 'css/shiny/jupyter-leaflet.css', inline: true },
 ]
 
 /** The shared page scripts the static app runs, in the Shiny page's order (staf-ns.js first). */
@@ -64,6 +71,15 @@ export const SCRIPTS: Item[] = [
 function url(item: Item): string {
   const hash = createHash('sha256').update(readFileSync(resolve(PAGE, item.path))).digest('hex').slice(0, 10)
   return `${item.path}?v=${hash}`
+}
+
+/** A stylesheet as a style element of the page: its relative url()s made relative to the page. */
+function inlineStyle(item: Item): string {
+  const dir = item.path.slice(0, item.path.lastIndexOf('/') + 1)
+  const css = readFileSync(resolve(PAGE, item.path), 'utf-8').replace(/url\((['"]?)([^'")]+)\1\)/g,
+    (all, quote: string, ref: string) => /^(?:[a-z][a-z0-9+.-]*:|[/#])/i.test(ref) ? all : `url(${quote}${dir}${ref}${quote})`)
+  if (/<\/style/i.test(css)) throw new Error(`${item.path} cannot go into a style element`)
+  return `<style data-staf-css-src="${item.path}">\n${css.trimEnd()}\n</style>`
 }
 
 /** Picks the shown tool before the first paint: html[data-staf-tool], the title and the tools'
@@ -96,7 +112,7 @@ export function stafSite(): Plugin {
       order: 'post',
       handler(html, ctx) {
         if (!ctx.filename.endsWith('index.html')) return html
-        const links = STYLES.map((item) => item.tool
+        const links = STYLES.map((item) => item.inline ? inlineStyle(item) : item.tool
           ? `<link rel="stylesheet" href="${url(item)}" media="all" data-staf-css="${item.tool}">`
           : `<link rel="stylesheet" href="${url(item)}">`)
         const scripts = SCRIPTS.map((item) => `<script src="${url(item)}" defer></script>`)
