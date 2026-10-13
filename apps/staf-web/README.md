@@ -44,6 +44,9 @@ Nothing else in the repo depends on it. Delete:
 4. if wanted, the Hugging Face dataset `gtmenichino/staf-data` and the `staf-web` and
    `staf-web-built` entries of `.claude/launch.json`.
 
+Browsers that used the app keep its download worker registered for `/staf/app/download/`. It answers
+nothing else, so it does no harm once the app is gone.
+
 The cross-section release (`staf-xs-current`, `tools/xs-grid`) is not part of the app and stays.
 
 ## The page: the Shiny app's look, in the app's own copies
@@ -228,7 +231,15 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   DejaVu Sans at matplotlib's hinted text metrics (`content/easi/xsplot-text.json` and
   `page/fonts/dejavu-sans.woff2`, from `copy_page.py`). `parity/make_xsimage_fixtures.py` +
   `tests/xsimage.test.ts` hold its layout to matplotlib's; `parity/xsimage_compare.py` compares the pixels.
-- **Not yet:** Get Forms, the report downloads, Save and Open (Phase 6). They say so when clicked.
+- **Files** (`src/files/`, `src/session/`): Save and Open, Get Forms and the report downloads, made in
+  the page (the assessment file, CSV, GeoJSON, workbooks, the reportlab PDFs).
+- **Downloads in their own tab** (`src/files/download.ts`, `page/download-sw.js`): a click on a
+  download link opens its tab, as the Shiny links do (`target="_blank"`), at `download/<token>/<name>`.
+  A service worker scoped to `download/` answers that tab with the file the page made, sent as an
+  attachment, so the browser saves it and closes the tab. On the USACE network, Menlo Security's
+  isolated browsing (CBII) shows a workbook or PDF in place of the tab it came to. Saved from the app's
+  own tab, that preview replaced the page and its work (2026-10-12). Without the worker (not yet
+  registered, or not allowed), the click opens a blank tab and the file is saved from it.
 
 ## Speed
 

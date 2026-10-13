@@ -22,7 +22,8 @@ Vite's public folder: served at the app's root in development and copied into ``
   (``behavior: url(#default#VML)``, ``progid:DXImageTransform`` filters), which network filters treat as
   attacks.
 - **Written here by hand** and never replaced: ``css/shiny/jupyter.css`` and ``jupyter-leaflet.css``,
-  the Jupyter widget rules the Shiny maps take from ipyleaflet (see their headers).
+  the Jupyter widget rules the Shiny maps take from ipyleaflet (see their headers), and
+  ``download-sw.js``, the worker that answers each download's own tab (src/files/download.ts).
 
 The same goes for the method content the app's code imports (``content/...``, written to
 ``src/app/content/``, not ``page/``): SFARI's functions, metrics and outcome mapping (``apps/sfari/data``),
@@ -97,7 +98,7 @@ FROM_REPO = {
 EASI_WATERSHED_TABLES = ("VALUE_KEYS", "ACRE_FT_PER_KM2_TO_M3_PER_KM2", "_STREAMCAT_COLUMNS", "_ENGINE_KEYS",
                          "STREAMCAT_INPUT_SOURCES", "STREAMCAT_RESULT_SOURCES", "_ENGINE_INPUT_DETAILS",
                          "_ENGINE_RESULT_DETAILS", "_ENGINE_NOTES", "GUIDANCE_UNAVAILABLE", "ENGINE_FAMILIES")
-OWN = ("css/shiny/jupyter.css", "css/shiny/jupyter-leaflet.css")
+OWN = ("css/shiny/jupyter.css", "css/shiny/jupyter-leaflet.css", "download-sw.js")
 KEEP_FONTS = ("latin", "latin-ext")
 FACE = re.compile(r"/\* ([a-z-]+) \*/\s*(@font-face\s*\{[^}]*\})")
 FONT_SRC = re.compile(r"url\((fonts/[^)]+)\)")
