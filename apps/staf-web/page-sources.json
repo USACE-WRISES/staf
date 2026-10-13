@@ -177,6 +177,10 @@
    "source": "apps/deep/data/us_states.geojson.gz",
    "sha256": "63074614d3bb15eff19461659cd056a770b2555ec22bb667da889ff00a866821"
   },
+  "download-sw.js": {
+   "source": "written here (see its header)",
+   "sha256": "974fb90cac4e37da43c1a81d7cfbef7c04686c10a10069765ed92abab8d863cb"
+  },
   "favicon.svg": {
    "source": "apps/staf/www/shell/favicon.svg",
    "sha256": "936f1776807ae1f6308074a763020b778d714c6032ec745a6922df4232ee41e2"
