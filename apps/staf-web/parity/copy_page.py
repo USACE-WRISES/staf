@@ -17,7 +17,10 @@ Vite's public folder: served at the app's root in development and copied into ``
   hinted advances, ink extents, kerning and ligatures at the image's sizes), so the static app draws the
   image as easi/xsplot.py does.
 - **From node_modules:** Leaflet's stylesheet and control images (Leaflet 1.9.4, the app's own
-  dependency).
+  dependency). The stylesheet leaves out Leaflet's rules for Internet Explorer 8 and older (``.lvml``,
+  ``.leaflet-oldie``): they match nothing in a browser the app runs in, and they carry IE's script hooks
+  (``behavior: url(#default#VML)``, ``progid:DXImageTransform`` filters), which network filters treat as
+  attacks.
 - **Written here by hand** and never replaced: ``css/shiny/jupyter.css`` and ``jupyter-leaflet.css``,
   the Jupyter widget rules the Shiny maps take from ipyleaflet (see their headers).
 
@@ -121,6 +124,22 @@ def sha256(data: bytes) -> str:
 
 def _normal(path: str, data: bytes) -> bytes:
     return data.replace(b"\r\n", b"\n") if path.endswith(TEXT) else data
+
+
+#: a rule of Leaflet's for Internet Explorer 8 and older: its selectors all start .lvml (VML shapes) or
+#: .leaflet-oldie (the class Leaflet gives the map in IE 8 and older)
+OLD_IE = re.compile(r"(?m)^(?:\.(?:lvml|leaflet-oldie)\b[^,{}\n]*,\n)*\.(?:lvml|leaflet-oldie)\b[^,{}\n]*\{[^{}]*\}[ \t]*\n")
+#: what an IE rule left in the stylesheet would carry
+IE_HOOKS = ("behavior", "progid:", "-ms-filter", "expression(")
+
+
+def _without_old_ie(css: bytes) -> bytes:
+    """Leaflet's stylesheet without its rules for Internet Explorer 8 and older (see the module's notes)."""
+    text = OLD_IE.sub("", css.decode("utf-8").replace("\r\n", "\n"))
+    left = [hook for hook in IE_HOOKS if hook in text]
+    if left:
+        raise SystemExit(f"Leaflet's stylesheet still carries {', '.join(left)}: OLD_IE needs the new rule")
+    return text.encode("utf-8")
 
 
 def _module(name: str, path: Path):
@@ -465,7 +484,8 @@ def sources() -> tuple[dict, dict]:
     if (leaflet / "dist" / "leaflet.css").is_file():
         version = json.loads((leaflet / "package.json").read_text(encoding="utf-8"))["version"]
         versions["leaflet"] = version
-        out["css/leaflet/leaflet.css"] = (f"leaflet {version}: dist/leaflet.css", (leaflet / "dist" / "leaflet.css").read_bytes())
+        out["css/leaflet/leaflet.css"] = (f"leaflet {version}: dist/leaflet.css, without its rules for IE 8 and older",
+                                          _without_old_ie((leaflet / "dist" / "leaflet.css").read_bytes()))
         for img in sorted((leaflet / "dist" / "images").iterdir()):
             out[f"css/leaflet/images/{img.name}"] = (f"leaflet {version}: dist/images/{img.name}", img.read_bytes())
     return {path: (label, _normal(path, data)) for path, (label, data) in out.items()}, versions

@@ -98,8 +98,8 @@
    "sha256": "264f5c640339f042dd729062cfc04c17f8ea0f29882b538e3848ed8f10edb4da"
   },
   "css/leaflet/leaflet.css": {
-   "source": "leaflet 1.9.4: dist/leaflet.css",
-   "sha256": "337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303"
+   "source": "leaflet 1.9.4: dist/leaflet.css, without its rules for IE 8 and older",
+   "sha256": "deca85ec91f167129cd1f600846ad1e292754c7b3165dd6004729369992b42e6"
   },
   "css/sfari/styles.css": {
    "source": "apps/sfari/www/styles.css",

@@ -60,9 +60,14 @@ browser.
   - the shared `staf.css` and `metric-rows.css`, and the shell's `staf-shell.css` and favicon;
   - the shared page scripts (`js/`);
   - py-shiny's Bootstrap build with its fonts (latin), `fill.css` and `shinywidgets.css`;
-  - Leaflet's stylesheet;
+  - Leaflet's stylesheet, without its rules for Internet Explorer 8 and older (they carry IE's script
+    hooks, which network filters treat as attacks);
   - two short files of the Jupyter widget rules the Shiny maps take from ipyleaflet
     (`css/shiny/jupyter.css`, `jupyter-leaflet.css`, written here).
+  - The map's three stylesheets (those two and Leaflet's) are written into the page as style
+    elements, where the Shiny page has them. As a separate file, Leaflet's stylesheet did not reach
+    the page on the USACE network's isolated browsing (CBII, 2026-10-12): the tiles sat out of place
+    and the map's controls were gone.
 - **`parity/copy_page.py`** made those copies. `page-sources.json` records each one's source and its
   sha256.
   - While the Shiny apps exist, `copy_page.py --check` reports any source that changed since the copy
@@ -71,8 +76,8 @@ browser.
   - Once the Shiny apps are gone, `page/` is the source: edit it directly.
 - **Markup** (`src/app/markup.ts`): the header and each tool's section with the Shiny page's elements,
   classes and ids (`easi-lat`), wrappers included, since the stylesheets select on them. It is written
-  into `index.html` when the page is built or served (`site.ts`, which also writes the links in the
-  Shiny page's order), so it paints before any script runs.
+  into `index.html` when the page is built or served (`site.ts`, which also writes the stylesheets in
+  the Shiny page's order), so it paints before any script runs.
 - **Page scripts:** the plain JavaScript the Shiny apps share runs unchanged: `staf-ns.js`, the legend
   dock, the place search, coordinate entry, tooltips and DEEP's `coverage.js`. They call
   `Shiny.setInputValue` and `Shiny.addCustomMessageHandler`, which `src/app/shim.ts` answers inside the
