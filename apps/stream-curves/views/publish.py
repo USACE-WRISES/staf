@@ -672,7 +672,8 @@ def publish_server(input, output, session, state: AppState):
     def download_calculator():
         """The calculator a publish would build, from the curves as they stand.
         A preview: it carries no version and no content digest, so DEEP never
-        offers it as a published version's workbook."""
+        offers it as a published version's workbook. Nobody has reviewed it,
+        so it states the Draft status."""
         from streamcurves import deep_calculator
         with reactive.isolate():
             req(state.app_data_loaded())
@@ -681,7 +682,7 @@ def publish_server(input, output, session, state: AppState):
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=8)
             return
-        yield deep_calculator.build_calculator(bundle)
+        yield deep_calculator.build_calculator(bundle, "draft")
 
     # ── publish (preliminary; validation lives on the Validate stage) ─────────
     @reactive.effect

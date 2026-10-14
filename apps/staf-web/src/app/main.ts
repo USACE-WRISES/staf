@@ -70,7 +70,7 @@ document.addEventListener('click', (e) => {
 
 // the panes' action buttons: Find on map, Retry StreamCat lookup, the legend's Try again, Delineate,
 // Clear, the Basin's next step; DEEP's Change link
-const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streamcat_ws|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment|staf_sc_save|staf_sc_delete|close_modal_x|xs_prev|xs_next|nav_new|confirm_new|ff_retry|assess_pick_\d+)$/
+const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streamcat_ws|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment|use_draft|draft_accept|staf_sc_save|staf_sc_delete|close_modal_x|xs_prev|xs_next|nav_new|confirm_new|ff_retry|assess_pick_\d+)$/
 document.addEventListener('click', (e) => {
   const el = e.target instanceof Element ? e.target.closest('button[id], a[id]') : null
   const m = el && ACTIONS.exec(el.id)

@@ -6926,7 +6926,24 @@ body.modal-open {
 .apply-route-picker {
   grid-template-areas:
     "title action"
-    "picker picker";
+    "picker picker"
+    "drafts drafts";
+}
+
+/* Drafts are listed only when asked (owner, 2026-10-14): a small box under the list adds them */
+.apply-picker-drafts {
+  grid-area: drafts;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  color: #3d4657;
+  cursor: pointer;
+}
+
+.apply-picker-drafts[hidden] {
+  display: none; /* an author display rule beats the hidden attribute */
 }
 
 .apply-route noscript {
@@ -7147,6 +7164,13 @@ body.modal-open {
   cursor: default;
 }
 
+/* a Draft while the Drafts are not listed: neutral, and it takes no click (after the hover rule) */
+.eco-map-regions path.is-hidden {
+  fill: #f5f6f8;
+  fill-opacity: 1;
+  cursor: default;
+}
+
 /* the statuses on the map, keyed like DEEP's legend: the status line around its fill */
 .eco-map-key {
   display: flex;
@@ -7188,6 +7212,29 @@ body.modal-open {
 .eco-map-swatch.is-final {
   border-color: #303f9f;
   background: rgba(63, 81, 181, 0.25);
+}
+
+/* the key's Draft item switches the Drafts on and off; off, its swatch goes hollow */
+.eco-map-key-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.eco-map-key-toggle:hover,
+.eco-map-key-toggle:focus-visible {
+  text-decoration: underline;
+}
+
+.eco-map-swatch.is-off {
+  background: transparent;
+  opacity: 0.6;
 }
 
 .eco-map-states {

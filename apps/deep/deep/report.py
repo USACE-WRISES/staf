@@ -427,10 +427,16 @@ def build_pdf(delin, assessment, measured, sc, region=None, *, scenario=None) ->
     from reportlab.lib.utils import ImageReader
     from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+    from . import status_mark
+    raw = _raw(assessment)
+    status = session.lifecycle_status(raw) if raw else None
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=status_mark.TOP_MARGIN_IN * inch,
+                            bottomMargin=0.6 * inch,
                             leftMargin=0.6 * inch, rightMargin=0.6 * inch,
-                            title="DEEP Detailed Assessment Report")
+                            title="DEEP Detailed Assessment Report",
+                            subject=session.status_line(status) if status else None)
+    mark = status_mark.page_marker(status)
     styles = getSampleStyleSheet()
     small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=7, leading=8.4)
 
@@ -463,7 +469,7 @@ def build_pdf(delin, assessment, measured, sc, region=None, *, scenario=None) ->
     version, status, digest, l3, st = _provenance(assessment, region)
     ver_txt = "unversioned" if version is None else f"v{version}"
     hdr = [["Source", _attr(assessment, "source_citation", "sourceCitation")],
-           ["Version / status", f"{ver_txt}  ·  {status.title()}"],
+           ["Version / status", f"{ver_txt}  ·  {session.status_label(status)}"],
            ["Predictor source", assessments.predictor_source_of(assessment)],
            ["Region match", _region_combined(st, l3)],
            ["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
@@ -606,14 +612,14 @@ def build_pdf(delin, assessment, measured, sc, region=None, *, scenario=None) ->
     if gallery:
         story += [Spacer(1, 10), Paragraph("Site photos", styles["Heading3"])] + gallery
 
-    doc.build(story)
+    doc.build(story, onFirstPage=mark, onLaterPages=mark)
     return buf.getvalue()
 
 
 def field_forms_filename(assessment) -> str:
-    """Filename for the downloadable field-forms packet."""
-    aid = _attr(assessment, "assessment_id", "assessmentId") or "assessment"
-    return f"deep-field-forms-{aid}.pdf"
+    """``deep-field-forms-<id>-v<N>-<status>.pdf``: the field-forms packet, named with its
+    version and status (owner, 2026-10-14)."""
+    return f"deep-field-forms-{session.download_stem(_raw(assessment))}.pdf"
 
 
 def _desktop_entries(assessment, measured) -> dict:
@@ -733,8 +739,15 @@ def metric_status_counts(rows: list[dict]) -> dict[str, int]:
 
 
 def metrics_filename(assessment) -> str:
-    aid = _attr(assessment, "assessment_id", "assessmentId") or "assessment"
-    return f"deep-metrics-{aid}.pdf"
+    """``deep-metrics-<id>-v<N>-<status>.pdf`` (owner, 2026-10-14)."""
+    return f"deep-metrics-{session.download_stem(_raw(assessment))}.pdf"
+
+
+def report_filename(assessment, suffix: str, ext: str) -> str:
+    """``deep-report-<id>-v<N>-<status><suffix>.<ext>``: the report's PDF, CSV and GeoJSON,
+    named with the assessment, its version and its status (owner, 2026-10-14); ``suffix`` is
+    the scenario's (``staf_web.scenario_suffix``)."""
+    return f"deep-report-{session.download_stem(_raw(assessment))}{suffix}.{ext}"
 
 
 def build_metrics_pdf(assessment, ref: str = "", *, measured=None, delineation=None) -> bytes:
@@ -758,14 +771,23 @@ def build_metrics_pdf(assessment, ref: str = "", *, measured=None, delineation=N
                           textColor=colors.HexColor("#66708a"))
     head_bg = colors.HexColor("#eef2f8")
 
+    from . import status_mark
+    raw = _raw(assessment)
+    status = session.lifecycle_status(raw) if raw else None
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=status_mark.TOP_MARGIN_IN * inch,
+                            bottomMargin=0.6 * inch,
                             leftMargin=0.6 * inch, rightMargin=0.6 * inch,
-                            title="DEEP Metrics", invariant=1)
+                            title="DEEP Metrics", invariant=1,
+                            subject=session.status_line(status) if status else None)
+    mark = status_mark.page_marker(status)
     name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
     dl = (delineation or {}).get("delineation") or {}
+    heading = name + (f"  ({ref})" if ref else "")
+    if status:
+        heading += f"  |  {session.status_label(status)}"
     story = [Paragraph("DEEP Metrics", base["Title"]),
-             Paragraph(escape(safe(name + (f"  ({ref})" if ref else ""))), base["Heading2"])]
+             Paragraph(escape(safe(heading)), base["Heading2"])]
     if dl:
         hdr = [["Stream", safe(dl.get("gnis_name") or "(unnamed reach)")],
                ["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
@@ -802,5 +824,5 @@ def build_metrics_pdf(assessment, ref: str = "", *, measured=None, delineation=N
                         "the value is shown and kept out of the score, because the curve was "
                         "fitted on another data source. Not scored: the assessment withholds the "
                         "metric for insufficient reference support.", dim)]
-    doc.build(story)
+    doc.build(story, onFirstPage=mark, onLaterPages=mark)
     return buf.getvalue()

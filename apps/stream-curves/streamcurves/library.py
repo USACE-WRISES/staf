@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from . import geo, session_io
+from .lifecycle_words import STATUS_LABELS
 from .paths import ROOT
 
 logger = logging.getLogger("streamcurves")
@@ -108,18 +109,11 @@ DEEP_STATUSES = ("draft", "preliminary", "certified")
 #: version, else the newest shown Preliminary one, else the newest shown Draft.
 DEEP_DEFAULT_ORDER = ("certified", "preliminary", "draft")
 
-# Stored literal -> label shown to people. Machine fields (status.json,
-# catalog.json, baked bundles, session provenance) always carry the stored
-# literal; only human-facing text uses these. Keep in sync with the copy in
-# apps/deep/deep/session.py (no shared package yet; the STAF_LINKS precedent).
-STATUS_LABELS = {
-    "draft": "Draft",
-    "preliminary": "Preliminary",
-    "under_review": "Under review",
-    "certified": "Final",
-    "revised": "Revised",
-    "retired": "Retired",
-}
+# Stored literal -> label shown to people: STATUS_LABELS (imported above) lives in
+# lifecycle_words.py with each status's line and colors, which the calculator stamps.
+# Machine fields (status.json, catalog.json, baked bundles, session provenance) always
+# carry the stored literal. DEEP holds the same literals in apps/deep/deep/session.py
+# (no shared package yet; the STAF_LINKS precedent); tests/test_status_words.py.
 VALIDATION_LABELS = {
     VALIDATION_UNVALIDATED: "Unvalidated",
     VALIDATION_VALIDATED: "Verified",
@@ -567,29 +561,45 @@ def calculator_path(assessment_id: str, version: int) -> Path:
     return version_dir(slugify(assessment_id), version) / CALCULATOR_FILE
 
 
-def calculator_state(assessment_id: str, version: int) -> str:
-    """``present`` when the recorded workbook is on disk with the recorded hash
-    and was built from the version's own content, ``stale`` when a record exists
-    and the file or the digest no longer agrees, else ``absent``."""
+def calculator_stale_reason(assessment_id: str, version: int) -> Optional[str]:
+    """Why a version's recorded workbook is not current, or ``None`` when it is (or when
+    there is no record): the file is missing or changed, it was built from other content,
+    or it states another status than the version's (owner, 2026-10-14: every workbook
+    states its version's status, so a status change makes the old one stale)."""
     rec = version_artifact(assessment_id, version)
     if not rec:
-        return "absent"
+        return None
     path = calculator_path(assessment_id, version)
     if not path.is_file():
-        return "stale"
+        return "the file is missing"
     import hashlib
     sha = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
     if sha != rec.get("sha256"):
-        return "stale"
+        return "the file changed since it was recorded"
     if rec.get("contentDigest") != version_content_digest(assessment_id, version):
-        return "stale"
-    return "present"
+        return "it was built from other content"
+    status = version_status(assessment_id, version)
+    if rec.get("status") != status:
+        return (f"it states no status, the version is {status}" if not rec.get("status")
+                else f"it states {rec.get('status')}, the version is {status}")
+    return None
+
+
+def calculator_state(assessment_id: str, version: int) -> str:
+    """``present`` when the recorded workbook is on disk with the recorded hash,
+    was built from the version's own content and states the version's current
+    status, ``stale`` when a record exists and any of those no longer agrees, else
+    ``absent``."""
+    if not version_artifact(assessment_id, version):
+        return "absent"
+    return "stale" if calculator_stale_reason(assessment_id, version) else "present"
 
 
 def write_calculator(assessment_id: str, version: int, *, actor: str = "",
                      note: Optional[str] = None, reissue: bool = False) -> Optional[dict]:
     """Build the Excel calculator of a published version from its own bundle,
-    write it into the version folder, and append its record.
+    stamped with the version's current status, write it into the version folder,
+    and append its record (which names that status).
 
     Idempotent: a version whose recorded workbook is present and current is left
     alone unless ``reissue``. Returns the record written, or ``None`` when
@@ -601,7 +611,8 @@ def write_calculator(assessment_id: str, version: int, *, actor: str = "",
     if not reissue and calculator_state(assessment_id, version) == "present":
         return None
     bundle = load_version_bundle(assessment_id, version)
-    data = deep_calculator.build_calculator(bundle)
+    status = version_status(assessment_id, version)
+    data = deep_calculator.build_calculator(bundle, status)
     path = calculator_path(assessment_id, version)
     path.write_bytes(data)
     record = {
@@ -610,6 +621,7 @@ def write_calculator(assessment_id: str, version: int, *, actor: str = "",
         "generator": deep_calculator.GENERATOR,
         "generatorVersion": deep_calculator.GENERATOR_VERSION,
         "contentDigest": bundle.get("contentDigest"),
+        "status": status,
         "builtAt": _now_iso(), "actor": actor or "", "note": note,
     }
     doc = read_artifacts(assessment_id)
@@ -618,6 +630,25 @@ def write_calculator(assessment_id: str, version: int, *, actor: str = "",
     doc["history"] = list(doc.get("history") or []) + [record]
     _write_json(artifacts_path(assessment_id), doc)
     return record
+
+
+def restamp_calculator(assessment_id: str, version: int, *, actor: str = "",
+                       note: Optional[str] = None) -> Optional[dict]:
+    """Rebuild a version's workbook after its status changed, so it states the new one.
+
+    Only a version that already has a recorded workbook gets one (a version published
+    before calculators existed stays without, as it was). Returns the record written, or
+    ``None`` when the version has no workbook or its workbook already states its status.
+    Raises on a build error; :func:`set_version_status` logs it and keeps the status.
+    """
+    assessment_id = slugify(assessment_id)
+    if not version_artifact(assessment_id, version):
+        return None
+    if calculator_state(assessment_id, version) == "present":
+        return None
+    status = version_status(assessment_id, version)
+    return write_calculator(assessment_id, version, actor=actor, reissue=True,
+                            note=note or f"Restamped: the version is now {status}.")
 
 
 def _append_status(
@@ -649,8 +680,10 @@ def set_version_status(
 ) -> str:
     """Append a lifecycle-status change for a published version and refresh the catalog
     pointers. The record is append-only + audited (actor + timestamp); it never rewrites
-    the version's analytical content, so the content fingerprint is unchanged. Returns
-    the new status.
+    the version's analytical content, so the content fingerprint is unchanged. The
+    version's workbook states its status, so it is rebuilt with the new one
+    (:func:`restamp_calculator`); a build error is logged and never blocks the change
+    (the catalog then reads the workbook as stale). Returns the new status.
 
     ``status`` must be one of :data:`VERSION_STATUSES`; ``actor`` (the maintainer audit
     name) must be non-empty.
@@ -672,6 +705,12 @@ def set_version_status(
     if not version_dir(assessment_id, version).is_dir():
         raise ValueError(f"{assessment_id} has no version v{int(version)} to update.")
     _append_status(assessment_id, int(version), status, actor, note)
+    try:
+        restamp_calculator(assessment_id, int(version), actor=actor)
+    except Exception:  # noqa: BLE001 - a workbook never blocks a status change
+        logger.exception("%s v%d: the calculator was not restamped as %s; it reads stale "
+                         "until build_deep_calculators.py rebuilds it.", assessment_id,
+                         int(version), status)
     _regenerate_catalog()
     logger.info("Set %s v%d status -> %s (%s).", assessment_id, int(version), status, actor)
     return status

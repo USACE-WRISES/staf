@@ -1,26 +1,28 @@
 // DEEP's assessment for a delineated site (deep/assessments.py covering_refs; app.py _resolve_assessment,
 // _assessment_facts, assess_pane): the assessments whose region holds the point, the one Basin adopts
-// (the first's default version), and what the pane states about it. The library comes from the data
-// mirror: the catalog (library.json, read as deep/remote_library.py reads it) and the version's bundle.
+// (the first default that is not a Draft, unless the Drafts show: owner, 2026-10-14), and what the pane
+// states about it. The library comes from the data mirror: the catalog (library.json, read as
+// deep/remote_library.py reads it) and the version's bundle.
 import type { DataSource } from '../data/source'
 import { parseJson, pyCopy, pySet } from './pyjson'
 import { deepAssessPane, deepNoAssessment } from './markup'
+import { bundleDigest } from '../session/deep'
+import { draftPending, LIFECYCLES as ELIGIBLE, lifecycleStatus } from './deepStatus'
 
-const ELIGIBLE = ['draft', 'preliminary', 'certified']
 const TIER_ORDER = ['certified', 'preliminary', 'draft']
 const HIDDEN_ID_SUFFIXES = ['-sqt-adapted']
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft', preliminary: 'Preliminary', under_review: 'Under review', certified: 'Final', revised: 'Revised', retired: 'Retired',
-}
-const BADGE_CLASS: Record<string, string> = { draft: 'deep-badge-draft', preliminary: 'deep-badge-prelim', certified: 'deep-badge-cert' }
 const TIER_LABELS: Record<string, string> = {
   minimally_disturbed: 'Minimally disturbed', least_disturbed: 'Least disturbed', best_available: 'Best available (fallback)',
 }
 /** The STAF framework's functions (deep config.functions_by_id), for a bundle that declares no coverage. */
 const FRAMEWORK_FUNCTIONS = 20
 
-interface Version { id: string, version: number, status: string, bundle: string, calculator: string | null, contentDigest: string | null }
+interface Version {
+  id: string, version: number, status: string, bundle: string, calculator: string | null, contentDigest: string | null
+  /** the status the calculator states (its asset's status, owner 2026-10-14); null when the catalog does not say */
+  calculatorStatus: string | null
+}
 export interface Covering {
   assessmentId: string
   /** the default version's assessment and region names (Change's cards) */
@@ -68,8 +70,10 @@ function catalog(src: DataSource): Promise<Version[]> {
         const bundle = raw.assets?.bundle?.name
         if (ELIGIBLE.includes(status) && visible && typeof bundle !== 'string') continue
         const calculator = typeof raw.assets?.calculator?.name === 'string' ? raw.assets.calculator.name : null
+        const stated = raw.assets?.calculator?.status
+        const calculatorStatus = calculator && typeof stated === 'string' && stated.trim() ? stated.trim().toLowerCase() : null
         byNumber.set(number, ELIGIBLE.includes(status) && visible
-          ? { id: aid, version: number, status, bundle, calculator, contentDigest: normDigest(raw.contentDigest) } : null)
+          ? { id: aid, version: number, status, bundle, calculator, contentDigest: normDigest(raw.contentDigest), calculatorStatus } : null)
       }
       for (const n of [...byNumber.keys()].sort((a, b) => a - b)) {
         const v = byNumber.get(n)
@@ -80,6 +84,12 @@ function catalog(src: DataSource): Promise<Version[]> {
   })()
   catalogP.catch(() => { catalogP = null })
   return catalogP
+}
+
+/** Forget the catalog read (tests). */
+export function resetCatalog(): void {
+  catalogP = null
+  bundles.clear()
 }
 
 function pointInRing(x: number, y: number, ring: number[][]): boolean {
@@ -140,7 +150,8 @@ function normDigest(value: unknown): string | null {
 
 /** calculator.template_for: the library file of the loaded version's Excel calculator, or null. It
  * belongs to the version only when the catalog's content digest (else its bundle's own) is the loaded
- * bundle's, so a workbook built for other curves is never offered. */
+ * bundle's, so a workbook built for other curves is never offered, and when it states the status the
+ * version is shown with (owner, 2026-10-14), so a workbook never says another status. */
 export async function calculatorFor(src: DataSource, bundle: Record<string, any> | null): Promise<string | null> {
   if (!bundle) return null
   const ref = String(bundle.assessmentRef || '')
@@ -150,6 +161,7 @@ export async function calculatorFor(src: DataSource, bundle: Record<string, any>
   if (!digest) return null
   const v = (await catalog(src)).find((x) => x.id === ref.slice(0, at) && x.version === Number(ref.slice(at + 2)))
   if (!v || !v.calculator) return null
+  if (v.calculatorStatus !== lifecycleStatus(bundle)) return null
   const entry = v.contentDigest || normDigest(bundle.contentDigest)
   if (!entry || normDigest(digest) !== entry) return null
   const logical = `library/${v.calculator}`
@@ -163,6 +175,34 @@ export async function defaultRefFor(src: DataSource, aid: string): Promise<strin
   for (const status of TIER_ORDER) {
     const vs = recs.filter((r) => r.status === status).map((r) => r.version)
     if (vs.length) return `${aid}@v${Math.max(...vs)}`
+  }
+  return null
+}
+
+/** app.py _with_current_lifecycle: the status the library gives an opened file's version today, when it
+ * holds the same version with the same content; else null (the file's own status stands). */
+export async function currentLifecycle(src: DataSource, ref: string | null, raw: Record<string, any> | null): Promise<string | null> {
+  if (!ref || !raw || !Object.keys(raw).length) return null
+  const at = ref.lastIndexOf('@v')
+  if (at < 0) return null
+  const v = (await catalog(src)).find((x) => x.id === ref.slice(0, at) && x.version === Number(ref.slice(at + 2)))
+  if (!v || !v.contentDigest || normDigest(bundleDigest(raw)) !== v.contentDigest) return null
+  return v.status
+}
+
+/** The status of a covering entry's default version (app.py _entry_lifecycle). */
+export function entryLifecycle(entry: Covering): string {
+  return lifecycleStatus({ lifecycle: entry.lifecycleByRef[entry.defaultRef] })
+}
+
+/** app.py _ref_to_adopt: the ref Basin adopts on its own, or null. One-shot (a chosen ref stands); a
+ * Draft only while ``drafts`` (Draft is on in the legend), and then only after its notice. */
+export function refToAdopt(current: string | null, covering: Covering[], drafts = false): string | null {
+  if (current || !covering.length) return null
+  for (const entry of covering) {
+    if (!entry.defaultRef) continue
+    if (!drafts && entryLifecycle(entry) === 'draft') continue
+    return entry.defaultRef
   }
   return null
 }
@@ -211,21 +251,14 @@ export function loadRef(src: DataSource, ref: string): Promise<Record<string, an
   return got
 }
 
-/** session.lifecycle_status. */
-function lifecycleStatus(raw: Record<string, any>): string {
-  const lib = raw.library ?? {}
-  for (const src of [raw, lib]) {
-    for (const key of ['lifecycle', 'status']) {
-      const v = src?.[key]
-      if (v && ELIGIBLE.includes(String(v).trim().toLowerCase())) return String(v).trim().toLowerCase()
-    }
-  }
-  return 'preliminary'
-}
-
-/** The Basin pane's assessment block for the loaded bundle (or the blocked one without). */
+/** The Basin pane's assessment block for the loaded bundle (or, without one, the Draft that covers the
+ * site when only Drafts do, else the blocked block). */
 export function assessPane(raw: Record<string, any> | null, covering: Covering[]): string {
-  if (!raw) return deepNoAssessment(covering.length > 0)
+  if (!raw) {
+    const drafts = covering.filter((e) => entryLifecycle(e) === 'draft')
+    if (drafts.length && drafts.length === covering.length) return draftPending(drafts[0], drafts.length > 1).render()
+    return deepNoAssessment(covering.length > 0)
+  }
   const mbf: any[] = raw.metricsByFunction ?? []
   const covered = mbf.filter((fn) => fn.metrics?.length).length
   const declared = raw.functionCoverage
@@ -241,8 +274,7 @@ export function assessPane(raw: Record<string, any> | null, covering: Covering[]
   const counts = `${nmet} metrics · ${cov.covered} of ${cov.total} functions${note}`
   const meta = [...(lib.version ? [`v${lib.version}`] : []), counts].join(' · ')
   return deepAssessPane({
-    name: raw.assessmentName ?? raw.assessmentId ?? '', region: region.name || '', lifecycle,
-    label: STATUS_LABELS[lifecycle] ?? lifecycle, badge: BADGE_CLASS[lifecycle], meta, tier,
+    name: raw.assessmentName ?? raw.assessmentId ?? '', region: region.name || '', lifecycle, meta, tier,
     bestAvailable: String(raw.referenceTier) === 'best_available',
     coversSite: covering.some((e) => e.assessmentId === raw.assessmentId),
     canChange: covering.length > 1 || covering.reduce((s, e) => s + e.refs.length, 0) > 1,

@@ -24,6 +24,7 @@ import pytest
 import yaml
 
 from streamcurves import gallery
+from streamcurves import library as lib
 from streamcurves.version import REPO
 
 APP_DIR = Path(__file__).resolve().parents[1]
@@ -248,6 +249,13 @@ def test_the_builder_writes_every_asset_its_catalog_names_the_same_way_twice(tmp
             assert hashlib.sha256(data).hexdigest() == asset["sha256"]
             assert asset["sha256"].startswith(m["sha"])
             assert data == (tmp_path / "b" / asset["name"]).read_bytes(), "not deterministic"
+            if kind == "calculator":
+                # the status the workbook states, from its record (owner, 2026-10-14)
+                rec = lib.version_artifact(entry["id"], v["version"]) or {}
+                assert asset.get("status") == rec.get("status")
+                assert asset.get("status") in (None, v["status"])
+            else:
+                assert "status" not in asset
     files = {p.name for p in (tmp_path / "a").iterdir()}
     # the schema-1 feed, the typed feed, and every asset either names
     assert files == lr.all_names(tmp_path / "a") | {gallery.CATALOG_NAME, gallery.CATALOG_NAME_V2}

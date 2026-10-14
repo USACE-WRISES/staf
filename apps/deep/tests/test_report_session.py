@@ -129,9 +129,12 @@ def test_field_forms_pdf_returns_pdf_bytes():
     assert len(pdf) > 1000                                # real content, not an empty doc
     # tolerates a missing assessment (cover page only, no crash)
     assert report.build_field_forms_pdf(None)[:4] == b"%PDF"
-    # filename derives from the assessment id
+    # filename derives from the assessment id, its version and its status (owner, 2026-10-14)
     fn = report.field_forms_filename(la)
     assert fn.startswith("deep-field-forms-") and fn.endswith(".pdf")
+    from deep import session as _s
+    assert fn == f"deep-field-forms-{_s.download_stem(la.raw)}.pdf"
+    assert fn.endswith(f"-{_s.status_slug(_s.lifecycle_status(la.raw))}.pdf")
 
 
 def test_pdf_includes_photo_gallery():

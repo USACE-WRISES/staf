@@ -54,6 +54,31 @@ def test_the_sheet_follows_the_schema_order():
                                   "pageSetup", "drawing"]
 
 
+def test_a_print_header_and_a_tab_color_keep_the_schema_order():
+    """DEEP's assessment status (owner, 2026-10-14): a print header and a tab color on the
+    authored tabs, in the places the schema gives them."""
+    w = SheetWriter()
+    w.text("A1", "x")
+    w.drawing_rid = "rId1"
+    w.header = ("Assessment status: Draft.\nFor research & development.", "475569")
+    w.tab_color = "475569"
+    xml = w.xml()
+    assert _children(xml) == ["sheetPr", "dimension", "sheetViews", "sheetFormatPr", "sheetData",
+                              "pageMargins", "pageSetup", "headerFooter", "drawing"]
+    root = ET.fromstring(xml)
+    pr = [c.tag.rsplit("}", 1)[-1] for c in root[0]]
+    assert pr == ["tabColor", "pageSetUpPr"]
+    assert root[0][0].get("rgb") == "FF475569"
+    head = root.find("{http://schemas.openxmlformats.org/spreadsheetml/2006/main}headerFooter")
+    assert head[0].text == ('&C&"Calibri,Bold"&K475569Assessment status: Draft.\n'
+                            "For research && development.")
+    assert 'top="0.8"' in xml, "room above the sheet for a two-line header"
+    plain = SheetWriter()
+    plain.text("A1", "x")
+    assert "headerFooter" not in plain.xml() and "tabColor" not in plain.xml()
+    assert 'top="0.6"' in plain.xml()
+
+
 def test_rules_escape_comparisons_and_number_priorities_once_per_sheet():
     w = SheetWriter()
     w.text("A1", "x")

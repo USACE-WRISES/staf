@@ -2,9 +2,10 @@
 
 StreamCurves generates a workbook at publish and records it in the assessment's
 append-only ``artifacts.json``. The bake copies the recorded file into
-``www/calculators/`` only when it is what the record says it is and was built
-from the very content being baked, and writes the index ``deep.calculator``
-reads. The script stays pure stdlib. Runs against tmp folders only.
+``www/calculators/`` only when it is what the record says it is, was built
+from the very content being baked and states the status the version is baked
+with (owner, 2026-10-14), and writes the index ``deep.calculator`` reads. The
+script stays pure stdlib. Runs against tmp folders only.
 """
 from __future__ import annotations
 
@@ -32,9 +33,11 @@ def _digest(version: int) -> str:
     return f"sha256:content-v{version}"
 
 
-def _add_calculator(root, version: int, payload: bytes, *, digest=None, sha=None):
+def _add_calculator(root, version: int, payload: bytes, *, digest=None, sha=None,
+                    status="preliminary"):
     """A workbook in the version folder with its artifacts.json record. The
-    bundle gets the content digest the record names."""
+    bundle gets the content digest the record names; the record states ``status``
+    (None: a record from before workbooks carried one)."""
     vdir = root / "assessments" / AID / f"v{version}"
     bundle_path = vdir / "assessment.deep.json"
     bundle = json.loads(bundle_path.read_text("utf-8"))
@@ -47,7 +50,7 @@ def _add_calculator(root, version: int, payload: bytes, *, digest=None, sha=None
         "version": version, "kind": "excel-calculator", "file": "calculator.xlsx",
         "sha256": sha or "sha256:" + hashlib.sha256(payload).hexdigest(),
         "bytes": len(payload), "contentDigest": digest or _digest(version),
-        "generatorVersion": "1.0"})
+        "generatorVersion": "1.1", **({"status": status} if status else {})})
     path.write_text(json.dumps(doc), encoding="utf-8")
 
 
@@ -64,14 +67,16 @@ def test_recorded_workbooks_are_copied_with_an_index(tmp_path, libroot):
     bake = _load_bake_module()
     result = bake.bake(out=tmp_path / "data")
     www = tmp_path / "www" / "calculators"
-    assert result["calculators"] == {"copied": ["ecbp@v1", "ecbp@v2"], "missing": []}
+    assert result["calculators"] == {"copied": ["ecbp@v1", "ecbp@v2"], "missing": [], "why": {}}
     assert (www / "ecbp@v1.xlsx").read_bytes() == b"PK-one"
     assert (www / "ecbp@v2.xlsx").read_bytes() == b"PK-two"
     assert (www / "ecbp.xlsx").read_bytes() == b"PK-two"            # the default version
     index = json.loads((www / "index.json").read_text("utf-8"))
     assert index["calculators"]["ecbp@v2"] == {
         "file": "ecbp@v2.xlsx", "sha256": "sha256:" + hashlib.sha256(b"PK-two").hexdigest(),
-        "bytes": 6, "contentDigest": _digest(2), "generatorVersion": "1.0"}
+        "bytes": 6, "contentDigest": _digest(2), "generatorVersion": "1.1",
+        "status": "preliminary"}
+    assert index["schemaVersion"] == 2
     assert index["default"] == {"ecbp": "ecbp.xlsx"}
 
 
@@ -94,10 +99,34 @@ def test_a_workbook_that_is_not_what_the_record_says_is_not_shipped(tmp_path, li
     _add_calculator(libroot, 2, b"PK-two", digest="sha256:other-curves")    # other content
     # v3 has no record at all
     result = _load_bake_module().bake(out=tmp_path / "data")
-    assert result["calculators"] == {"copied": [], "missing": ["ecbp@v1", "ecbp@v2", "ecbp@v3"]}
+    assert result["calculators"] == {
+        "copied": [], "missing": ["ecbp@v1", "ecbp@v2", "ecbp@v3"],
+        "why": {"ecbp@v1": "the file changed since it was recorded",
+                "ecbp@v2": "built from other content", "ecbp@v3": "none recorded"}}
     www = tmp_path / "www" / "calculators"
     assert not list(www.glob("*.xlsx")) if www.is_dir() else True
     assert not (www / "index.json").exists()
+
+
+def test_a_workbook_stating_another_status_or_none_is_not_shipped(tmp_path, libroot):
+    """A status change rebuilds the version's workbook (StreamCurves restamps it); until
+    then the old one states the old status, and an older one states none: neither is
+    this version's (owner, 2026-10-14)."""
+    from test_bake_library import _write_library
+    _write_library(libroot, AID, "ECBP", [1, 2, 3], statuses={1: "draft", 2: "draft",
+                                                               3: "preliminary"})
+    _write_catalog(libroot, [_catalog_entry(AID, "ECBP", latest=3, default=3, prelim=3)])
+    _add_calculator(libroot, 1, b"PK-one", status="draft")
+    _add_calculator(libroot, 2, b"PK-two", status="preliminary")        # stamped before a change
+    _add_calculator(libroot, 3, b"PK-three", status=None)               # generator 1.0
+    result = _load_bake_module().bake(out=tmp_path / "data")
+    assert result["calculators"]["copied"] == ["ecbp@v1"]
+    assert result["calculators"]["why"] == {"ecbp@v2": "states preliminary, the version is draft",
+                                            "ecbp@v3": "states no status"}
+    www = tmp_path / "www" / "calculators"
+    assert not (www / "ecbp.xlsx").exists(), "the default version's workbook is not current"
+    index = json.loads((www / "index.json").read_text("utf-8"))
+    assert index["calculators"]["ecbp@v1"]["status"] == "draft" and index["default"] == {}
 
 
 def test_a_reissue_supersedes_the_earlier_record(tmp_path, libroot):

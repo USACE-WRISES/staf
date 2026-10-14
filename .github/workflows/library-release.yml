@@ -9,7 +9,9 @@
 #
 # WHEN IT RUNS. Every push to main that changes the library (the maintainer's publish, approve
 # or certify, committed and pushed), or by hand. Asset names carry a content hash, so a rerun
-# uploads nothing new and a status change rewrites only the catalog.
+# uploads nothing new. A status change rewrites the catalog and the version's Excel calculator,
+# which states its version's status (2026-10-14); the catalog names that status on the
+# calculator asset, and DEEP hands a calculator out only when it equals the version's status.
 name: library-release
 
 on:

@@ -8,9 +8,15 @@ recorded workbook is still present and current. It writes only
 ``artifacts.json``. A version's bundle, session, provenance and ``meta.json`` are
 never touched, so no fingerprint moves.
 
+Every workbook states its version's status (owner, 2026-10-14), so a workbook built
+for another status, or before workbooks carried one, reads stale and is rebuilt.
+``--recorded`` limits a run to versions that already have a recorded workbook, so
+an older version that never had one is not given one by the way.
+
     py -3.12 scripts/build_deep_calculators.py --all
     py -3.12 scripts/build_deep_calculators.py --assessment northeastern-highlands --version 6
     py -3.12 scripts/build_deep_calculators.py --all --reissue      # after a generator change
+    py -3.12 scripts/build_deep_calculators.py --all --recorded     # restamp what exists
     py -3.12 scripts/build_deep_calculators.py --all --check        # exit 1 when any is missing or stale
 
 Writing the canonical ``apps/library`` needs the same gate a publish does
@@ -58,6 +64,8 @@ def main(argv=None) -> int:
     ap.add_argument("--version", type=int, default=None, help="with --assessment: one version")
     ap.add_argument("--reissue", action="store_true",
                     help="rebuild even when the recorded workbook is present and current")
+    ap.add_argument("--recorded", action="store_true",
+                    help="only versions that already have a recorded workbook")
     ap.add_argument("--check", action="store_true", help="report only; write nothing")
     ap.add_argument("--library-root", default=None,
                     help="another library root (default: the canonical apps/library)")
@@ -70,12 +78,15 @@ def main(argv=None) -> int:
         os.environ["STAF_LIBRARY_ROOT"] = str(Path(a.library_root).resolve())
 
     todo = targets(a.assessment, a.version)
+    if a.recorded:
+        todo = [(aid, v) for aid, v in todo if lib.version_artifact(aid, v)]
     if a.check:
         bad = 0
         for aid, v in todo:
             state = lib.calculator_state(aid, v)
             bad += state != "present"
-            print(f"  {aid} v{v}: {state}")
+            why = lib.calculator_stale_reason(aid, v) if state == "stale" else None
+            print(f"  {aid} v{v}: {state}" + (f" ({why})" if why else ""))
         print(f"[calculators] {len(todo) - bad} of {len(todo)} present and current")
         return 1 if bad else 0
 
@@ -93,8 +104,10 @@ def main(argv=None) -> int:
         try:
             record = lib.write_calculator(
                 aid, v, actor=a.actor,
-                note="Reissued." if a.reissue else "Backfilled for a version published "
-                                                   "before calculators were generated.",
+                note=("Reissued." if a.reissue else
+                      "Restamped with the version's status (generator 1.1)."
+                      if lib.version_artifact(aid, v) else
+                      "Backfilled for a version published before calculators were generated."),
                 reissue=a.reissue)
         except Exception as exc:  # noqa: BLE001 - one bad bundle must not end the run
             failed += 1

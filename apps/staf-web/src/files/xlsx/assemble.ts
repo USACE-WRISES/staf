@@ -7,7 +7,7 @@ import type { ScenarioScores } from '../../shared/scenarios'
 import type { SummaryInfo } from '../../shared/summary'
 import { clearTabSelected, ScenarioCloner, setTabSelected } from './clone'
 import { Package } from './package'
-import { addCurvesSheet, addSummarySheet, type RefCurves, type SummaryCells } from './sheets'
+import { addCurvesSheet, addSummarySheet, type Banner, type RefCurves, type SummaryCells } from './sheets'
 import { StyleBook } from './styles'
 import { validatePackage } from './validate'
 import { WorkbookModel } from './workbook'
@@ -80,14 +80,16 @@ export interface AssembleArgs {
   curves: RefCurves | null
   /** the day written on the Summary (an ISO date) */
   generatedOn: string
+  /** a line across the top of the Summary and ReferenceCurves tabs (DEEP's assessment status) */
+  banner?: Banner | null
 }
 
 /** assemble: the whole workbook. */
 export async function assemble(template: Uint8Array, spec: AssemblySpec, scenarios: ScenarioInput[], args: AssembleArgs): Promise<Uint8Array> {
   const built = await build(template, spec, scenarios)
   const styles = new StyleBook(built.pkg)
-  const first = [addSummarySheet(built, spec, styles, args.summary, args.cells, args.scores, scenarios, args.generatedOn)]
-  const after = args.curves !== null && args.curves.blocks.length ? [addCurvesSheet(built, styles, args.curves)] : []
+  const first = [addSummarySheet(built, spec, styles, args.summary, args.cells, args.scores, scenarios, args.generatedOn, args.banner ?? null)]
+  const after = args.curves !== null && args.curves.blocks.length ? [addCurvesSheet(built, styles, args.curves, args.banner ?? null)] : []
   styles.save()
   return finish(built, spec, first, after)
 }

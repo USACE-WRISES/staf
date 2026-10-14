@@ -381,9 +381,17 @@ def validate_server(input, output, session, state: AppState, active=None):
         state.run_stage_status.set(stamped)
         ui.notification_show(message, type="message", duration=8)
 
-    def _rebake_and_toast(prefix: str):
+    def _rebake_and_toast(prefix: str, *, restamped=None):
         """Fold the change into DEEP's baked registry (status changes move bake
-        eligibility) and tell the owner what to commit."""
+        eligibility) and tell the owner what to commit. ``restamped`` is the
+        ``(assessment id, version)`` whose status changed: its calculator states its
+        status, so set_version_status rebuilt it, and a rebuild that failed is said."""
+        if restamped is not None and lib.calculator_state(*restamped) == "stale":
+            aid, ver = restamped
+            ui.notification_show(
+                f"The calculator of {aid} v{ver} still states its old status: run "
+                f"apps/stream-curves/scripts/build_deep_calculators.py --assessment {aid} "
+                f"--version {ver}, then bake DEEP.", type="warning", duration=12)
         baked_ok, baked_msg = lib.rebake_deep()
         if baked_ok:
             ui.notification_show(
@@ -453,7 +461,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         lib.set_version_status(aid, ver, "preliminary", maintainer,
                                note="Reviewed in StreamCurves; approved as preliminary.")
         state.validation_records.set(lib._validation_records_for(aid, ver))
-        _rebake_and_toast(f"{aid} v{ver} approved as Preliminary.")
+        _rebake_and_toast(f"{aid} v{ver} approved as Preliminary.", restamped=(aid, ver))
 
     @render.ui
     def certify_block():
@@ -516,7 +524,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         # Certification changes what DEEP prefers (certified beats preliminary
         # for defaultVersion), so the baked registry must follow. This was a
         # pre-existing gap: certify never rebaked.
-        _rebake_and_toast(f"{aid} v{ver} certified (shown as Final).")
+        _rebake_and_toast(f"{aid} v{ver} certified (shown as Final).", restamped=(aid, ver))
 
     @render.ui
     def deep_visibility_block():

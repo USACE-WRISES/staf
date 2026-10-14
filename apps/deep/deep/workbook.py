@@ -18,13 +18,13 @@ import io
 import re
 import zipfile
 
-from . import calculator, config, curves, measure, scoring
+from . import calculator, config, curves, measure, scoring, session
 from ._vendor.staf_workbook.assemble import AssemblySpec, ScenarioInput, assemble
 from ._vendor.staf_workbook.model import compare as cmp_model
 from ._vendor.staf_workbook.model.compare import Measure, ScenarioScores
 from ._vendor.staf_workbook.model.refcurves import CurveBlock, RefCurves
 from ._vendor.staf_workbook.model.summary import SummaryInfo, regions_for_l3
-from ._vendor.staf_workbook.sheets import SummaryCells
+from ._vendor.staf_workbook.sheets import Banner, SummaryCells
 
 SPEC = AssemblySpec("DEEP", calculator.SHEET_NAME, force_recalc=True)
 SUB_NAMES = {"physical": "sub_index_physical", "chemical": "sub_index_chemical",
@@ -206,4 +206,16 @@ def build(template: bytes, assessment, delin: dict, scenarios: list, *, today: _
         used.append((s.name, measured))
     return assemble(template, SPEC, inputs, summary=summary_info(delin),
                     cells=summary_cells(template, assessment, claims), scores=book_scores,
-                    curves=reference_curves(assessment, used), generated_on=today)
+                    curves=reference_curves(assessment, used), generated_on=today,
+                    banner=status_banner(assessment))
+
+
+def status_banner(assessment) -> Banner:
+    """The assessment's status across the top of the Summary and ReferenceCurves tabs, as the
+    calculator's own sheets carry it (owner, 2026-10-14)."""
+    raw = getattr(assessment, "raw", None)
+    raw = raw if isinstance(raw, dict) else (assessment if isinstance(assessment, dict) else {})
+    status = session.lifecycle_status(raw)
+    head, note = session.status_parts(status)
+    color = session.STATUS_COLORS[status][0].lstrip("#").upper()
+    return Banner(session.status_line(status), color, head + "\n" + note)

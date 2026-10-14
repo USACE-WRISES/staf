@@ -193,8 +193,15 @@ ignore all of it.
 
 `assessments/<id>/artifacts.json` is an append-only record of files generated from a published
 version. Today that is `vN/calculator.xlsx`, the Excel calculator built at publish, with its
-sha256, the generator version and the bundle's `contentDigest`. `meta.json` of a published
-version is never touched. The catalog reports `calculatorState` (present, stale or absent).
+sha256, the generator version, the bundle's `contentDigest` and the `status` it states. Every
+calculator states its version's status (owner, 2026-10-14: a banner on each visible sheet, a print
+header and the Metadata row), so a status change (`library.set_version_status`, the Validate page,
+`set_library_status.py`) rebuilds that version's calculator and appends its record; one that
+states another status, or none, is `stale` until it is rebuilt
+(`build_deep_calculators.py --all --recorded`). `meta.json` of a published version is never
+touched. The catalog reports `calculatorState` (present, stale or absent). The bake copies only a
+calculator that states its version's status, and the release names that status on the calculator
+asset; DEEP hands out only a calculator whose status is the one it shows.
 
 ## Embedded `"library"` block on the bundle
 

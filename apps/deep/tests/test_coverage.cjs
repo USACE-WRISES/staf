@@ -134,8 +134,10 @@ const FEATURES = [
 const DRAFT = ["#475569", "#6b6459"], PRELIM = ["#b45309", "#d97706"], FINAL = ["#303f9f", "#3f51b5"];
 const NAVY = "#2f4b7c";
 
-// a standalone DEEP page with its map, sidebar and the regions delivered
-function deepPage({ features = FEATURES, width = 1400, storage = null } = {}) {
+// a standalone DEEP page with its map, sidebar and the regions delivered. Drafts start hidden
+// (owner, 2026-10-14); ``drafts`` turns them on through the legend, as a user does, so the cases
+// about the list and the map see every region.
+function deepPage({ features = FEATURES, width = 1400, storage = null, drafts = true } = {}) {
   const L = leaflet();
   const p = page({ bodies: [["deep", ""]] }, L);
   p.window.innerWidth = width;
@@ -146,6 +148,11 @@ function deepPage({ features = FEATURES, width = 1400, storage = null } = {}) {
   p.tick();
   const map = new L.Map(m.container);
   p.handlers.get("deep_coverage")({ features });
+  if (drafts) {
+    const k = keyIn(m.corner, [["draft", "Draft"]]);
+    p.fire("click", k.rows.draft);
+    k.key.remove();
+  }
   const layer = (aid) => L.made.find((l) => l.data.geometry.id === features.find((f) => f.assessmentId === aid).geometry.id);
   const rows = () => p.tools.deep.querySelectorAll(".deep-cov-row");
   const row = (aid) => rows().find((r) => r.getAttribute("data-aid") === aid);
@@ -417,15 +424,17 @@ test("the Layers menu shows and hides the regions, and its row survives a rebuil
   assert.ok(box() && box().checked);
 });
 
-// the legend's region key, as app.py _region_key draws it
+// the legend's region key, as app.py _region_key draws it: the Draft row off (REGIONS_OFF_AT_START)
 function keyIn(root, statuses) {
   const key = new El("div", { class: "deep-reg-key" }), rows = {};
   for (const [status, label] of statuses) {
     const name = new El("div", { class: "easi-legend-label" });
     name.textContent = label;
-    rows[status] = new El("div", { class: "easi-legend-row deep-reg-row", role: "button", tabindex: "0",
-                                   "data-status": status, "aria-pressed": "true",
-                                   title: "Hide " + label + " regions" })
+    const off = status === "draft";
+    rows[status] = new El("div", { class: "easi-legend-row deep-reg-row" + (off ? " is-off" : ""),
+                                   role: "button", tabindex: "0", "data-status": status,
+                                   "aria-pressed": off ? "false" : "true",
+                                   title: (off ? "Show " : "Hide ") + label + " regions" })
       .add(new El("span", { class: "deep-reg-sw" }), name);
     key.appendChild(rows[status]);
   }
@@ -459,11 +468,72 @@ test("the legend's status rows hide and show their regions, on the map and in th
   assert.ok(again.rows.draft.classList.contains("is-off") && again.rows.preliminary.classList.contains("is-off"));
   assert.ok(!again.rows.certified.classList.contains("is-off"));
   assert.equal(again.rows.certified.getAttribute("title"), "Hide Final regions");
+  d.p.handlers.get("deep_coverage_current")({ assessmentId: null, identify: true });
   d.p.fire("click", again.rows.certified);
-  assert.equal(d.p.tools.deep.querySelector(".deep-cov-empty").textContent, "Every status is turned off in the legend");
+  assert.equal(d.p.tools.deep.querySelector(".deep-cov-empty").textContent,
+               "Turn on Draft, Preliminary and Final in the legend to see 4 regions");
   d.p.fire("click", again.rows.draft);
   assert.ok(d.map.hasLayer(d.layer("southern-coastal-plain")) && !d.row("southern-coastal-plain").hidden);
   assert.equal(again.rows.draft.getAttribute("aria-pressed"), "true");
+});
+
+// ---- Drafts hidden unless asked (owner, 2026-10-14) ----
+test("Drafts start hidden on the map and in the list, and the count says so", () => {
+  const d = deepPage({ drafts: false });
+  assert.ok(!d.map.hasLayer(d.layer("southern-coastal-plain")), "the Draft region is off the map");
+  assert.ok(d.row("southern-coastal-plain").hidden, "and out of the list");
+  assert.ok(d.map.hasLayer(d.layer("flint-hills")) && !d.row("flint-hills").hidden);
+  assert.equal(d.side.count.textContent, "3 of 4");
+  assert.equal(d.side.tabCount.textContent, "3 of 4");
+  assert.ok(!d.p.names().includes("coverage_drafts"), "nothing is posted at load");
+});
+
+test("turning Draft on shows them and tells the server; off again, it tells it too", () => {
+  const d = deepPage({ drafts: false });
+  const k = keyIn(d.m.corner, STATUSES);
+  d.p.fire("staf:tool-shown", d.p.document, { detail: { tool: "deep" } });
+  assert.ok(k.rows.draft.classList.contains("is-off"));
+  d.p.fire("click", k.rows.draft);
+  assert.ok(d.map.hasLayer(d.layer("southern-coastal-plain")) && !d.row("southern-coastal-plain").hidden);
+  assert.equal(d.side.count.textContent, "4");
+  const posted = () => d.p.posts.filter((x) => x.name === "coverage_drafts").map((x) => x.value);
+  assert.deepEqual(posted(), [true]);
+  d.p.fire("click", k.rows.draft);
+  assert.deepEqual(posted(), [true, false]);
+  d.p.fire("click", k.rows.preliminary);           // another status's row tells the server nothing
+  assert.deepEqual(posted(), [true, false]);
+});
+
+test("a Draft in use shows on the map and in the list while Drafts are hidden", () => {
+  const d = deepPage({ drafts: false });
+  d.p.handlers.get("deep_coverage_current")({ assessmentId: "southern-coastal-plain", identify: true });
+  assert.ok(d.map.hasLayer(d.layer("southern-coastal-plain")));
+  assert.ok(!d.row("southern-coastal-plain").hidden, "the region in use always shows");
+  assert.equal(d.side.count.textContent, "4");
+});
+
+test("a search that finds only hidden Drafts says how to see them", () => {
+  const d = deepPage({ drafts: false });
+  d.search().value = "southern";
+  d.search().fire("input");
+  const empty = d.p.tools.deep.querySelector(".deep-cov-empty");
+  assert.ok(!empty.hidden);
+  assert.equal(empty.textContent, "Turn on Draft in the legend to see 1 match");
+  d.search().value = "nowhere";
+  d.search().fire("input");
+  assert.ok(empty.textContent.startsWith("No ecoregion matches"));
+});
+
+test("in the STAF app the toggle posts DEEP's own input", () => {
+  const p = page({ bodies: [["easi", "easi"], ["deep", "deep"]], showing: "deep" });
+  mapIn(p.tools.deep);
+  sidebarIn(p.tools.deep);
+  p.load("staf-ns.js", "coverage.js");
+  p.tick();
+  p.handlers.get("deep_coverage")({ features: FEATURES });
+  const k = keyIn(p.tools.deep, STATUSES);
+  p.fire("click", k.rows.draft);
+  assert.ok(p.names().includes("deep-coverage_drafts"));
 });
 
 // ---- open and closed ----

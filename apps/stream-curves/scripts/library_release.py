@@ -101,6 +101,16 @@ def evidence_reference(vdir: Path) -> dict | None:
     return doc
 
 
+def _stated_status(aid: str, version: int, sha: str) -> str | None:
+    """The status a version's workbook states, from its artifacts.json record, only when the
+    file is the recorded one (owner, 2026-10-14). DEEP and the static app hand a workbook out
+    only when this equals the status they show; None (unknown) is never handed out."""
+    rec = lib.version_artifact(aid, version)
+    if not rec or rec.get("sha256") != "sha256:" + sha:
+        return None
+    return rec.get("status") or None
+
+
 def build(out: Path, *, commit: str | None = None) -> dict:
     """Write library.json and every asset into `out`; return the catalog."""
     out.mkdir(parents=True, exist_ok=True)
@@ -140,7 +150,8 @@ def build(out: Path, *, commit: str | None = None) -> dict:
                 sha = _sha(data)
                 name = f"{e.id}-v{v.version}-calculator-{sha[:8]}.xlsx"
                 (out / name).write_bytes(data)
-                assets["calculator"] = gallery.Asset(name=name, size=len(data), sha256=sha)
+                assets["calculator"] = gallery.Asset(name=name, size=len(data), sha256=sha,
+                                                     status=_stated_status(e.id, v.version, sha))
             evidence = evidence_reference(lib.version_dir(e.id, v.version))
             versions.append(dataclasses.replace(v, assets=assets, evidence=evidence))
         rebuilt.append(dataclasses.replace(e, versions=tuple(versions)))

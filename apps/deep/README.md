@@ -225,13 +225,30 @@ later source wins a ref:
 
 **Statuses (owner, 2026-10-08).** DEEP runs Draft, Preliminary and Final versions, each labeled
 in one palette: the map's regions, the region list's chips, the legend's key on Identify and the
-badges are gray for a Draft (its curves are not reviewed yet; the Basin pane says so), amber for
-Preliminary and blue for Final, while hover and selection stay navy (`REGION_STATUS_STYLE` in
-`app.py` and `STATUS` in `www/coverage.js`, kept equal by `tests/test_region_status.py`). An
-assessment's default version is its newest Final version, else its newest Preliminary one, else
-its newest Draft (`deep.library.default_pointers`, the bake's rule and the live one), and the
-version chooser lists Final before Preliminary before Draft. An assessment with no version shown
-leaves the map, the picker and the site's calculator list.
+badges are gray for a Draft, amber for Preliminary and blue for Final, while hover and selection
+stay navy (`REGION_STATUS_STYLE` in `app.py`, built from `deep/session.py` `STATUS_COLORS`, and
+`STATUS` in `www/coverage.js`, kept equal by `tests/test_region_status.py`). An assessment's
+default version is its newest Final version, else its newest Preliminary one, else its newest
+Draft (`deep.library.default_pointers`, the bake's rule and the live one), and the version chooser
+lists Final before Preliminary before Draft. An assessment with no version shown leaves the map,
+the picker and the site's calculator list.
+
+**The status is never in question (owner, 2026-10-14).** Each status has one line of meaning
+(`deep/session.py` `STATUS_NOTES`): a Draft is "For research and regional assessment development
+only.", a Preliminary version is "Reviewed and approved as Preliminary. Not yet certified for
+use.", a Final one is "Cleared and approved for use." The Assessment step opens with the
+assessment's name, version and status pill; the report's heading carries the pill; every page of
+the field forms, metrics and report PDFs has a band in the status's color that says "Assessment
+status: Draft. ..." (`deep/status_mark.py`), and a Draft's pages a light diagonal DRAFT; the
+calculator states it on every sheet (StreamCurves stamps it, and rebuilds a version's workbook
+when its status changes) and the completed workbook's Summary and ReferenceCurves tabs too; every
+download's name carries the version and the status (`session.download_stem`). DEEP hands out a
+calculator only when the status it states is the one DEEP shows (the bake's `index.json` and the
+release's catalog record it). Drafts are hidden unless asked: the legend's Draft row starts off
+(`REGIONS_OFF_AT_START`, `www/coverage.js`), Basin adopts a Draft on its own only while Draft is
+on and otherwise offers **Use the Draft**, and every way an assessment comes into use (the
+automatic pick, Use the Draft, Change, a link, Open) shows the Draft notice first, once per visit.
+An opened file takes the status its version has in the library today.
 
 The remote library never makes a page wait. The first lookup loads the last good catalog and its
 assets from the disk cache, with no network. A background thread refreshes once the snapshot is

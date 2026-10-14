@@ -65,7 +65,8 @@ def test_the_workbook_is_built_from_the_published_bundle(libroot):
     v = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle())
     aid = "eastern-corn-belt-plains"
     published = lib.load_version_bundle(aid, v)
-    assert lib.calculator_path(aid, v).read_bytes() == deep_calculator.build_calculator(published)
+    assert lib.calculator_path(aid, v).read_bytes() == deep_calculator.build_calculator(
+        published, lib.version_status(aid, v))
 
 
 def test_recording_a_calculator_never_touches_the_version(libroot):
@@ -88,7 +89,7 @@ def test_recording_a_calculator_never_touches_the_version(libroot):
 
 
 def test_a_workbook_failure_never_blocks_a_publish(libroot, monkeypatch):
-    def boom(_bundle):
+    def boom(_bundle, _status=None):
         raise RuntimeError("openpyxl said no")
     monkeypatch.setattr(deep_calculator, "build_calculator", boom)
     v = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle())
@@ -115,7 +116,7 @@ def test_a_changed_or_missing_workbook_reads_stale(libroot):
 def test_the_backfill_builds_what_is_missing_and_checks(libroot, monkeypatch, capsys):
     real = deep_calculator.build_calculator
     monkeypatch.setattr(deep_calculator, "build_calculator",
-                        lambda b: (_ for _ in ()).throw(RuntimeError("not yet")))
+                        lambda b, s=None: (_ for _ in ()).throw(RuntimeError("not yet")))
     lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle())
     lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle())
     monkeypatch.setattr(deep_calculator, "build_calculator", real)
@@ -131,3 +132,92 @@ def test_the_backfill_builds_what_is_missing_and_checks(libroot, monkeypatch, ca
                         "--reissue", "--library-root", str(libroot)]) == 0
     history = lib.read_artifacts("eastern-corn-belt-plains")["history"]
     assert [r["version"] for r in history] == [1, 2, 1]
+
+
+# --------------------------------------------------------------------------- #
+# The workbook states its version's status (owner, 2026-10-14)
+# --------------------------------------------------------------------------- #
+def _stated(aid, v) -> str:
+    import io
+    import openpyxl
+    book = openpyxl.load_workbook(io.BytesIO(lib.calculator_path(aid, v).read_bytes()))
+    return book["Metadata"]["B7"].value
+
+
+def test_the_record_names_the_status_the_workbook_states(libroot):
+    v = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle(),
+                            status="draft")
+    aid = "eastern-corn-belt-plains"
+    assert lib.version_artifact(aid, v)["status"] == "draft"
+    assert _stated(aid, v) == "Draft"
+    assert lib.calculator_state(aid, v) == "present"
+
+
+def test_a_status_change_restamps_the_workbook(libroot):
+    v = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle(),
+                            status="draft")
+    aid = "eastern-corn-belt-plains"
+    lib.set_version_status(aid, v, "preliminary", "GM", note="Reviewed.")
+    rec = lib.version_artifact(aid, v)
+    assert rec["status"] == "preliminary" and rec["actor"] == "GM"
+    assert rec["note"] == "Restamped: the version is now preliminary."
+    assert _stated(aid, v) == "Preliminary"
+    assert lib.calculator_state(aid, v) == "present"
+    assert [r["status"] for r in lib.read_artifacts(aid)["history"]] == ["draft", "preliminary"]
+    lib.set_version_status(aid, v, "certified", "GM")
+    assert _stated(aid, v) == "Final"
+    catalog = json.loads((libroot / "catalog.json").read_text("utf-8"))
+    assert catalog["assessments"][0]["calculatorState"] == "present"
+
+
+def test_a_failed_restamp_keeps_the_status_and_reads_stale(libroot, monkeypatch):
+    v = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle(),
+                            status="draft")
+    aid = "eastern-corn-belt-plains"
+    monkeypatch.setattr(deep_calculator, "build_calculator",
+                        lambda b, s=None: (_ for _ in ()).throw(RuntimeError("no")))
+    assert lib.set_version_status(aid, v, "preliminary", "GM") == "preliminary"
+    assert lib.version_status(aid, v) == "preliminary"
+    assert lib.calculator_state(aid, v) == "stale"
+    assert lib.calculator_stale_reason(aid, v) == "it states draft, the version is preliminary"
+
+
+def test_a_version_without_a_workbook_is_not_given_one_by_a_status_change(libroot, monkeypatch):
+    real = deep_calculator.build_calculator
+    monkeypatch.setattr(deep_calculator, "build_calculator",
+                        lambda b, s=None: (_ for _ in ()).throw(RuntimeError("not yet")))
+    v = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle(),
+                            status="draft")
+    monkeypatch.setattr(deep_calculator, "build_calculator", real)
+    aid = "eastern-corn-belt-plains"
+    lib.set_version_status(aid, v, "preliminary", "GM")
+    assert lib.calculator_state(aid, v) == "absent"
+    assert lib.restamp_calculator(aid, v) is None
+
+
+def test_an_unstamped_record_reads_stale_and_recorded_restamps_only_those(libroot, monkeypatch,
+                                                                          capsys):
+    aid = "eastern-corn-belt-plains"
+    v1 = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle(),
+                             status="draft")
+    # a record from before workbooks carried a status
+    doc = lib.read_artifacts(aid)
+    del doc["history"][-1]["status"]
+    lib._write_json(lib.artifacts_path(aid), doc)
+    assert lib.calculator_state(aid, v1) == "stale"
+    assert lib.calculator_stale_reason(aid, v1) == "it states no status, the version is draft"
+    real = deep_calculator.build_calculator
+    monkeypatch.setattr(deep_calculator, "build_calculator",
+                        lambda b, s=None: (_ for _ in ()).throw(RuntimeError("not yet")))
+    v2 = lib.publish_version("Eastern Corn Belt Plains", META, _session_payload(), _bundle(),
+                             status="draft")
+    monkeypatch.setattr(deep_calculator, "build_calculator", real)
+    script = _script()
+    assert script.main(["--all", "--recorded", "--check", "--library-root", str(libroot)]) == 1
+    assert "it states no status, the version is draft" in capsys.readouterr().out
+    assert script.main(["--all", "--recorded", "--library-root", str(libroot)]) == 0
+    assert "built 1, left alone 0, failed 0" in capsys.readouterr().out
+    assert lib.calculator_state(aid, v1) == "present"
+    assert lib.calculator_state(aid, v2) == "absent"          # never had one: not given one
+    assert lib.version_artifact(aid, v1)["note"] == ("Restamped with the version's status "
+                                                     "(generator 1.1).")

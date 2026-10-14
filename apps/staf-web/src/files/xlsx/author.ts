@@ -56,6 +56,10 @@ export class SheetWriter {
   /** 0: as many pages tall as needed */
   fitHeight = 0
   centerHorizontally = false
+  /** the print header, centred and bold: [text, RRGGBB] (DEEP's assessment status, 2026-10-14) */
+  header: [string, string] | null = null
+  /** RRGGBB */
+  tabColor: string | null = null
 
   private put(ref: string, body: string, style: number | null, cellType: string | null = null): void {
     const [col, row] = splitRef(ref)
@@ -166,13 +170,21 @@ export class SheetWriter {
       ? `<mergeCells count="${this.merges.length}">` + this.merges.map((m) => `<mergeCell ref="${m}"/>`).join('') + '</mergeCells>' : ''
     const drawing = this.drawingRid ? `<drawing r:id="${this.drawingRid}"/>` : ''
     const options = this.centerHorizontally ? '<printOptions horizontalCentered="1"/>' : ''
-    const margins = '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>'
+    // a print header of up to two lines needs more paper above the sheet
+    const margins = `<pageMargins left="0.5" right="0.5" top="${this.header ? '0.8' : '0.6'}" bottom="0.6" header="0.3" footer="0.3"/>`
     const setup = `<pageSetup orientation="${this.orientation}" fitToWidth="1" fitToHeight="${Math.trunc(this.fitHeight)}"/>`
+    let header = ''
+    if (this.header) {
+      const [text, color] = this.header
+      const code = '&C&"Calibri,Bold"&K' + color + String(text).replace(NOT_XML, '').split('&').join('&&')
+      header = `<headerFooter><oddHeader>${xmlEscape(code)}</oddHeader></headerFooter>`
+    }
+    const tab = this.tabColor ? `<tabColor rgb="FF${this.tabColor}"/>` : ''
     return `<worksheet xmlns="${NS_MAIN}" xmlns:r="${NS_R}">`
-      + '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>'
+      + `<sheetPr>${tab}<pageSetUpPr fitToPage="1"/></sheetPr>`
       + `${dim}<sheetViews>${view}</sheetViews>`
       + '<sheetFormatPr defaultRowHeight="15"/>'
       + `${cols}<sheetData>${rows.map(([, x]) => x).join('')}</sheetData>${merges}${this.conditionalXml()}`
-      + `${options}${margins}${setup}${drawing}</worksheet>`
+      + `${options}${margins}${setup}${header}${drawing}</worksheet>`
   }
 }

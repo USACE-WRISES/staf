@@ -11,6 +11,7 @@ import { COMPUTABLE } from './computed'
 import { type Bundle, isHeld, type Metric, methodText, type Rec, unitsOf } from './method'
 import { pyStrOf, rows, sourceLabel } from './report'
 import { withheld, withheldReason } from './support'
+import { downloadStem } from '../../app/deepStatus'
 
 export const STATUS_AVAILABLE = 'Available'
 export const STATUS_PENDING = 'Pending'
@@ -189,8 +190,11 @@ export function refSlug(la: Bundle | null): string {
   }
   return (ref ?? 'assessment').split('@').join('-')
 }
-export const blankFilename = (la: Bundle | null) => `deep-calculator-${refSlug(la)}-blank.xlsx`
-export const filledFilename = (la: Bundle | null) => `deep-calculator-${refSlug(la)}.xlsx`
-/** report.field_forms_filename, metrics_filename */
-export const fieldFormsFilename = (la: Bundle | null) => `deep-field-forms-${(la ?? {}).assessmentId || 'assessment'}.pdf`
-export const metricsFilename = (la: Bundle | null) => `deep-metrics-${(la ?? {}).assessmentId || 'assessment'}.pdf`
+// every download's name carries the assessment, its version and its status (session.download_stem,
+// owner 2026-10-14)
+export const blankFilename = (la: Bundle | null) => `deep-calculator-${downloadStem(la)}-blank.xlsx`
+export const filledFilename = (la: Bundle | null) => `deep-calculator-${downloadStem(la)}.xlsx`
+/** report.field_forms_filename, metrics_filename, report_filename */
+export const fieldFormsFilename = (la: Bundle | null) => `deep-field-forms-${downloadStem(la)}.pdf`
+export const metricsFilename = (la: Bundle | null) => `deep-metrics-${downloadStem(la)}.pdf`
+export const reportFilename = (la: Bundle | null, suffix: string, ext: string) => `deep-report-${downloadStem(la)}${suffix}.${ext}`

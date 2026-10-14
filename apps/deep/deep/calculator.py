@@ -15,8 +15,10 @@ and not from the bake gets the calculator published beside its bundle
 against the catalog's sha256.
 
 A workbook is offered only when its recorded content digest equals the loaded
-bundle's. A calculator built for another version of the curves is never handed
-out as this one's.
+bundle's and it states the status DEEP shows for the version (owner, 2026-10-14:
+every workbook states its status, and StreamCurves rebuilds a version's workbook
+when its status changes). A calculator built for another version of the curves,
+or stamped with another status, is never handed out as this one's.
 
 openpyxl is not a DEEP dependency (adding it would change the desktop payload's
 environment lock), and a load and save would drop the charts anyway. So, like
@@ -38,7 +40,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from . import reference_support
+from . import reference_support, session
 
 CALCULATOR_DIR = Path(__file__).resolve().parent.parent / "www" / "calculators"
 #: Lets a local run read calculators baked somewhere else (a scratch library's),
@@ -118,36 +120,43 @@ def template_for(assessment, directory: Optional[Path] = None) -> Optional[bytes
     """The blank calculator of the loaded version, or ``None``.
 
     The baked workbook comes first. When none is shipped for the version, the
-    index does not record it, or its recorded content digest differs from the
-    loaded bundle's (the curves moved and the workbook did not), a version that
-    arrived through the remote library gets the calculator published with it in
-    the release, under the same rule (:func:`_remote_template`). ``None`` when
-    neither has one."""
+    index does not record it, its recorded content digest differs from the
+    loaded bundle's (the curves moved and the workbook did not), or it states
+    another status than the one the version is shown with (the status changed
+    after this copy was baked; an index from before workbooks carried a status
+    states none), a version that arrived through the remote library gets the
+    calculator published with it in the release, under the same rule
+    (:func:`_remote_template`). ``None`` when neither has one: a workbook that
+    would state the wrong status is never handed out."""
     directory = Path(directory or os.environ.get(_ENV_DIR) or CALCULATOR_DIR)
     ref = assessment_ref(assessment)
     if not ref:
         return None
-    digest = _raw(assessment).get("contentDigest")
+    raw = _raw(assessment)
+    digest = raw.get("contentDigest")
     if not digest:
         return None
+    status = session.lifecycle_status(raw)
     record = _index(str(directory)).get(ref)
-    if isinstance(record, dict) and record.get("file") and record.get("contentDigest") == digest:
+    if (isinstance(record, dict) and record.get("file") and record.get("contentDigest") == digest
+            and record.get("status") == status):
         path = directory / str(record["file"])
         if path.is_file():
             return _read(str(path))
-    return _remote_template(ref, digest)
+    return _remote_template(ref, digest, status)
 
 
-def _remote_template(ref: str, digest: str) -> Optional[bytes]:
+def _remote_template(ref: str, digest: str, status: str) -> Optional[bytes]:
     """The remote library's cached calculator for ``ref``, only when the release
-    records it for the loaded bundle's content digest; else ``None``."""
+    records it for the loaded bundle's content digest and the status it is shown
+    with; else ``None``."""
     aid, sep, version = ref.rpartition("@v")
     if not sep or not aid:
         return None
     try:
         from . import remote_library  # local import: the release is optional
 
-        path = remote_library.calculator_path(aid, int(version), digest)
+        path = remote_library.calculator_path(aid, int(version), digest, status=status)
     except Exception:  # noqa: BLE001 - a missing workbook never breaks the dialog
         return None
     if path is None:
@@ -158,18 +167,16 @@ def _remote_template(ref: str, digest: str) -> Optional[bytes]:
         return None
 
 
-def _ref_slug(assessment) -> str:
-    return (assessment_ref(assessment) or "assessment").replace("@", "-")
-
-
 def blank_filename(assessment) -> str:
-    """``deep-calculator-<id>-v<N>-blank.xlsx``: the version's calculator with empty entries."""
-    return f"deep-calculator-{_ref_slug(assessment)}-blank.xlsx"
+    """``deep-calculator-<id>-v<N>-<status>-blank.xlsx``: the version's calculator with
+    empty entries, named with its status (owner, 2026-10-14)."""
+    return f"deep-calculator-{session.download_stem(_raw(assessment))}-blank.xlsx"
 
 
 def filled_filename(assessment) -> str:
-    """``deep-calculator-<id>-v<N>.xlsx``: plain, with no site id (owner, 2026-10-08)."""
-    return f"deep-calculator-{_ref_slug(assessment)}.xlsx"
+    """``deep-calculator-<id>-v<N>-<status>.xlsx``: plain, with no site id (owner, 2026-10-08),
+    and with the status the workbook states (owner, 2026-10-14)."""
+    return f"deep-calculator-{session.download_stem(_raw(assessment))}.xlsx"
 
 
 # --------------------------------------------------------------------------- #

@@ -36,6 +36,26 @@ PRINTABLE = dict(portrait=(523.0, 705.0), landscape=(720.0, 509.0))
 ONE_PAGE_SCALE = 0.75
 
 
+@dataclass(frozen=True)
+class Banner:
+    """A line across the top of the authored tabs, also their print header and tab color (DEEP's
+    assessment status, owner 2026-10-14): ``text`` in white bold on ``color`` (RRGGBB);
+    ``header`` is the print header's text (its two lines apart), else ``text``."""
+    text: str
+    color: str
+    header: str = ""
+
+
+def _banner_style(sb: StyleBook, banner: Banner) -> int:
+    return sb.xf(font=sb.font(bold=True, size=11, color="FFFFFF"), fill=sb.fill(banner.color),
+                 halign="left", valign="center", wrap=True, indent=1)
+
+
+def _mark(w: SheetWriter, banner: Banner) -> None:
+    w.header = (banner.header or banner.text, banner.color)
+    w.tab_color = banner.color
+
+
 @dataclass
 class SummaryCells:
     """Where a scenario's results sit in the template (template sheet names and cells)."""
@@ -180,13 +200,15 @@ def _extent(w: SheetWriter, last_col: int, last_row: int) -> tuple:
 
 
 def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: SummaryCells, scores: list,
-                      scenarios: list, generated_on: Optional[_dt.date] = None) -> str:
+                      scenarios: list, generated_on: Optional[_dt.date] = None,
+                      banner: Optional[Banner] = None) -> str:
     """Write the Summary tab into ``built``; returns its name.
 
     Rows: the title, the summary block, the scenarios' descriptions (when any has one), then the
     scores as the Compare dialog shows them on its side: a row per measure (the index, then each
     function under its category), a column per scenario, each alternative followed by its change
-    from Existing Conditions; then ``cells.statements`` and ``cells.note``."""
+    from Existing Conditions; then ``cells.statements`` and ``cells.note``. A ``banner`` takes
+    row 3, above the summary block, and becomes the print header and the tab color."""
     from .assemble import sheet_for
     st = _SummaryStyles(sb)
     w = SheetWriter()
@@ -237,8 +259,19 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     w.height(1, TITLE_H)
     w.text("A2", f"Generated {date} by the {spec.app_title} web application.", st.sub)
     w.height(2, ROW_H)
-    w.height(3, GAP_H)
-    row = 4
+    if banner is None:
+        w.height(3, GAP_H)
+        row = 4
+    else:
+        style = _banner_style(sb, banner)
+        w.text("A3", banner.text, style)
+        for c in range(2, span + 1):
+            w.blank(f"{col_letter(c)}3", style)
+        w.merge(f"A3:{col_letter(span)}3")
+        w.height(3, _height(_lines(banner.text, a_px + rest_px, bold=True), ROW_H + 3))
+        w.height(4, GAP_H)
+        _mark(w, banner)
+        row = 5
     for key, value in site:
         row = pair(row, key, value)
     described = [s for s in scenarios if (s.description or "").strip()]
@@ -321,14 +354,23 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     return sheet.name
 
 
-def add_curves_sheet(built, sb: StyleBook, curves: RefCurves) -> str:
-    """Write the ReferenceCurves tab (charts and tables); returns its name."""
+def add_curves_sheet(built, sb: StyleBook, curves: RefCurves, banner: Optional[Banner] = None) -> str:
+    """Write the ReferenceCurves tab (charts and tables); returns its name. A ``banner`` takes
+    row 3, above the first block, and becomes the print header and the tab color."""
     st = _Styles(sb)
     w = SheetWriter()
     w.text("A1", "Reference curves", st.title)
     if curves.intro:
         w.text("A2", curves.intro, st.sub)
     w.height(1, 24)
+    if banner is not None:
+        style = _banner_style(sb, banner)
+        w.text("A3", banner.text, style)
+        for c in range(2, 9):
+            w.blank(f"{col_letter(c)}3", style)
+        w.merge("A3:H3")
+        w.height(3, 21)
+        _mark(w, banner)
     row = 4
     charts = []
     for block in curves.blocks:

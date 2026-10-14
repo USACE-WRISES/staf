@@ -416,6 +416,9 @@ def test_publish_final_writer_sequence(libroot):
     assert e["latestCertified"] == 1
     assert e["defaultVersion"] == 1
     assert e["validationState"] == "validated"
+    # the certified version's workbook now says Final (owner, 2026-10-14)
+    assert lib.version_artifact("ecbp", 1)["status"] == "certified"
+    assert e["calculatorState"] == "present"
 
 
 def test_revision_stamps_supersedes_version(libroot):

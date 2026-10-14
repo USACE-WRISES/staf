@@ -13,6 +13,8 @@
 // readout) are rendered again by the same functions.
 
 import { pyFixed } from './pyfmt'
+import { h, type Tag } from './htm'
+import { actionLink, statusNote, statusPill } from './deepStatus'
 
 export type ToolKey = 'easi' | 'sfari' | 'deep'
 
@@ -253,53 +255,44 @@ export function basinPane(key: ToolKey, card: string, assess = ''): string {
 </div>`
 }
 
-/** DEEP's assessment under the basin card (app.py _assessment_pane_block). */
-export function deepAssessPane(f: { name: string, region: string, lifecycle: string, label: string, badge: string,
-  meta: string, tier: string, bestAvailable: boolean, coversSite: boolean, canChange: boolean }): string {
-  const lines: string[] = []
-  if (f.region) lines.push(`<div class="deep-pane-line">${esc(f.region)}</div>`)
-  lines.push(`<div class="deep-pane-line">${esc(f.meta)}</div>`)
-  if (f.tier) lines.push(`<div class="deep-pane-line">Reference tier: ${esc(f.tier)}</div>`)
-  if (f.lifecycle === 'draft') lines.push('<div class="deep-pane-note">Draft assessment: its curves have not been reviewed yet.</div>')
+/** DEEP's assessment under the basin card (app.py _assessment_pane_block): built with htmltools' rules,
+ * so it is Shiny's markup to the byte. The badge is the status pill, and a Draft says what it is for. */
+export function deepAssessPane(f: { name: string, region: string, lifecycle: string, meta: string, tier: string,
+  bestAvailable: boolean, coversSite: boolean, canChange: boolean }): string {
+  const lines: Tag[] = []
+  if (f.region) lines.push(h.div(f.region, { class: 'deep-pane-line' }))
+  lines.push(h.div(f.meta, { class: 'deep-pane-line' }))
+  if (f.tier) lines.push(h.div(`Reference tier: ${f.tier}`, { class: 'deep-pane-line' }))
+  if (f.lifecycle === 'draft') lines.push(h.div(statusNote('draft'), { class: 'deep-pane-note' }))
   if (f.bestAvailable) {
-    lines.push('<div class="deep-pane-note">Scores compare the site with the best remaining streams of the region, not with unimpaired condition.</div>')
+    lines.push(h.div('Scores compare the site with the best remaining streams of the region, not with unimpaired condition.',
+      { class: 'deep-pane-note' }))
   }
-  if (!f.coversSite) lines.push('<div class="deep-pane-caution">This assessment\'s region does not contain your site.</div>')
-  const change = f.canChange ? `
-  <div class="deep-pane-change">
-    <a class="action-button action-link" id="deep-change_assessment" href="#">
-<span class="action-label">Change</span>
-</a>
-  </div>` : ''
-  return `<div class="deep-pane-assess">
-  <div class="deep-pane-head">
-    <span class="deep-pane-label">Assessment</span>
-<span class="deep-card-badge ${f.badge}">${esc(f.label)}</span>
-  </div>
-  <div class="deep-pane-name">${esc(f.name)}</div>
-  ${lines.join('\n  ')}${change}
-</div>`
+  if (!f.coversSite) lines.push(h.div('This assessment\'s region does not contain your site.', { class: 'deep-pane-caution' }))
+  return h.div(
+    h.div(h.span('Assessment', { class: 'deep-pane-label' }), statusPill(f.lifecycle), { class: 'deep-pane-head' }),
+    h.div(f.name, { class: 'deep-pane-name' }),
+    ...lines,
+    f.canChange ? h.div(actionLink('deep-change_assessment', 'Change'), { class: 'deep-pane-change' }) : null,
+    { class: 'deep-pane-assess' }).render()
 }
 
 /** DEEP's Basin block when no assessment covers the site (app.py _no_assessment_block). */
 export function deepNoAssessment(hasCandidates: boolean): string {
   if (hasCandidates) {
-    return `<div class="deep-pane-assess is-blocked">
-  <div class="deep-pane-label">Assessment</div>
-  <div class="deep-pane-name">No assessment loaded</div>
-  <div class="deep-pane-line">Choose one of the assessments that cover this point.</div>
-  <div class="deep-pane-change">
-    <a class="action-button action-link" id="deep-change_assessment" href="#">
-<span class="action-label">Choose</span>
-</a>
-  </div>
-</div>`
+    return h.div(
+      h.div('Assessment', { class: 'deep-pane-label' }),
+      h.div('No assessment loaded', { class: 'deep-pane-name' }),
+      h.div('Choose one of the assessments that cover this point.', { class: 'deep-pane-line' }),
+      h.div(actionLink('deep-change_assessment', 'Choose'), { class: 'deep-pane-change' }),
+      { class: 'deep-pane-assess is-blocked' }).render()
   }
-  return `<div class="deep-pane-assess is-blocked">
-  <div class="deep-pane-label">Assessment</div>
-  <div class="deep-pane-name">No assessment covers this point</div>
-  <div class="deep-pane-line">Detailed scoring needs a published assessment whose region contains your site. The shaded regions on the map are the areas with coverage.</div>
-</div>`
+  return h.div(
+    h.div('Assessment', { class: 'deep-pane-label' }),
+    h.div('No assessment covers this point', { class: 'deep-pane-name' }),
+    h.div('Detailed scoring needs a published assessment whose region contains your site. The shaded regions on the map are '
+      + 'the areas with coverage.', { class: 'deep-pane-line' }),
+    { class: 'deep-pane-assess is-blocked' }).render()
 }
 
 // ------------------------------------------------------------------------------- over the map

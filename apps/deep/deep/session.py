@@ -82,6 +82,62 @@ def status_label(status) -> str:
     return STATUS_LABELS.get(s) or (s.title() if s else STATUS_LABELS["preliminary"])
 
 
+# What each status DEEP runs means, in one line (owner, 2026-10-14). The worksheet's pill, the
+# Draft notice, About, the Basin pane and every file DEEP hands out (the calculators, the field
+# forms, the metrics and the report) say these words. Keep in sync with
+# apps/stream-curves/streamcurves/lifecycle_words.py, which stamps the calculators (its
+# tests/test_status_words.py compares these literals), and with the static app's
+# src/app/deepStatus.ts.
+STATUS_NOTES = {
+    "draft": "For research and regional assessment development only.",
+    "preliminary": "Reviewed and approved as Preliminary. Not yet certified for use.",
+    "certified": "Cleared and approved for use.",
+}
+# Each status's (line, fill) colors: the map's region palette (app.REGION_STATUS_STYLE is built
+# from it). The line color carries the files' status bands, under white text.
+STATUS_COLORS = {
+    "draft": ("#475569", "#6b6459"),
+    "preliminary": ("#b45309", "#d97706"),
+    "certified": ("#303f9f", "#3f51b5"),
+}
+# The one sentence a file prints for its assessment's status.
+STATUS_LINE = "Assessment status: {label}. {note}"
+
+
+def status_note(status) -> str:
+    """The line of a status; a status DEEP does not run reads as preliminary, as
+    :func:`lifecycle_status` reads it."""
+    return STATUS_NOTES[lifecycle_status({"lifecycle": status})]
+
+
+def status_parts(status) -> tuple:
+    """``("Assessment status: Draft.", "For research ...")``: the head and the line of
+    meaning apart, as the PDFs' status band sets them (the head in bold)."""
+    s = lifecycle_status({"lifecycle": status})
+    return STATUS_LINE.format(label=status_label(s), note="").rstrip(), STATUS_NOTES[s]
+
+
+def status_line(status) -> str:
+    """``Assessment status: Draft. For research ...``: what every file says."""
+    return " ".join(status_parts(status))
+
+
+def status_slug(status) -> str:
+    """The status word a file name carries: ``draft``, ``preliminary`` or ``final``."""
+    return status_label(lifecycle_status({"lifecycle": status})).lower()
+
+
+def download_stem(bundle: dict | None) -> str:
+    """``<id>-v<N>-<status>``, the part every DEEP download's name shares, so a file
+    says which assessment, which version and which status it was made from."""
+    b = bundle or {}
+    lib = b.get("library") or {}
+    aid = str(b.get("assessmentId") or "assessment")
+    version = lib.get("version") if lib.get("version") is not None else b.get("version")
+    parts = [aid] + ([f"v{version}"] if version not in (None, "") else [])
+    return "-".join(parts + [status_slug(lifecycle_status(b))])
+
+
 def content_digest(bundle: dict | None) -> str:
     """Stable ``sha256:<hex>`` over the inlined assessment bundle.
 

@@ -211,9 +211,24 @@ function extent(w: SheetWriter, lastCol: number, lastRow: number): [number, numb
   return [pySum(cols) * 0.75, pySum(rows)]
 }
 
-/** add_summary_sheet: the Summary tab written into ``built``; its name. */
+/** sheets.Banner: a line across the top of the authored tabs, also their print header and tab color
+ * (DEEP's assessment status, owner 2026-10-14): ``text`` in white bold on ``color`` (RRGGBB); ``header``
+ * is the print header's text (its two lines apart), else ``text``. */
+export interface Banner { text: string, color: string, header?: string }
+
+function bannerStyle(sb: StyleBook, banner: Banner): number {
+  return sb.xf({ font: sb.font({ bold: true, size: 11, color: 'FFFFFF' }), fill: sb.fill(banner.color), halign: 'left', valign: 'center',
+    wrap: true, indent: 1 })
+}
+
+function mark(w: SheetWriter, banner: Banner): void {
+  w.header = [banner.header || banner.text, banner.color]
+  w.tabColor = banner.color
+}
+
+/** add_summary_sheet: the Summary tab written into ``built``; its name. A ``banner`` takes row 3. */
 export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook, info: SummaryInfo, cells: SummaryCells, scores: ScenarioScores[],
-  scenarios: ScenarioInput[], generatedOn: string): string {
+  scenarios: ScenarioInput[], generatedOn: string, banner: Banner | null = null): string {
   const st = new SummaryStyles(sb)
   const w = new SheetWriter()
   const n = scenarios.length
@@ -259,8 +274,18 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
   w.height(1, TITLE_H)
   w.text('A2', `Generated ${generatedOn} by the ${spec.appTitle} web application.`, st.sub)
   w.height(2, ROW_H)
-  w.height(3, GAP_H)
   let row = 4
+  if (!banner) w.height(3, GAP_H)
+  else {
+    const style = bannerStyle(sb, banner)
+    w.text('A3', banner.text, style)
+    for (let c = 2; c <= span; c++) w.blank(`${colLetter(c)}3`, style)
+    w.merge(`A3:${colLetter(span)}3`)
+    w.height(3, height(lines(banner.text, aPx + restPx, true), ROW_H + 3))
+    w.height(4, GAP_H)
+    mark(w, banner)
+    row = 5
+  }
   for (const [key, value] of site) row = pair(row, key, value)
   const described = scenarios.filter((s) => pyStrip(s.description || ''))
   if (described.length) {
@@ -348,12 +373,20 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
 }
 
 /** add_curves_sheet: the ReferenceCurves tab (charts and tables); its name. */
-export function addCurvesSheet(built: Built, sb: StyleBook, curves: RefCurves): string {
+export function addCurvesSheet(built: Built, sb: StyleBook, curves: RefCurves, banner: Banner | null = null): string {
   const st = new Styles(sb)
   const w = new SheetWriter()
   w.text('A1', 'Reference curves', st.title)
   if (curves.intro) w.text('A2', curves.intro, st.sub)
   w.height(1, 24)
+  if (banner) {
+    const style = bannerStyle(sb, banner)
+    w.text('A3', banner.text, style)
+    for (let c = 2; c <= 8; c++) w.blank(`${colLetter(c)}3`, style)
+    w.merge('A3:H3')
+    w.height(3, 21)
+    mark(w, banner)
+  }
   let row = 4
   const charts: ScatterChart[] = []
   for (const block of curves.blocks) {

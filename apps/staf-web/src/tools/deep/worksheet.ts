@@ -12,11 +12,13 @@ import { timed } from '../../app/perf'
 import { removeModal, showModal } from '../../shared/modal'
 import * as shim from '../../app/shim'
 import { calculatorFor } from '../../app/deepAssess'
+import { assessmentLine, lifecycleStatus, versionOf } from '../../app/deepStatus'
 import { level3At, resolveSiteRegions } from '../../engine/ecoregion'
 import { displaySimplify } from '../../engine/simplify'
 import { registerDownload } from '../../files/download'
 import { scenarioSuffix, XLSX_MEDIA_TYPE } from '../../shared/downloads'
-import { blankFilename, fieldFormsFilename, ffPreview, ffSite, ffStatus, ffTable, filledFilename, formsModal, metricsFilename } from './forms'
+import { blankFilename, fieldFormsFilename, ffPreview, ffSite, ffStatus, ffTable, filledFilename, formsModal, metricsFilename,
+  reportFilename } from './forms'
 import { todayIso } from '../../files/xlsx/calcfill'
 import { buildFilled } from './calculator'
 import type { SummaryInfo } from '../../shared/summary'
@@ -222,12 +224,12 @@ export class DeepWorksheet {
   /** The report's downloads (dl_csv, dl_geojson), named for the scenario shown. */
   private registerDownloads(): void {
     const suffix = () => scenarioSuffix(this.scenarios)
-    registerDownload('deep-dl_csv', { filename: () => `deep-report${suffix()}.csv`, mime: 'text/csv',
+    registerDownload('deep-dl_csv', { filename: () => reportFilename(this.host.loaded(), suffix(), 'csv'), mime: 'text/csv',
       build: async () => buildCsv(this.host.delin() ?? {}, this.host.loaded(), this.measured, this.scored()[0], await this.siteRegion()) })
-    registerDownload('deep-dl_geojson', { filename: () => `deep-report${suffix()}.geojson`, mime: 'application/geo+json',
+    registerDownload('deep-dl_geojson', { filename: () => reportFilename(this.host.loaded(), suffix(), 'geojson'), mime: 'application/geo+json',
       build: async () => buildGeojson(this.host.delin() ?? {}, this.host.loaded(), this.scored()[0], await this.siteRegion(), this.measured) })
     // the report's PDF (report.build_pdf), named for the scenario shown
-    registerDownload('deep-dl_pdf', { filename: () => `deep-report${suffix()}.pdf`, mime: 'application/pdf', build: async () => {
+    registerDownload('deep-dl_pdf', { filename: () => reportFilename(this.host.loaded(), suffix(), 'pdf'), mime: 'application/pdf', build: async () => {
       const { buildPdf } = await import('./reportpdf')
       return buildPdf(this.host.delin() ?? {}, this.host.loaded(), this.measured, this.scored()[0], await this.siteRegion(),
         reportScenario(this.scenarios))
@@ -493,7 +495,9 @@ export class DeepWorksheet {
     const fid = fn.functionId
     const eyebrow = `Function ${idx + 1} of ${fns.length} · ${fn.discipline ?? ''}`
     const la = this.host.loaded()
-    if (fn.unassessed) return h.div(unassessedPanel(fn, la, eyebrow), fnFooter(idx, fns.length), { class: 'sfari-fnpanel-inner' })
+    // the worksheet's first line: the assessment in use, its version and its status (owner, 2026-10-14)
+    const line = la ? assessmentLine(la.assessmentName ?? la.assessmentId ?? '', versionOf(la), lifecycleStatus(la)) : null
+    if (fn.unassessed) return h.div(line, unassessedPanel(fn, la, eyebrow), fnFooter(idx, fns.length), { class: 'sfari-fnpanel-inner' })
     const [, results] = this.scored()
     const fr = results[fid]
     const d = this.host.delin()
@@ -506,6 +510,7 @@ export class DeepWorksheet {
     const total = (fn.metrics ?? []).length
     const entered = (fn.metrics ?? []).filter((m: Rec) => isEntered(this.measured[m.metricId])).length
     return h.div(
+      line,
       fnHead(eyebrow, fn.functionName ?? ''),
       h.div(secLbl(entered, total), ...rows, { class: 'sfari-ev-card' }),
       scorecard(fid, fr ? fr.score : null),

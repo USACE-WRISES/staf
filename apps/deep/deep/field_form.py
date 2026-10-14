@@ -17,6 +17,11 @@ printed with their source, and metrics the assessment withholds for
 insufficient reference support are listed at the end so the crew knows they
 were considered.
 
+Every page states the assessment's status in a band at the top, with the page
+number at its right end, and a Draft's pages carry a light diagonal DRAFT
+(:mod:`deep.status_mark`, owner 2026-10-14). The band takes the top margin, so
+the page's own top margin is :data:`deep.status_mark.TOP_MARGIN_IN`.
+
 Pure: a bundle, the measured-value state and the delineation in, PDF bytes out.
 ``invariant=1`` keeps the bytes identical for identical inputs.
 """
@@ -26,7 +31,7 @@ import io
 from typing import Optional
 from xml.sax.saxutils import escape
 
-from . import config, reference_support
+from . import config, reference_support, session, status_mark
 
 TITLE = "Detailed Evaluation of Ecosystem Processes (DEEP) Field Worksheet"
 BAND_FILL = "#D9D9D9"
@@ -236,29 +241,27 @@ def build_field_form_pdf(assessment, ref: str = "", *, measured=None, delineatio
                                ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]))
         return t
 
-    def page_number(canvas, doc):
-        canvas.saveState()
-        canvas.setFont("Times-Roman", 9)
-        canvas.drawCentredString(letter[0] / 2.0, letter[1] - 0.32 * inch, str(doc.page))
-        canvas.restoreState()
-
+    raw = _raw(assessment)
+    # the status DEEP shows the version with (Final, never Certified), on every page
+    status = session.lifecycle_status(raw) if raw else None
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=letter, title="DEEP Field Worksheet",
                             author="STAF DEEP", invariant=1,
-                            topMargin=PAGE_MARGIN_IN * inch, bottomMargin=PAGE_MARGIN_IN * inch,
+                            subject=session.status_line(status) if status else None,
+                            topMargin=status_mark.TOP_MARGIN_IN * inch,
+                            bottomMargin=PAGE_MARGIN_IN * inch,
                             leftMargin=PAGE_MARGIN_IN * inch, rightMargin=PAGE_MARGIN_IN * inch)
+    mark = status_mark.page_marker(status, page_number=True)
 
     name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
-    raw = _raw(assessment)
     version = (raw.get("library") or {}).get("version")
-    status = str(raw.get("lifecycle") or (raw.get("library") or {}).get("status") or "").strip()
     about = [_esc(name)]
     if ref:
         about.append(_esc(ref))
     elif version is not None:
         about.append(f"version {version}")
     if status:
-        about.append(_esc(status.replace("_", " ").title()))
+        about.append(_esc(session.status_label(status)))
     cite = _attr(assessment, "source_citation", "sourceCitation")
     story = [Paragraph(_esc(TITLE), title),
              Paragraph("  |  ".join(about), body)]
@@ -373,5 +376,5 @@ def build_field_form_pdf(assessment, ref: str = "", *, measured=None, delineatio
                            "recorded under Notes."), body)]], colWidths=[full],
                         style=TableStyle([("BOX", (0, 0), (-1, -1), line, colors.black)]))]
 
-    doc.build(story, onFirstPage=page_number, onLaterPages=page_number)
+    doc.build(story, onFirstPage=mark, onLaterPages=mark)
     return buf.getvalue()
