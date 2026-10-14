@@ -28,9 +28,13 @@
  * on a status's row (or Enter or Space) hides that status's regions on the map and in the list,
  * and shows them again, the way the search filters; the chosen region always shows. The server
  * redraws the legend, so every redraw takes the toggles' state back (markKey, from the map's
- * control watcher).
+ * control watcher). Drafts start hidden on every load (owner, 2026-10-14: a Draft is for research
+ * and regional assessment development only, so it shows when the user asks): the Draft row starts
+ * off (app.py REGIONS_OFF_AT_START draws it so), and the region in use always shows, on the map
+ * and in the list, whatever its status.
  *
- * Server contract: the page posts `coverage_ready` (DEEP's own input) until the server answers.
+ * Server contract: the page posts `coverage_ready` (DEEP's own input) until the server answers,
+ * and `coverage_drafts` (true or false) each time the user turns Draft on or off, never at load.
  * `deep_coverage` brings {features:[{assessmentId, name, code, version, status, lifecycle,
  * certified, geometry}]} once (lifecycle: draft | preliminary | certified; status is its label);
  * `deep_coverage_current` brings {assessmentId, identify, focus} whenever the
@@ -82,7 +86,8 @@
   var selected = null, inUse = null, hovered = null;
   var query = "", visible = true, identify = true, passive = null, focusWanted = false;
   var gotCoverage = false, queryTimer = null;
-  var off = {};                         // the statuses the legend hides: {draft: true, ...}
+  // the statuses the legend hides; Drafts at first (app.py REGIONS_OFF_AT_START)
+  var off = { draft: true };
 
   function flowZoom() {
     var panel = document.getElementById("deep-cov-panel");
@@ -310,12 +315,26 @@
     if (/^\d+$/.test(query)) return String(f.code) === query;
     return f.name.toLowerCase().indexOf(query) >= 0;
   }
-  function shows(f) { return matches(f) && !off[f.lifecycle]; }
-  function anyOff() { return Object.keys(off).length > 0; }
+  // listed on the map and in the list: it matches the search and its status is on, or it is the
+  // region in use (which always shows)
+  function listed(f) { return matches(f) && (!off[f.lifecycle] || f.assessmentId === inUse); }
+  // what the empty list says: the search found nothing, or what it found is hidden by the legend
+  function emptyText() {
+    var found = features.filter(matches);
+    if (!found.length) return "No ecoregion matches “" + query + "”";
+    var hidden = Object.keys(STATUS).filter(function (st) {
+      return found.some(function (f) { return f.lifecycle === st; });
+    }).map(function (st) { return STATUS[st].label; });
+    var n = found.length;
+    var names = hidden.length > 1 ? hidden.slice(0, -1).join(", ") + " and " + hidden[hidden.length - 1]
+      : hidden[0];
+    return "Turn on " + names + " in the legend to see " + n +
+      (query ? (n === 1 ? " match" : " matches") : (n === 1 ? " region" : " regions"));
+  }
   function applyFilter() {
     var shown = 0;
     features.forEach(function (f) {
-      var aid = f.assessmentId, on = shows(f);
+      var aid = f.assessmentId, on = listed(f);
       if (on) shown += 1;
       if (rows[aid]) rows[aid].hidden = !on;
       var lyr = layers[aid];
@@ -324,7 +343,8 @@
       if (want && !map.hasLayer(lyr)) map.addLayer(lyr);
       else if (!want && map.hasLayer(lyr)) { if (hovered === aid) unhover(aid); map.removeLayer(lyr); }
     });
-    var label = query || anyOff() ? shown + " of " + features.length : String(features.length);
+    // "2 of 85" while the search or the legend hides some (the closed button says so too)
+    var label = shown < features.length ? shown + " of " + features.length : String(features.length);
     var count = document.querySelector("#deep-cov-panel .deep-cov-count");
     if (count) count.textContent = label;
     var tabCount = tab() && tab().querySelector(".deep-cov-tab-count");   // closed, it says a filter is on
@@ -332,9 +352,7 @@
     var empty = document.querySelector("#deep-cov-body .deep-cov-empty");
     if (empty) {
       empty.hidden = !(features.length && shown === 0);
-      if (!empty.hidden) {
-        empty.textContent = query ? "No ecoregion matches “" + query + "”" : "Every status is turned off in the legend";
-      }
+      if (!empty.hidden) empty.textContent = emptyText();
     }
     return shown;
   }
@@ -368,6 +386,13 @@
     if (off[status]) delete off[status]; else off[status] = true;
     markKey();
     applyFilter();
+    if (status === "draft") postDrafts();
+  }
+  // the server picks a Draft on its own only while Drafts show (app.py drafts_shown)
+  function postDrafts() {
+    if (window.Shiny && Shiny.setInputValue) {
+      Shiny.setInputValue(NS.id(NS.tool(TOOL), "coverage_drafts"), !off.draft);
+    }
   }
 
   // ---- the sidebar ----
@@ -382,7 +407,7 @@
     Object.keys(rows).forEach(function (id) { rows[id].classList.toggle("is-in-use", id === inUse); });
   }
   function firstShown() {
-    for (var i = 0; i < features.length; i++) if (shows(features[i])) return features[i].assessmentId;
+    for (var i = 0; i < features.length; i++) if (listed(features[i])) return features[i].assessmentId;
     return null;
   }
   function choose(aid) {
