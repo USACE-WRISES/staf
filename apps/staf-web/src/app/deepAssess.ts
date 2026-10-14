@@ -6,7 +6,6 @@
 import type { DataSource } from '../data/source'
 import { parseJson, pyCopy, pySet } from './pyjson'
 import { deepAssessPane, deepNoAssessment } from './markup'
-import { bundleDigest } from '../session/deep'
 import { draftPending, LIFECYCLES as ELIGIBLE, lifecycleStatus } from './deepStatus'
 
 const TIER_ORDER = ['certified', 'preliminary', 'draft']
@@ -186,7 +185,12 @@ export async function currentLifecycle(src: DataSource, ref: string | null, raw:
   const at = ref.lastIndexOf('@v')
   if (at < 0) return null
   const v = (await catalog(src)).find((x) => x.id === ref.slice(0, at) && x.version === Number(ref.slice(at + 2)))
-  if (!v || !v.contentDigest || normDigest(bundleDigest(raw)) !== v.contentDigest) return null
+  // session.bundle_digest: the publisher's digest (a library bundle always carries one), else the content
+  // digest, whose code loads only then (the session file's code stays out of the first chunk)
+  const lib = raw.library ?? {}
+  const published = [raw, lib].map((x) => x?.contentDigest || x?.digest || x?.fingerprint).find((d) => d)
+  const digest = published ? String(published) : (await import('../session/deep')).bundleDigest(raw)
+  if (!v || !v.contentDigest || normDigest(digest) !== v.contentDigest) return null
   return v.status
 }
 
