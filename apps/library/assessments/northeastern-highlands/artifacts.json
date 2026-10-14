@@ -109,6 +109,62 @@
       "builtAt": "2026-10-14T11:17:49Z",
       "actor": "GM",
       "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 7,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:3e74a3eb8416b707109286568579ba39b47c580ed7eba3166b166e5815ee7e1b",
+      "bytes": 45140,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
+      "status": "preliminary",
+      "builtAt": "2026-10-14T12:19:55Z",
+      "actor": "GM",
+      "note": "Restamped: a spreadsheet's Preliminary banner is the shorter line."
+    },
+    {
+      "version": 8,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:e1c0bf2de1bed1bf3e6fb4244d4f9d9bd83f042bc3872e9f73edc3fbd56eea87",
+      "bytes": 45937,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
+      "status": "preliminary",
+      "builtAt": "2026-10-14T12:19:56Z",
+      "actor": "GM",
+      "note": "Restamped: a spreadsheet's Preliminary banner is the shorter line."
+    },
+    {
+      "version": 9,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:681f7f7217062a8b6e17142bdec5b628d871db4d9ad2bd37820dcf09162cf4d8",
+      "bytes": 46443,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
+      "status": "preliminary",
+      "builtAt": "2026-10-14T12:19:56Z",
+      "actor": "GM",
+      "note": "Restamped: a spreadsheet's Preliminary banner is the shorter line."
+    },
+    {
+      "version": 10,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:5fae8bf9dc843556bba7b915d85edccf72cbe365b08140b5f8881bf0ae847676",
+      "bytes": 44127,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:3803702732ec6e7191238f165ffae1d5e6588465a682a891fbf58f3d1e2256ca",
+      "status": "preliminary",
+      "builtAt": "2026-10-14T12:19:56Z",
+      "actor": "GM",
+      "note": "Restamped: a spreadsheet's Preliminary banner is the shorter line."
     }
   ]
 }

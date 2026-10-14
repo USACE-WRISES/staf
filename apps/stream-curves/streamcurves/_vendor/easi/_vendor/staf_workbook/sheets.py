@@ -30,6 +30,9 @@ UP, DOWN = "2F7A4B", "A33A3A"
 #: Summary column widths (characters) and row heights (points; Excel never fits a merged or a
 #: custom-height row, so every row's height is set from its text)
 VALUE_W, CHANGE_W, LABEL_W_MIN, LABEL_W_MAX = 13, 10, 24, 44
+#: column D's width under a banner, so its line fits on one row: Excel shows 15 (fifteen Calibri 11
+#: characters and the cell padding)
+BANNER_D_W = 15.7109375
 TITLE_H, LINE_H, ROW_H, GROUP_H, HEAD_H, HEADING_H, GAP_H = 28, 15, 18, 22, 21, 28, 10
 #: printable area inside the margins (points), the smaller of Letter and A4
 PRINTABLE = dict(portrait=(523.0, 705.0), landscape=(720.0, 509.0))
@@ -234,6 +237,9 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     widths[2] = VALUE_W
     for c in range(3, span + 1):
         widths[c] = VALUE_W if c % 2 else CHANGE_W
+    if banner is not None:
+        # the band's line fits on one row (owner, 2026-10-14)
+        widths[4] = max(widths[4], BANNER_D_W)
     for c, wd in widths.items():
         w.width(c, wd)
     a_px = _col_px(widths[1])

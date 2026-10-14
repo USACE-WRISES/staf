@@ -18,6 +18,12 @@ export const STATUS_NOTES: Record<string, string> = {
   preliminary: 'Reviewed and approved as Preliminary. Not yet certified for use.',
   certified: 'Cleared and approved for use.',
 }
+/** session.SHEET_NOTES: what a spreadsheet's banner says, Preliminary's shorter (owner, 2026-10-14). */
+export const SHEET_NOTES: Record<string, string> = {
+  draft: 'For research and regional assessment development only.',
+  preliminary: 'Reviewed and approved as Preliminary.',
+  certified: 'Cleared and approved for use.',
+}
 /** session.STATUS_COLORS: (line, fill), the map's region palette; the line color carries the files' bands. */
 export const STATUS_COLORS: Record<string, [string, string]> = {
   draft: ['#475569', '#6b6459'],
@@ -69,6 +75,15 @@ export function statusParts(status: unknown): [string, string] {
 /** session.status_line: what every file says. */
 export function statusLine(status: unknown): string {
   return statusParts(status).join(' ')
+}
+
+/** session.sheet_status_parts and sheet_status_line: as a spreadsheet says them. */
+export function sheetStatusParts(status: unknown): [string, string] {
+  const s = lifecycleStatus({ lifecycle: status })
+  return [STATUS_LINE.replace('{label}', statusLabel(s)).replace('{note}', '').trimEnd(), SHEET_NOTES[s]]
+}
+export function sheetStatusLine(status: unknown): string {
+  return sheetStatusParts(status).join(' ')
 }
 
 /** session.status_slug: the status word a file name carries (draft, preliminary, final). */

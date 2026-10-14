@@ -16,7 +16,7 @@ from streamcurves import library as lib
 from streamcurves import lifecycle_words as words
 
 DEEP_SESSION = Path(__file__).resolve().parents[2] / "deep" / "deep" / "session.py"
-NAMES = ("STATUS_LABELS", "STATUS_NOTES", "STATUS_COLORS", "STATUS_LINE")
+NAMES = ("STATUS_LABELS", "STATUS_NOTES", "SHEET_NOTES", "STATUS_COLORS", "STATUS_LINE")
 
 
 def _deep_literals() -> dict:
@@ -50,6 +50,10 @@ def test_every_status_deep_runs_has_a_line_and_colors():
     assert words.status_line("certified") == "Assessment status: Final. Cleared and approved for use."
     assert words.status_line("retired") == "Assessment status: Retired."
     assert words.status_colors("retired") == words.STATUS_COLORS["draft"]
+    # a spreadsheet's Preliminary banner is the shorter line (owner, 2026-10-14)
+    assert words.sheet_status_line("preliminary") == ("Assessment status: Preliminary. Reviewed and "
+                                                      "approved as Preliminary.")
+    assert words.sheet_status_line("draft") == words.status_line("draft")
 
 
 def test_no_dash_in_the_words():

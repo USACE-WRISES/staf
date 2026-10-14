@@ -57,7 +57,7 @@
   "_vendor/site_engine/progress.py": "63aa389b1a6f90d259f1157e1cd01c7f624ea0bd720ed7b2094558c10e3a48f9",
   "_vendor/site_engine/provenance.py": "af4032b98afc757813aeb4db5eab66cec36e468f99bba443549be64b3b289c40",
   "_vendor/site_engine/reach.py": "aaa74bf19d08d69ac65b3a9e3f48e0d4e240787cc1634d5cb40b936f2710aa47",
-  "_vendor/staf_workbook/__init__.py": "985313408528980b4f9a232310420d07387cdfc03c9d0ef8da98538378cc3674",
+  "_vendor/staf_workbook/__init__.py": "f7e7b97e891ce933ab60ed46f6bd12840ea18eb75fe130683187dfe835a2f5ac",
   "_vendor/staf_workbook/assemble.py": "fb3429a483e815f856d4cfbdc0248c17a7918a9fa893c587a73ac68c969f0e7a",
   "_vendor/staf_workbook/assessment_file.py": "71207520141170fe4dac22e7f3fa65e9b077a56d5f41f390b8b25e639272094e",
   "_vendor/staf_workbook/model/__init__.py": "fae5024335a350d1f0df06b245c6c9a3702446d04d775cd9d82b144fe284542e",
@@ -65,7 +65,7 @@
   "_vendor/staf_workbook/model/refcurves.py": "f589268a44f2dc86ddce75389d2e335e9fce3c1dc250c60f6e829860cc7a4bba",
   "_vendor/staf_workbook/model/scenarios.py": "b8fe2101e799162548d6559378409d2de6229aaade60a05dcdc5fa2e4ca1d772",
   "_vendor/staf_workbook/model/summary.py": "561298a70ca1b9fd509c71ab5ed10ffc0115608ff5bcae554decae6ccc4e02be",
-  "_vendor/staf_workbook/sheets.py": "35cd7511439a6753ca6c64ea23c3dfb09fd8a851cd394f8d4fcda49251038f7e",
+  "_vendor/staf_workbook/sheets.py": "71414b55460e92cfcb3e041b7d4634d2875d97ba0ef0c251a23021610f77698d",
   "_vendor/staf_workbook/web.py": "aaecde38246c577e7e56f69cf11e50be457b9db3d510929b4fcb7efaf447e470",
   "_vendor/staf_workbook/xlsx/__init__.py": "806e1ea137030b7a70f8fadd14171c2dd24ed7b5fa03f0514304351184a658e4",
   "_vendor/staf_workbook/xlsx/author.py": "2b75db86e4ddc2eca2b6b0d760641c198af7cee6b5b977eb0f1e4db7ba2cb331",
@@ -158,7 +158,7 @@
   "_vendor/site_engine/_hrslim/HRSLIM_INFO.json": "70383aebe656efb462792704624af461be79f1048fe38568686455e966b0b791",
   "_vendor/site_engine/data/BFI_GRID_INFO.json": "593a732e6aa0ee3110473a4f5306218b6a63200b25d36b96df60fe906d6ac49f",
   "_vendor/site_engine/data/bfi48grd.tif": "b7f483bd0de8a4487969cc579f5367953434f06919d5001de04880e2e4dfae87",
-  "_vendor/staf_workbook/VENDOR_INFO.json": "da1e911054950254809ff50f2f220731dc1d745b8109029064f1f5307fdb2e0e",
+  "_vendor/staf_workbook/VENDOR_INFO.json": "27dce8f0b77d68737877bede9c920fbdd75ea8c4cfe2f7038a988673ed78474d",
   "_vendor/staf_workbook/data/ecoregions.json": "df2d3cc0f12ec8640ce9e937c78cc55b0ebfaf7d2bc0a54864076f76a8b51b40"
  },
  "vendored_from": "apps/easi/easi"

@@ -43,7 +43,7 @@ def _strings(path: Path) -> str:
 
 
 def _stated(text: str) -> list:
-    return [s for s in session.LIFECYCLES if session.status_line(s) in text]
+    return [s for s in session.LIFECYCLES if session.sheet_status_line(s) in text]
 
 
 def test_the_index_records_a_status_for_every_workbook_and_it_is_the_versions():

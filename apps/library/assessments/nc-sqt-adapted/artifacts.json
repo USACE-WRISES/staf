@@ -28,6 +28,20 @@
       "builtAt": "2026-10-14T11:17:45Z",
       "actor": "GM",
       "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 2,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:e3952cda09d03d99c74d9651bb1e86c01bed16fb2050bcc4af7c5b32f03bc634",
+      "bytes": 45286,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+      "status": "preliminary",
+      "builtAt": "2026-10-14T12:19:55Z",
+      "actor": "GM",
+      "note": "Restamped: a spreadsheet's Preliminary banner is the shorter line."
     }
   ]
 }
