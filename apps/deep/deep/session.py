@@ -93,6 +93,13 @@ STATUS_NOTES = {
     "preliminary": "Reviewed and approved as Preliminary. Not yet certified for use.",
     "certified": "Cleared and approved for use.",
 }
+# What a spreadsheet's banner says (owner, 2026-10-14): the same lines, Preliminary's shorter so the
+# completed workbook's Summary band fits on one line.
+SHEET_NOTES = {
+    "draft": "For research and regional assessment development only.",
+    "preliminary": "Reviewed and approved as Preliminary.",
+    "certified": "Cleared and approved for use.",
+}
 # Each status's (line, fill) colors: the map's region palette (app.REGION_STATUS_STYLE is built
 # from it). The line color carries the files' status bands, under white text.
 STATUS_COLORS = {
@@ -120,6 +127,18 @@ def status_parts(status) -> tuple:
 def status_line(status) -> str:
     """``Assessment status: Draft. For research ...``: what every file says."""
     return " ".join(status_parts(status))
+
+
+def sheet_status_parts(status) -> tuple:
+    """:func:`status_parts` as a spreadsheet says them (:data:`SHEET_NOTES`)."""
+    s = lifecycle_status({"lifecycle": status})
+    return STATUS_LINE.format(label=status_label(s), note="").rstrip(), SHEET_NOTES[s]
+
+
+def sheet_status_line(status) -> str:
+    """:func:`status_line` as a spreadsheet says it: what the calculators and the completed
+    workbook's tabs say."""
+    return " ".join(sheet_status_parts(status))
 
 
 def status_slug(status) -> str:

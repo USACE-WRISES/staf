@@ -216,6 +216,6 @@ def status_banner(assessment) -> Banner:
     raw = getattr(assessment, "raw", None)
     raw = raw if isinstance(raw, dict) else (assessment if isinstance(assessment, dict) else {})
     status = session.lifecycle_status(raw)
-    head, note = session.status_parts(status)
+    head, note = session.sheet_status_parts(status)
     color = session.STATUS_COLORS[status][0].lstrip("#").upper()
-    return Banner(session.status_line(status), color, head + "\n" + note)
+    return Banner(session.sheet_status_line(status), color, head + "\n" + note)

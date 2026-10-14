@@ -149,7 +149,7 @@ def test_every_tab_of_the_workbook_states_the_assessments_status(la, template):
     calculator's own sheets carry, and every scenario's score sheet keeps the calculator's."""
     openpyxl = pytest.importorskip("openpyxl")
     from deep import session
-    line = session.status_line(session.lifecycle_status(la.raw))
+    line = session.sheet_status_line(session.lifecycle_status(la.raw))
     sset = _set(la)
     rows = [(s, s.state["measured_values"]) for s in sset.items]
     wb = openpyxl.load_workbook(io.BytesIO(workbook.build(template, la, DELIN, rows, today=TODAY)))

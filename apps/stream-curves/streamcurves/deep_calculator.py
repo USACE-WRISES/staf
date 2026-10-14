@@ -853,9 +853,9 @@ class Builder:
         sentence as every sheet's print header, the tab color, and the document properties.
         Text only in the header: a header picture would add a legacyDrawingHF part, which the
         scenario workbook's sheet cloner refuses."""
-        line = _words.status_line(self.status)
+        line = _words.sheet_status_line(self.status)
         # the print header on two lines, so the longest sentence fits a portrait page
-        header = "\n".join(part for part in _words.status_parts(self.status) if part)
+        header = "\n".join(part for part in _words.sheet_status_parts(self.status) if part)
         color = _words.status_colors(self.status)[0].lstrip("#").upper()
         fill = solid(color)
         for name, row, last in STATUS_BANNERS:

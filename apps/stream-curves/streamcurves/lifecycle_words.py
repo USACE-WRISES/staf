@@ -28,6 +28,13 @@ STATUS_NOTES = {
     "preliminary": "Reviewed and approved as Preliminary. Not yet certified for use.",
     "certified": "Cleared and approved for use.",
 }
+# What a spreadsheet's banner says (owner, 2026-10-14): the same lines, Preliminary's shorter so the
+# completed workbook's Summary band fits on one line.
+SHEET_NOTES = {
+    "draft": "For research and regional assessment development only.",
+    "preliminary": "Reviewed and approved as Preliminary.",
+    "certified": "Cleared and approved for use.",
+}
 # Each status's (line, fill) colors: DEEP's region palette. The line color carries the
 # calculator's status banners, under white text.
 STATUS_COLORS = {
@@ -65,6 +72,18 @@ def status_parts(status) -> tuple:
 def status_line(status) -> str:
     """``Assessment status: Draft. For research ...``, or ``Assessment status: Retired.``"""
     return " ".join(part for part in status_parts(status) if part)
+
+
+def sheet_status_parts(status) -> tuple:
+    """:func:`status_parts` as a spreadsheet says them (:data:`SHEET_NOTES`)."""
+    s = status_key(status)
+    head = STATUS_LINE.format(label=status_label(s), note="").rstrip()
+    return head, SHEET_NOTES.get(s, "")
+
+
+def sheet_status_line(status) -> str:
+    """:func:`status_line` as a spreadsheet says it."""
+    return " ".join(part for part in sheet_status_parts(status) if part)
 
 
 def status_colors(status) -> tuple:

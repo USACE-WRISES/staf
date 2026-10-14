@@ -11,8 +11,8 @@
     },
     "ak-sqt-adapted@v2": {
       "file": "ak-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:6170c30e8c517c9ab3b78788a2d33c5873514209a968aeb0776cbd3c94ce582d",
-      "bytes": 38737,
+      "sha256": "sha256:2b9a1d29a3825551ec4f0735e3cf46de203393808dc55c9065a7c071d343baf1",
+      "bytes": 38539,
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -171,8 +171,8 @@
     },
     "co-sqt-adapted@v2": {
       "file": "co-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:92d1c4b648439ac38e57a4aee4664d48f643d9072ac5db50a80206deb10fdc1a",
-      "bytes": 41145,
+      "sha256": "sha256:632dbf789cb98b800ffd6b77bfc41af19bfe421d6a9271cd871e73b9903a0058",
+      "bytes": 40946,
       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -235,32 +235,32 @@
     },
     "eastern-corn-belt-plains@v6": {
       "file": "eastern-corn-belt-plains@v6.xlsx",
-      "sha256": "sha256:acb652d6fd859b95cf4ebec1122d122ab9c8cba5a58967aa502a560aee74777c",
-      "bytes": 36612,
+      "sha256": "sha256:4a32fb22b50a971ff5eed7b1f470f57d717e3dbba63bd8355d056c52de6479fb",
+      "bytes": 36433,
       "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
       "generatorVersion": "1.1",
       "status": "preliminary"
     },
     "eastern-corn-belt-plains@v7": {
       "file": "eastern-corn-belt-plains@v7.xlsx",
-      "sha256": "sha256:87d8d4dd822a3679d0060eadc4b34e9425129458a3516f50fc66a6ddcde197b6",
-      "bytes": 39872,
+      "sha256": "sha256:b7805a8cce756a4ed6ac191492980ea09d75817c6bc95fd9f0024298f69f4bf1",
+      "bytes": 39693,
       "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
       "generatorVersion": "1.1",
       "status": "preliminary"
     },
     "eastern-corn-belt-plains@v8": {
       "file": "eastern-corn-belt-plains@v8.xlsx",
-      "sha256": "sha256:d8c6a51063ce56469a07522769ddd79bc8b77881e9aff5258a51ec658875e432",
-      "bytes": 42355,
+      "sha256": "sha256:bcd90c6810d2c343f7c1e7cf77da69d7ed88c2317078685138293a7e10b11eb9",
+      "bytes": 42165,
       "contentDigest": "sha256:2b9698cd3554ba99507d73f0a0e17f82561acdbc0d6fe5b31983ae6926e23f7f",
       "generatorVersion": "1.1",
       "status": "preliminary"
     },
     "eastern-corn-belt-plains@v9": {
       "file": "eastern-corn-belt-plains@v9.xlsx",
-      "sha256": "sha256:b96329bfa0c1ee33febb1d82a8bb1157591dbdc00364d629a709c4868717094a",
-      "bytes": 45952,
+      "sha256": "sha256:5f10ddfec5fbb3268114b18b43a6bb2e5b08a7f7cc6666a9dd52782c2bf10a26",
+      "bytes": 45755,
       "contentDigest": "sha256:02e720a6278c02080a796cab5402bed6b80080f418b44e76edf3c661ddc38a29",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -387,8 +387,8 @@
     },
     "mi-sqt-adapted@v2": {
       "file": "mi-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:588847217f5daee48424b3a63896e4e2635492e7594cd220413e76d7bf308b75",
-      "bytes": 37516,
+      "sha256": "sha256:aa017719476ed0c85139a546ca18b7a5b1f7d324c928fb46e9dcb27bda52cce2",
+      "bytes": 37318,
       "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -427,8 +427,8 @@
     },
     "mn-sqt-adapted@v2": {
       "file": "mn-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:10993d3522744016c59bbdb6b7ba1ef3b8467e3dbdc51fdb821b43a74201fe6e",
-      "bytes": 38657,
+      "sha256": "sha256:eec20317333913ffb0443d3139dcb1d21fe413ca6564df440eb51e6b855106c5",
+      "bytes": 38459,
       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -443,8 +443,8 @@
     },
     "nc-sqt-adapted@v2": {
       "file": "nc-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:2ddf0a21a39c4b8ac6ea885b81beb4d653afbcae56c00657bb6e4ba7d8b8ecf5",
-      "bytes": 45483,
+      "sha256": "sha256:e3952cda09d03d99c74d9651bb1e86c01bed16fb2050bcc4af7c5b32f03bc634",
+      "bytes": 45286,
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -491,32 +491,32 @@
     },
     "northeastern-highlands@v10": {
       "file": "northeastern-highlands@v10.xlsx",
-      "sha256": "sha256:299ec86470e2cdb41005065973abd95e8835d60e2f1d69598a915ca5d6858c9b",
-      "bytes": 44324,
+      "sha256": "sha256:5fae8bf9dc843556bba7b915d85edccf72cbe365b08140b5f8881bf0ae847676",
+      "bytes": 44127,
       "contentDigest": "sha256:3803702732ec6e7191238f165ffae1d5e6588465a682a891fbf58f3d1e2256ca",
       "generatorVersion": "1.1",
       "status": "preliminary"
     },
     "northeastern-highlands@v7": {
       "file": "northeastern-highlands@v7.xlsx",
-      "sha256": "sha256:36fb084b75388b90b07c6f38a0344236422ed13079245232dd5d1cad1bb43bff",
-      "bytes": 45341,
+      "sha256": "sha256:3e74a3eb8416b707109286568579ba39b47c580ed7eba3166b166e5815ee7e1b",
+      "bytes": 45140,
       "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
       "generatorVersion": "1.1",
       "status": "preliminary"
     },
     "northeastern-highlands@v8": {
       "file": "northeastern-highlands@v8.xlsx",
-      "sha256": "sha256:f85b7123d10f7026f1b8005d2289f80ce410c3366ec3b89d1dad19201f02309a",
-      "bytes": 46135,
+      "sha256": "sha256:e1c0bf2de1bed1bf3e6fb4244d4f9d9bd83f042bc3872e9f73edc3fbd56eea87",
+      "bytes": 45937,
       "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
       "generatorVersion": "1.1",
       "status": "preliminary"
     },
     "northeastern-highlands@v9": {
       "file": "northeastern-highlands@v9.xlsx",
-      "sha256": "sha256:f81b82ca4e972069bce6c28fe5b1b59a989b3f68dc4505e277ae05c6f734bbc8",
-      "bytes": 46636,
+      "sha256": "sha256:681f7f7217062a8b6e17142bdec5b628d871db4d9ad2bd37820dcf09162cf4d8",
+      "bytes": 46443,
       "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -643,8 +643,8 @@
     },
     "sc-sqt-adapted@v2": {
       "file": "sc-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:4a2a1e0bb5007df3da2e91b4511e1adbf7e85132231ee965f190166b4c39d550",
-      "bytes": 40755,
+      "sha256": "sha256:7d9155ef202e4fac5aecbbb6ed27dab4f670bd2a3d407f4d4410379636eb8612",
+      "bytes": 40558,
       "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -827,8 +827,8 @@
     },
     "wi-sqt-adapted@v2": {
       "file": "wi-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:12f6daaee2ac3b1aa3f7d7b7613f979ed5aa3db2af4f87027d5bcb627ed490b0",
-      "bytes": 39647,
+      "sha256": "sha256:29e67988d908745f36019e14b25f3ba2558b2b18f9fdf3f3cbe80f2027940655",
+      "bytes": 39450,
       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
       "generatorVersion": "1.1",
       "status": "preliminary"
@@ -843,8 +843,8 @@
     },
     "wy-sqt-adapted@v2": {
       "file": "wy-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:682b1be706382b94b74ca56cfa96dce4466cb455df8090eda0d5ec1d52020a9c",
-      "bytes": 40349,
+      "sha256": "sha256:3869c265d70fea8bf575fd3200da901e85607b2adc3a7011cb0faad24985182b",
+      "bytes": 40153,
       "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
       "generatorVersion": "1.1",
       "status": "preliminary"

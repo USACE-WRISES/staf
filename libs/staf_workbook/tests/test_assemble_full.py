@@ -195,6 +195,8 @@ def test_a_banner_heads_the_authored_tabs_and_nothing_else_moves():
     assert ws["A3"].fill.fgColor.rgb.endswith("475569")
     assert any(str(r).startswith("A3:") for r in ws.merged_cells.ranges)
     assert ws["A5"].value == "Reach name", "the summary block starts under the band"
+    assert ws.column_dimensions["D"].width == 15.7109, "column D widens (Excel shows 15) so the band fits one row"
+    assert ws.row_dimensions[3].height == 21
     curves = wb["ReferenceCurves"]
     assert curves["A3"].value == line
     for name in ("Summary", "ReferenceCurves"):

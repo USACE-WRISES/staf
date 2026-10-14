@@ -28,6 +28,8 @@ const UP = '2F7A4B'
 const DOWN = 'A33A3A'
 /** Summary column widths (characters) and row heights (points) */
 const VALUE_W = 13
+/** sheets.BANNER_D_W: column D's width under a banner, so its line fits on one row (owner, 2026-10-14) */
+const BANNER_D_W = 15.7109375        // Excel shows 15 (fifteen Calibri 11 characters and the cell padding)
 const CHANGE_W = 10
 const LABEL_W_MIN = 24
 const LABEL_W_MAX = 44
@@ -249,6 +251,7 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
   const widths = new Map<number, number>([[1, Math.min(LABEL_W_MAX, Math.max(LABEL_W_MIN, Math.ceil((labelPx + 12) / 7)))]])
   widths.set(2, VALUE_W)
   for (let c = 3; c <= span; c++) widths.set(c, c % 2 ? VALUE_W : CHANGE_W)
+  if (banner) widths.set(4, Math.max(widths.get(4)!, BANNER_D_W))
   for (const [c, wd] of widths) w.width(c, wd)
   const aPx = colPx(widths.get(1)!)
   const restCols: number[] = []

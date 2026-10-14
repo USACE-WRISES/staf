@@ -195,8 +195,7 @@ def test_what_the_workbook_says_about_the_assessment(book):
 # The workbook states its status (owner, 2026-10-14)
 # --------------------------------------------------------------------------- #
 LINES = {"draft": "Assessment status: Draft. For research and regional assessment development only.",
-         "preliminary": ("Assessment status: Preliminary. Reviewed and approved as Preliminary. "
-                         "Not yet certified for use."),
+         "preliminary": "Assessment status: Preliminary. Reviewed and approved as Preliminary.",
          "certified": "Assessment status: Final. Cleared and approved for use."}
 COLORS = {"draft": "475569", "preliminary": "B45309", "certified": "303F9F"}
 
