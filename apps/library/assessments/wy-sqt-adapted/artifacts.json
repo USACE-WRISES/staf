@@ -14,6 +14,20 @@
       "builtAt": "2026-09-24T15:33:36Z",
       "actor": "GM",
       "note": "Built at publish."
+    },
+    {
+      "version": 2,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:682b1be706382b94b74ca56cfa96dce4466cb455df8090eda0d5ec1d52020a9c",
+      "bytes": 40349,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+      "status": "preliminary",
+      "builtAt": "2026-10-14T11:18:06Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
     }
   ]
 }

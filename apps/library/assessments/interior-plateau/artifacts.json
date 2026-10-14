@@ -53,6 +53,62 @@
       "builtAt": "2026-09-30T07:07:43Z",
       "actor": "StreamCurves regional analysis (STAF)",
       "note": "Built at publish."
+    },
+    {
+      "version": 4,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:9ed86712f54cee9f1bae99b07a74954d133cbb96f4652ce127e54c989679d851",
+      "bytes": 41776,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:39Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 5,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:7d07ed26a48d0a28aae7f1500842a9229462c06cada7e72a0725fa188f37d52c",
+      "bytes": 42417,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:d339376ab846e645ef6ae9c7c41e9ea0c58f19cca552e72c7e686bf680a19f19",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:39Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 6,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:a96fd75c180668eda84e0fd342af0b25b8f8add7b93843fb390ea4eae63e3a6c",
+      "bytes": 41927,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:c7f3ba4aab6330c47fa23613a0ca1969469bd4b99a8f5b268498601311da0f73",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:39Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 7,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:cba73a366165cb7d8b2d67e26fabaea5fbd082b4740026aac3a4f1454593c6a4",
+      "bytes": 45468,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:3dfc705427d34238acf676460286484e2d45c1661e24944b32fa3eec61e60b9e",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:40Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
     }
   ]
 }
