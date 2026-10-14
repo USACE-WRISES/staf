@@ -227,7 +227,8 @@ def test_every_page_of_the_field_forms_states_the_status(status):
     assert len(pages) > 1
     for n, text in enumerate(pages, 1):
         assert f"Assessment status: {LABELS[status]}." in text, n
-        assert session.STATUS_NOTES[status] in text, n
+        assert session.SHEET_NOTES[status] in text, n
+        assert "Not yet certified" not in text, "the field forms say the shorter line"
         assert f"Page {n}" in text
         assert ("DRAFT" in text) == (status == "draft"), "the watermark is a Draft's alone"
     assert f"acadian-plains-and-hills@v1 | {LABELS[status]}" in pages[0]

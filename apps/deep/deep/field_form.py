@@ -247,11 +247,13 @@ def build_field_form_pdf(assessment, ref: str = "", *, measured=None, delineatio
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=letter, title="DEEP Field Worksheet",
                             author="STAF DEEP", invariant=1,
-                            subject=session.status_line(status) if status else None,
+                            subject=session.sheet_status_line(status) if status else None,
                             topMargin=status_mark.TOP_MARGIN_IN * inch,
                             bottomMargin=PAGE_MARGIN_IN * inch,
                             leftMargin=PAGE_MARGIN_IN * inch, rightMargin=PAGE_MARGIN_IN * inch)
-    mark = status_mark.page_marker(status, page_number=True)
+    # the band says the shorter lines a spreadsheet says (owner, 2026-10-14: Preliminary without
+    # "Not yet certified for use.")
+    mark = status_mark.page_marker(status, page_number=True, short=True)
 
     name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
     version = (raw.get("library") or {}).get("version")

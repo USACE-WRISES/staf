@@ -17,7 +17,7 @@ import { assessmentName, coords, measureCode, reachId } from './forms'
 import { type Bundle, CATEGORY_ORDER, FUNCTIONS_BY_ID, type Metric, methodText, type Rec, unitsOf, withheldForFunction, withheldOnlyFunctions } from './method'
 import { pyStrOf, rows, sourceLabel, watershedBasisLabel } from './report'
 import { stratumLabel, withheld, withheldNote, withheldReason } from './support'
-import { lifecycleStatus, statusLabel, statusLine } from '../../app/deepStatus'
+import { lifecycleStatus, sheetStatusLine, statusLabel } from '../../app/deepStatus'
 import { pageMarker, TOP_MARGIN_IN } from './statusmark'
 
 export const TITLE = 'Detailed Evaluation of Ecosystem Processes (DEEP) Field Worksheet'
@@ -145,10 +145,11 @@ export function buildFieldFormsPdf(la: Bundle | null, ref: string, measured: Rec
   // the status DEEP shows the version with (Final, never Certified), on every page (status_mark.py)
   const status = Object.keys(raw).length ? lifecycleStatus(raw) : null
   const doc = new SimpleDocTemplate({
-    pagesize: letter, title: 'DEEP Field Worksheet', author: 'STAF DEEP', invariant: true, subject: status ? statusLine(status) : null,
+    pagesize: letter, title: 'DEEP Field Worksheet', author: 'STAF DEEP', invariant: true, subject: status ? sheetStatusLine(status) : null,
     topMargin: TOP_MARGIN_IN * inch, bottomMargin: PAGE_MARGIN_IN * inch, leftMargin: PAGE_MARGIN_IN * inch, rightMargin: PAGE_MARGIN_IN * inch,
   })
-  const mark = pageMarker(status, true)
+  // the band says the shorter lines a spreadsheet says (Preliminary without "Not yet certified for use.")
+  const mark = pageMarker(status, true, true)
 
   const name = (la ? assessmentName(la) : '') || 'Detailed assessment'
   const version = (raw.library || {}).version

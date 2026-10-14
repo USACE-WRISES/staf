@@ -28,8 +28,8 @@ STATUS_NOTES = {
     "preliminary": "Reviewed and approved as Preliminary. Not yet certified for use.",
     "certified": "Cleared and approved for use.",
 }
-# What a spreadsheet's banner says (owner, 2026-10-14): the same lines, Preliminary's shorter so the
-# completed workbook's Summary band fits on one line.
+# What a spreadsheet's banner and the field forms' band say (owner, 2026-10-14): the same lines,
+# Preliminary's shorter (the completed workbook's Summary band fits on one line).
 SHEET_NOTES = {
     "draft": "For research and regional assessment development only.",
     "preliminary": "Reviewed and approved as Preliminary.",

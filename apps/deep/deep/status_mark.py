@@ -34,10 +34,12 @@ WATERMARK_TINT = "#E3E6E9"
 _R45 = 0.7071067811865476
 
 
-def page_marker(status: Optional[str], *, page_number: bool = False):
+def page_marker(status: Optional[str], *, page_number: bool = False, short: bool = False):
     """The onPage callback for one PDF: ``status`` is the assessment's lifecycle status
     (None when no assessment is loaded: no band and no watermark). ``page_number`` puts
-    "Page N" at the band's right end (the field forms, which number their pages)."""
+    "Page N" at the band's right end (the field forms, which number their pages). ``short``
+    says the shorter lines a spreadsheet says (``session.SHEET_NOTES``: the field forms,
+    owner 2026-10-14)."""
 
     def mark(canvas, doc):
         from reportlab.lib import colors
@@ -60,7 +62,7 @@ def page_marker(status: Optional[str], *, page_number: bool = False):
             line, fill = session.STATUS_COLORS[session.lifecycle_status({"lifecycle": status})]
             canvas.setFillColor(colors.HexColor(line))
             canvas.rect(left, bottom, right - left, BAND_HEIGHT_IN * inch, stroke=0, fill=1)
-            head, note = session.status_parts(status)
+            head, note = (session.sheet_status_parts if short else session.status_parts)(status)
             canvas.setFillColor(colors.white)
             canvas.setFont("Helvetica-Bold", BAND_FONT)
             x = left + BAND_PAD_PT
