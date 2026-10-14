@@ -6,7 +6,7 @@
 import type { Canvas } from '../../files/pdf/canvas'
 import { black, HexColor, white } from '../../files/pdf/colors'
 import { inch, type SimpleDocTemplate } from '../../files/pdf/doctemplate'
-import { lifecycleStatus, sheetStatusParts, STATUS_COLORS, statusParts } from '../../app/deepStatus'
+import { lifecycleStatus, sheetStatusParts, STATUS_COLORS } from '../../app/deepStatus'
 
 /** Every DEEP PDF keeps this much paper above its content: the band, and air under it. */
 export const TOP_MARGIN_IN = 0.65
@@ -20,9 +20,9 @@ const WATERMARK_TINT = '#E3E6E9'
 const R45 = 0.7071067811865476
 
 /** page_marker: the onPage callback for one PDF; ``status`` null (no assessment) draws no band and no
- * watermark; ``pageNumber`` puts "Page N" at the band's right end (the field forms); ``short`` says the
- * shorter lines a spreadsheet says (the field forms, owner 2026-10-14). */
-export function pageMarker(status: string | null, pageNumber = false, short = false): (canvas: Canvas, doc: SimpleDocTemplate) => void {
+ * watermark; ``pageNumber`` puts "Page N" at the band's right end (the field forms). The band says the
+ * shorter lines the files say (SHEET_NOTES). */
+export function pageMarker(status: string | null, pageNumber = false): (canvas: Canvas, doc: SimpleDocTemplate) => void {
   return (canvas, doc) => {
     const [width, height] = doc.pagesize
     canvas.saveState()
@@ -42,7 +42,7 @@ export function pageMarker(status: string | null, pageNumber = false, short = fa
       const [line] = STATUS_COLORS[lifecycleStatus({ lifecycle: status })]
       canvas.setFillColor(HexColor(line))
       canvas.rect(left, bottom, right - left, BAND_HEIGHT_IN * inch, 0, 1)
-      const [head, note] = (short ? sheetStatusParts : statusParts)(status)
+      const [head, note] = sheetStatusParts(status)
       canvas.setFillColor(white)
       canvas.setFont('Helvetica-Bold', BAND_FONT)
       let x = left + BAND_PAD_PT

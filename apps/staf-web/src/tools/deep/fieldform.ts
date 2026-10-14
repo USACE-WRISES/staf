@@ -148,8 +148,7 @@ export function buildFieldFormsPdf(la: Bundle | null, ref: string, measured: Rec
     pagesize: letter, title: 'DEEP Field Worksheet', author: 'STAF DEEP', invariant: true, subject: status ? sheetStatusLine(status) : null,
     topMargin: TOP_MARGIN_IN * inch, bottomMargin: PAGE_MARGIN_IN * inch, leftMargin: PAGE_MARGIN_IN * inch, rightMargin: PAGE_MARGIN_IN * inch,
   })
-  // the band says the shorter lines a spreadsheet says (Preliminary without "Not yet certified for use.")
-  const mark = pageMarker(status, true, true)
+  const mark = pageMarker(status, true)
 
   const name = (la ? assessmentName(la) : '') || 'Detailed assessment'
   const version = (raw.library || {}).version

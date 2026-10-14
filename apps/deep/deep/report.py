@@ -435,7 +435,7 @@ def build_pdf(delin, assessment, measured, sc, region=None, *, scenario=None) ->
                             bottomMargin=0.6 * inch,
                             leftMargin=0.6 * inch, rightMargin=0.6 * inch,
                             title="DEEP Detailed Assessment Report",
-                            subject=session.status_line(status) if status else None)
+                            subject=session.sheet_status_line(status) if status else None)
     mark = status_mark.page_marker(status)
     styles = getSampleStyleSheet()
     small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=7, leading=8.4)
@@ -779,7 +779,7 @@ def build_metrics_pdf(assessment, ref: str = "", *, measured=None, delineation=N
                             bottomMargin=0.6 * inch,
                             leftMargin=0.6 * inch, rightMargin=0.6 * inch,
                             title="DEEP Metrics", invariant=1,
-                            subject=session.status_line(status) if status else None)
+                            subject=session.sheet_status_line(status) if status else None)
     mark = status_mark.page_marker(status)
     name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
     dl = (delineation or {}).get("delineation") or {}
