@@ -242,7 +242,7 @@ def test_the_metrics_pdf_and_the_report_state_the_status(status, monkeypatch):
     metrics = _pages(report.build_metrics_pdf(la, ref="form-test@v3", delineation=DELIN))
     monkeypatch.setattr(report.reportmap, "pdf_flowable", lambda *a, **k: None)
     pdf = _pages(report.build_pdf(DELIN, la, {}, workbook.score(la, {})))
-    line = session.status_line(status)
+    line = session.sheet_status_line(status)
     for text in metrics + pdf:
         assert line in text
         assert ("DRAFT" in text) == (status == "draft")

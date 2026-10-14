@@ -93,8 +93,9 @@ STATUS_NOTES = {
     "preliminary": "Reviewed and approved as Preliminary. Not yet certified for use.",
     "certified": "Cleared and approved for use.",
 }
-# What a spreadsheet's banner and the field forms' band say (owner, 2026-10-14): the same lines,
-# Preliminary's shorter (the completed workbook's Summary band fits on one line).
+# What the files say (owner, 2026-10-14): the calculators' and workbooks' banners and the PDFs'
+# bands. The same lines, Preliminary's shorter (the completed workbook's Summary band fits on one
+# line); the app keeps the full line.
 SHEET_NOTES = {
     "draft": "For research and regional assessment development only.",
     "preliminary": "Reviewed and approved as Preliminary.",

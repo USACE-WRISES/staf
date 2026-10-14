@@ -2,8 +2,9 @@
 
 The field forms, the metrics list and the report each carry, at the top of every
 page, a band in the status's color that says "Assessment status: Draft. For
-research and regional assessment development only." (the words of
-:mod:`deep.session`). Every page of a Draft's PDFs also carries a large, light
+research and regional assessment development only." (the shorter lines the files
+say, :data:`deep.session.SHEET_NOTES`: Preliminary without "Not yet certified for
+use."). Every page of a Draft's PDFs also carries a large, light
 diagonal DRAFT behind the content.
 
 Both are drawn by the page callback, which reportlab runs before a page's
@@ -34,12 +35,10 @@ WATERMARK_TINT = "#E3E6E9"
 _R45 = 0.7071067811865476
 
 
-def page_marker(status: Optional[str], *, page_number: bool = False, short: bool = False):
+def page_marker(status: Optional[str], *, page_number: bool = False):
     """The onPage callback for one PDF: ``status`` is the assessment's lifecycle status
     (None when no assessment is loaded: no band and no watermark). ``page_number`` puts
-    "Page N" at the band's right end (the field forms, which number their pages). ``short``
-    says the shorter lines a spreadsheet says (``session.SHEET_NOTES``: the field forms,
-    owner 2026-10-14)."""
+    "Page N" at the band's right end (the field forms, which number their pages)."""
 
     def mark(canvas, doc):
         from reportlab.lib import colors
@@ -62,7 +61,7 @@ def page_marker(status: Optional[str], *, page_number: bool = False, short: bool
             line, fill = session.STATUS_COLORS[session.lifecycle_status({"lifecycle": status})]
             canvas.setFillColor(colors.HexColor(line))
             canvas.rect(left, bottom, right - left, BAND_HEIGHT_IN * inch, stroke=0, fill=1)
-            head, note = (session.sheet_status_parts if short else session.status_parts)(status)
+            head, note = session.sheet_status_parts(status)
             canvas.setFillColor(colors.white)
             canvas.setFont("Helvetica-Bold", BAND_FONT)
             x = left + BAND_PAD_PT

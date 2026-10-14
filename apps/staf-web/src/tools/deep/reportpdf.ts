@@ -20,7 +20,7 @@ import {
   coverageLabel, desktopBasisLabel, functionRows, pyStrOf, rows, sourceCellText, streamcatReachLabel, watershedBasisLabel, withheldRows,
 } from './report'
 import { flaggedSummary, referenceMethodStatement, withheld, withheldNote } from './support'
-import { statusLabel, statusLine } from '../../app/deepStatus'
+import { sheetStatusLine, statusLabel } from '../../app/deepStatus'
 import { pageMarker, TOP_MARGIN_IN } from './statusmark'
 
 /** str.title() */
@@ -52,7 +52,7 @@ export async function buildPdf(delin: Rec, la: Bundle | null, measured: Record<s
   const doc = new SimpleDocTemplate({
     pagesize: letter, topMargin: TOP_MARGIN_IN * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch, rightMargin: 0.6 * inch,
     title: 'DEEP Detailed Assessment Report', invariant: opts.invariant ?? false,
-    subject: markStatus ? statusLine(markStatus) : null,
+    subject: markStatus ? sheetStatusLine(markStatus) : null,
   })
   const mark = pageMarker(markStatus)
   const styles = getSampleStyleSheet()
@@ -189,7 +189,7 @@ export function buildMetricsPdf(la: Bundle | null, ref: string, measured: Record
   const markStatus = la && Object.keys(la).length ? lifecycleStatus(la) : null
   const doc = new SimpleDocTemplate({
     pagesize: letter, topMargin: TOP_MARGIN_IN * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch, rightMargin: 0.6 * inch, title: 'DEEP Metrics',
-    invariant: true, subject: markStatus ? statusLine(markStatus) : null,
+    invariant: true, subject: markStatus ? sheetStatusLine(markStatus) : null,
   })
   const mark = pageMarker(markStatus)
   const name = (la ? assessmentNameOf(la) : '') || 'Detailed assessment'

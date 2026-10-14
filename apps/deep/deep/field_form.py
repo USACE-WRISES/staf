@@ -251,9 +251,7 @@ def build_field_form_pdf(assessment, ref: str = "", *, measured=None, delineatio
                             topMargin=status_mark.TOP_MARGIN_IN * inch,
                             bottomMargin=PAGE_MARGIN_IN * inch,
                             leftMargin=PAGE_MARGIN_IN * inch, rightMargin=PAGE_MARGIN_IN * inch)
-    # the band says the shorter lines a spreadsheet says (owner, 2026-10-14: Preliminary without
-    # "Not yet certified for use.")
-    mark = status_mark.page_marker(status, page_number=True, short=True)
+    mark = status_mark.page_marker(status, page_number=True)
 
     name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
     version = (raw.get("library") or {}).get("version")

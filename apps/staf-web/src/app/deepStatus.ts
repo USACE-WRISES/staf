@@ -18,8 +18,8 @@ export const STATUS_NOTES: Record<string, string> = {
   preliminary: 'Reviewed and approved as Preliminary. Not yet certified for use.',
   certified: 'Cleared and approved for use.',
 }
-/** session.SHEET_NOTES: what a spreadsheet's banner and the field forms' band say, Preliminary's shorter
- * (owner, 2026-10-14). */
+/** session.SHEET_NOTES: what the files say (the workbooks' banners, the PDFs' bands), Preliminary's shorter
+ * (owner, 2026-10-14); the app keeps the full line. */
 export const SHEET_NOTES: Record<string, string> = {
   draft: 'For research and regional assessment development only.',
   preliminary: 'Reviewed and approved as Preliminary.',
