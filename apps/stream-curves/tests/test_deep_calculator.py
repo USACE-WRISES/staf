@@ -191,6 +191,78 @@ def test_what_the_workbook_says_about_the_assessment(book):
     assert "—" not in score + text                           # no em dash in the copy
 
 
+# --------------------------------------------------------------------------- #
+# The workbook states its status (owner, 2026-10-14)
+# --------------------------------------------------------------------------- #
+LINES = {"draft": "Assessment status: Draft. For research and regional assessment development only.",
+         "preliminary": ("Assessment status: Preliminary. Reviewed and approved as Preliminary. "
+                         "Not yet certified for use."),
+         "certified": "Assessment status: Final. Cleared and approved for use."}
+COLORS = {"draft": "475569", "preliminary": "B45309", "certified": "303F9F"}
+
+
+@pytest.mark.parametrize("status", ["draft", "preliminary", "certified"])
+def test_every_sheet_states_the_status(status):
+    data = dc.build_calculator(_bundle(), status)
+    book = openpyxl.load_workbook(io.BytesIO(data))
+    line = LINES[status]
+    for name, row, last in dc.STATUS_BANNERS:
+        ws = book[name]
+        cell = ws.cell(row=row, column=1)
+        assert cell.value == line, name
+        assert cell.fill.fgColor.rgb.endswith(COLORS[status]) and cell.font.bold
+        assert cell.font.color.rgb.endswith("FFFFFF")
+        assert cell.protection.locked is True
+        merged = [str(r) for r in ws.merged_cells.ranges if r.min_row == row]
+        from openpyxl.utils import get_column_letter
+        assert merged == ([f"A{row}:{get_column_letter(last)}{row}"] if last > 1 else []), name
+    head, note = line.split(". ", 1)
+    for ws in book.worksheets:
+        assert ws.oddHeader.center.text == head + ".\n" + note, ws.title
+        assert ws.oddHeader.center.color == COLORS[status]
+        assert ws.sheet_properties.tabColor.rgb.endswith(COLORS[status])
+    label = line.split(": ", 1)[1].split(".", 1)[0]
+    meta = {r[0].value: r[1].value for r in book["Metadata"].iter_rows(min_row=4) if r[0].value}
+    assert meta["Lifecycle status"] == label
+    assert book[dc.SCORE]["A3"].value.startswith(f"Version 2 | {label} | ")
+    assert book.properties.contentStatus == label and book.properties.subject == line
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        text = " ".join(z.read(n).decode("utf-8") for n in z.namelist() if n.endswith(".xml"))
+    assert "Certified" not in text, "people read Final, never Certified"
+    assert "—" not in line
+
+
+def test_the_status_given_wins_and_a_workbook_never_guesses():
+    bundle = _bundle()                              # carries library.status = preliminary
+    assert dc.build_calculator(bundle) == dc.build_calculator(bundle, "preliminary")
+    draft = dc.build_calculator(bundle, "draft")
+    assert draft != dc.build_calculator(bundle) and draft == dc.build_calculator(bundle, "draft")
+    stamped = dict(bundle, lifecycle="certified")    # a baked bundle's stamp
+    assert dc.resolve_status(stamped) == "certified"
+    bare = _bundle()
+    del bare["library"]["status"]
+    with pytest.raises(ValueError, match="no status for the calculator"):
+        dc.build_calculator(bare)
+    assert dc.resolve_status(bare, "Draft") == "draft"
+
+
+def test_the_banner_rows_are_left_empty_by_the_layout():
+    """stamp_sheets refuses a row that holds content, so a layout change cannot hide
+    the status under a title or a note."""
+    builder = dc.Builder(_bundle(), "draft")
+    builder.status = dc.resolve_status(builder.bundle, builder.status)
+    builder.build_reference()
+    builder.build_metrics()
+    builder.build_results()
+    builder.build_score()
+    builder.build_charts()
+    builder.build_instructions()
+    builder.build_metadata()
+    builder.wb["Metrics"]["B3"] = "taken"
+    with pytest.raises(ValueError, match="Metrics row 3 holds content"):
+        builder.stamp_sheets()
+
+
 def test_the_shared_vocabulary():
     assert dc.metric_key("spring-phab-xembed") == "spring_phab_xembed"
     assert dc.metric_key("a.b c/d") == "a_b_c_d"
@@ -258,7 +330,7 @@ def test_the_restriction_reaches_the_visible_sheet():
     if not bundles:
         pytest.skip("no published assessment leaves a function unassessed")
     for key, bundle in bundles.items():
-        ws = openpyxl.load_workbook(io.BytesIO(dc.build_calculator(bundle)))["DEEP Score"]
+        ws = openpyxl.load_workbook(io.BytesIO(dc.build_calculator(bundle, "draft")))["DEEP Score"]
         said = [c.value for row in ws.iter_rows() for c in row
                 if isinstance(c.value, str) and "not assessed" in c.value]
         assert said, f"{key}: the workbook's own sheet does not carry the restriction"

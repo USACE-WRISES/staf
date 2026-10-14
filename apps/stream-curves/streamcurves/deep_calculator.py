@@ -24,10 +24,18 @@ A blank value is Not Applicable and drops out. A metric that serves several
 functions is entered once and linked. A metric with several curve sets gets a
 dropdown, and the choice selects the curve.
 
+Every workbook states the status of the version it was built for (owner,
+2026-10-14): a banner on each visible sheet, a print header and a tab color on
+every sheet, and the Metadata row, all saying "Assessment status: Draft. For
+research and regional assessment development only." (``lifecycle_words``). The
+status is not part of a version's content, so the library rebuilds a version's
+workbook whenever its status changes (``library.restamp_calculator``).
+
 ``tests/test_deep_calculator_parity.py`` evaluates the workbook's formulas and
 proves them equal to DEEP's scoring, knot by knot.
 
-Pure: a bundle in, bytes out. openpyxl only (already a StreamCurves dependency).
+Pure: a bundle and a status in, bytes out. openpyxl only (already a StreamCurves
+dependency).
 """
 from __future__ import annotations
 
@@ -52,8 +60,19 @@ from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
 
+try:
+    from . import lifecycle_words as _words
+except ImportError:
+    # Loaded by file path, outside the package (DEEP's tests do): load the words the same way.
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "streamcurves_lifecycle_words", Path(__file__).with_name("lifecycle_words.py"))
+    _words = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_words)
+
 GENERATOR = "streamcurves.deep_calculator"
-GENERATOR_VERSION = "1.0"
+# 1.1 (2026-10-14): the version's status on every sheet
+GENERATOR_VERSION = "1.1"
 FILE_NAME = "calculator.xlsx"
 PASSWORD = "deep"            # a guard rail against accidental edits, not a secret
 SCORE = "DEEP Score"         # the worksheet the user fills
@@ -76,6 +95,10 @@ C_POOR = "FF6969"
 C_CALC = "EDEDED"
 CATEGORY_FILL = {"Hydrology": "D9E1F2", "Hydraulics": "B4C6E7", "Geomorphology": "FCE4D6",
                  "Physicochemistry": "E2EFDA", "Biology": "FFF2CC"}
+# The status banner on each visible sheet: (sheet, row, last merged column). The rows are the
+# ones each sheet's layout leaves empty under its title (stamp_sheets refuses a used row).
+STATUS_BANNERS = (("Instructions", 3, 1), (SCORE, 4, 9), ("Metrics", 3, 4), ("Reference", 3, 4),
+                  ("Metadata", 2, 2))
 
 _VENDORED_MAPPING = (Path(__file__).resolve().parent / "_vendor" / "easi" / "data"
                      / "cwa-mapping.json")
@@ -271,8 +294,9 @@ def link_formula(ref: str) -> str:
 # the generator
 # --------------------------------------------------------------------------- #
 class Builder:
-    def __init__(self, bundle: dict):
+    def __init__(self, bundle: dict, status: Optional[str] = None):
         self.bundle = bundle
+        self.status = status         # resolved in build(): this argument, else the bundle's
         self.wb = Workbook()
         self.functions = functions_of(bundle)
         self.mapping = outcome_mapping()
@@ -423,7 +447,8 @@ class Builder:
         S.cell(1, "Detailed Evaluation of Ecosystem Processes (DEEP) Calculator",
                font=Font(bold=True, size=14))
         S.cell(1, name, row=2, font=Font(bold=True, size=11))
-        S.cell(1, version_line(self.bundle), row=3, font=FONT_NOTE)
+        S.cell(1, version_line(self.bundle, self.status), row=3, font=FONT_NOTE)
+        # row 4 is the status banner (stamp_sheets)
 
         # the site block
         site = [("Stream or site", "site_name"), ("Reach ID", "site_reach"),
@@ -794,7 +819,7 @@ class Builder:
             ("Assessment id", self.bundle.get("assessmentId")),
             ("Assessment name", self.bundle.get("assessmentName")),
             ("Version", lib.get("version")),
-            ("Lifecycle status", lib.get("status") or lib.get("lifecycle")),
+            ("Lifecycle status", _words.status_label(self.status)),
             ("Content digest", self.bundle.get("contentDigest")),
             ("Region", " ".join(str(x) for x in (region.get("kind"), region.get("code"),
                                                  region.get("name")) if x)),
@@ -821,9 +846,43 @@ class Builder:
         ws.protection.sheet = True
         ws.protection.password = PASSWORD
 
+    # ---- the status on every sheet (owner, 2026-10-14) ----------------------
+    def stamp_sheets(self):
+        """The version's status, so a workbook never leaves its status in question: a banner in
+        the line color on each visible sheet (rows the layout leaves empty for it), the same
+        sentence as every sheet's print header, the tab color, and the document properties.
+        Text only in the header: a header picture would add a legacyDrawingHF part, which the
+        scenario workbook's sheet cloner refuses."""
+        line = _words.status_line(self.status)
+        # the print header on two lines, so the longest sentence fits a portrait page
+        header = "\n".join(part for part in _words.status_parts(self.status) if part)
+        color = _words.status_colors(self.status)[0].lstrip("#").upper()
+        fill = solid(color)
+        for name, row, last in STATUS_BANNERS:
+            ws = self.wb[name]
+            for col in range(1, last + 1):
+                if ws.cell(row=row, column=col).value not in (None, ""):
+                    raise ValueError(f"{name} row {row} holds content; the status banner "
+                                     "needs an empty row")
+            c = ws.cell(row=row, column=1, value=line)
+            c.font = Font(bold=True, size=11, color="FFFFFF")
+            c.fill = fill
+            c.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+            if last > 1:
+                ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=last)
+            ws.row_dimensions[row].height = 21
+        for ws in self.wb.worksheets:
+            ws.oddHeader.center.text = header
+            ws.oddHeader.center.font = "Calibri,Bold"
+            ws.oddHeader.center.color = color
+            ws.sheet_properties.tabColor = color
+        self.wb.properties.contentStatus = _words.status_label(self.status)
+        self.wb.properties.subject = line
+
     def build(self) -> bytes:
         if not self.functions:
             raise ValueError("the bundle scores no function; nothing to build a calculator from")
+        self.status = resolve_status(self.bundle, self.status)
         self.build_reference()
         self.build_metrics()
         self.build_results()
@@ -836,6 +895,7 @@ class Builder:
         self.wb.active = 1
         for ws in self.wb.worksheets:
             ws.sheet_view.tabSelected = ws.title == SCORE
+        self.stamp_sheets()
         stamp = bundle_stamp(self.bundle)
         self.wb.properties.creator = "DEEP"
         self.wb.properties.lastModifiedBy = "DEEP"
@@ -968,17 +1028,33 @@ def _support_text(metric: dict) -> str:
     return f"{int(n)} reference sites" if isinstance(n, (int, float)) else ""
 
 
-def version_line(bundle: dict) -> str:
+def version_line(bundle: dict, status: Optional[str] = None) -> str:
+    """``Version N | Draft | <citation>`` under the score sheet's title: the label people
+    read (Final, never Certified)."""
     lib = bundle.get("library") or {}
     parts = []
     if lib.get("version") is not None:
         parts.append(f"Version {lib.get('version')}")
-    status = lib.get("status") or lib.get("lifecycle")
+    status = status or lib.get("status") or lib.get("lifecycle")
     if status:
-        parts.append(str(status).replace("_", " ").title())
+        parts.append(_words.status_label(status))
     if bundle.get("sourceCitation"):
         parts.append(str(bundle["sourceCitation"]))
     return " | ".join(parts)
+
+
+def resolve_status(bundle: dict, status: Optional[str] = None) -> str:
+    """The status a workbook is stamped with: ``status`` when given, else the one the bundle
+    carries (a baked or stamped bundle's ``lifecycle``/``status``, then its ``library`` block).
+    A workbook never guesses: with neither, this raises."""
+    lib = bundle.get("library") or {}
+    for value in (status, bundle.get("lifecycle"), bundle.get("status"), lib.get("status"),
+                  lib.get("lifecycle")):
+        key = _words.status_key(value)
+        if key:
+            return key
+    raise ValueError("no status for the calculator: pass the version's status "
+                     "(library.version_status)")
 
 
 def coverage_text(bundle: dict) -> str:
@@ -1055,9 +1131,10 @@ def repack(source: bytes, stamp: _dt.datetime) -> bytes:
     return out.getvalue()
 
 
-def build_calculator(bundle: dict) -> bytes:
-    """The calculator workbook for a published (or about to be published) bundle."""
-    return Builder(bundle).build()
+def build_calculator(bundle: dict, status: Optional[str] = None) -> bytes:
+    """The calculator workbook for a published (or about to be published) bundle, stamped with
+    ``status`` (the version's lifecycle status; see :func:`resolve_status`)."""
+    return Builder(bundle, status).build()
 
 
 def sha256_of(data: bytes) -> str:

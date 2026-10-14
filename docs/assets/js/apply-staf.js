@@ -2,8 +2,11 @@
 // calculator; its version and status ride in the button's tooltip, and the list groups the
 // ecoregions by status (owner, 2026-10-08). The Map button opens a map of the Level III ecoregions
 // (DEEP's own outlines, docs/assets/data/ecoregions-l3-map.json, built by
-// apps/deep/scripts/build_site_ecoregion_map.py): a click selects that ecoregion. Without
-// JavaScript the picker stays hidden and the noscript list of links, with EPA's PDF map, stands in.
+// apps/deep/scripts/build_site_ecoregion_map.py): a click selects that ecoregion. Drafts are
+// listed only when asked (owner, 2026-10-14): the Draft group joins the list when "Show Draft
+// assessments" is ticked (or the map key's Draft item is clicked), and until then a Draft's
+// region on the map is neutral and takes no click. Nothing is remembered. Without JavaScript the
+// picker stays hidden and the noscript list of links, with EPA's PDF map, stands in.
 (function () {
   'use strict';
 
@@ -25,6 +28,13 @@
     if (!controls.length || !select || !link) {
       return;
     }
+    var draftGroup = select.querySelector('optgroup[data-calc-draft]');
+    var toggle = route.querySelector('[data-calc-drafts]');
+    var allOptions = Array.prototype.slice.call(select.options);   // the map looks up every one
+    var restored = select.options[select.selectedIndex];
+    // a Draft the browser restored (back navigation) keeps the Drafts listed
+    var drafts = { shown: !!(draftGroup && restored && restored.parentNode === draftGroup),
+                   all: allOptions, listeners: [] };
 
     function sync() {
       var option = select.options[select.selectedIndex];
@@ -38,13 +48,36 @@
       }
     }
 
+    drafts.set = function (on) {
+      drafts.shown = !!on;
+      if (draftGroup) {
+        if (drafts.shown && !draftGroup.parentNode) {
+          select.appendChild(draftGroup);
+        } else if (!drafts.shown && draftGroup.parentNode) {
+          var current = select.options[select.selectedIndex];
+          if (current && current.parentNode === draftGroup) {
+            select.value = '';
+          }
+          select.removeChild(draftGroup);
+        }
+      }
+      if (toggle) {
+        toggle.checked = drafts.shown;
+      }
+      sync();
+      drafts.listeners.forEach(function (fn) { fn(drafts.shown); });
+    };
+
     select.addEventListener('change', sync);
+    if (toggle) {
+      toggle.addEventListener('change', function () { drafts.set(toggle.checked); });
+    }
     Array.prototype.forEach.call(controls, function (el) { el.hidden = false; });
-    sync(); // a choice the browser restored (back navigation) is honored
-    initMap(route, select);
+    drafts.set(drafts.shown); // hidden at first; a choice the browser restored is honored
+    initMap(route, select, drafts);
   }
 
-  function initMap(route, select) {
+  function initMap(route, select, drafts) {
     var opener = route.querySelector('[data-eco-map-open]');
     var dialog = route.querySelector('[data-eco-map]');
     if (!opener || !dialog || typeof dialog.showModal !== 'function' || !window.fetch) {
@@ -58,12 +91,17 @@
     var loading = null;
 
     function optionFor(code) {
-      for (var i = 0; i < select.options.length; i += 1) {
-        if (select.options[i].getAttribute('data-code') === code) {
-          return select.options[i];
+      for (var i = 0; i < drafts.all.length; i += 1) {
+        if (drafts.all[i].getAttribute('data-code') === code) {
+          return drafts.all[i];
         }
       }
       return null;
+    }
+
+    // a Draft while the Drafts are not listed: shown neutral, never chosen from the map
+    function hiddenDraft(option) {
+      return !!option && option.getAttribute('data-status') === 'Draft' && !drafts.shown;
     }
 
     function selectedCode() {
@@ -79,6 +117,9 @@
         return name + ', no calculator yet';
       }
       var status = option.getAttribute('data-status');
+      if (hiddenDraft(option)) {
+        return name + ' \u00b7 Draft (hidden)';
+      }
       return status ? name + ' \u00b7 ' + status : name;
     }
 
@@ -99,14 +140,33 @@
       return item;
     }
 
+    // the key's Draft item is the Drafts' switch too: the dialog is modal, so the page's box
+    // cannot be reached from inside it
+    function draftKeyItem() {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'eco-map-key-toggle';
+      button.setAttribute('aria-pressed', drafts.shown ? 'true' : 'false');
+      button.setAttribute('title', (drafts.shown ? 'Hide' : 'Show') + ' Draft assessments');
+      var swatch = document.createElement('i');
+      swatch.className = 'eco-map-swatch is-draft' + (drafts.shown ? '' : ' is-off');
+      swatch.setAttribute('aria-hidden', 'true');
+      button.appendChild(swatch);
+      button.appendChild(document.createTextNode('Draft'));
+      button.addEventListener('click', function () { drafts.set(!drafts.shown); });
+      return button;
+    }
+
+    var keyState = null;
     function renderKey(present, missing) {
       if (!key) {
         return;
       }
+      keyState = { present: present, missing: missing };
       key.textContent = '';
       STATUS_ORDER.forEach(function (status) {
         if (present[status]) {
-          key.appendChild(keyItem(STATUS_CLASS[status], status));
+          key.appendChild(status === 'Draft' ? draftKeyItem() : keyItem(STATUS_CLASS[status], status));
         }
       });
       if (missing) {
@@ -132,10 +192,8 @@
         var option = optionFor(region.code);
         var status = option ? option.getAttribute('data-status') : null;
         if (!option) {
-          path.classList.add('is-unavailable');
           missing = true;
         } else if (statusClass(status)) {
-          path.classList.add(statusClass(status));
           present[status] = true;
         }
         paths[region.code] = path;
@@ -166,7 +224,7 @@
       regions.addEventListener('click', function (event) {
         var code = event.target.getAttribute('data-code');
         var option = code ? optionFor(code) : null;
-        if (!option) {
+        if (!option || hiddenDraft(option)) {
           return;
         }
         select.value = option.value;
@@ -177,9 +235,37 @@
 
       canvas.textContent = '';
       canvas.appendChild(svg);
+      paint();
       renderKey(present, missing);
       markSelected();
     }
+
+    // each region's class from its option: its status, neutral when it has no calculator or is a
+    // Draft while the Drafts are not listed; on every change of the Drafts too
+    function paint() {
+      Object.keys(paths).forEach(function (code) {
+        var path = paths[code];
+        var option = optionFor(code);
+        var status = option ? option.getAttribute('data-status') : null;
+        ['is-draft', 'is-preliminary', 'is-final', 'is-unavailable', 'is-hidden'].forEach(function (c) {
+          path.classList.remove(c);
+        });
+        if (!option) {
+          path.classList.add('is-unavailable');
+        } else if (hiddenDraft(option)) {
+          path.classList.add('is-hidden');
+        } else if (statusClass(status)) {
+          path.classList.add(statusClass(status));
+        }
+      });
+    }
+    drafts.listeners.push(function () {
+      paint();
+      if (keyState) {
+        renderKey(keyState.present, keyState.missing);
+      }
+      markSelected();
+    });
 
     function load() {
       if (!loading) {

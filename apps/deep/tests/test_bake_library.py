@@ -314,7 +314,7 @@ def test_default_only_copies_the_default_calculator_only(tmp_path, libroot):
     _add_calculator(libroot, 1, b"PK-one")
     _add_calculator(libroot, 2, b"PK-two")
     result = _load_bake_module().bake(out=out, default_only=True)
-    assert result["calculators"] == {"copied": ["ecbp@v2"], "missing": []}
+    assert result["calculators"] == {"copied": ["ecbp@v2"], "missing": [], "why": {}}
     www = tmp_path / "www" / "calculators"
     assert sorted(p.name for p in www.glob("*.xlsx")) == ["ecbp.xlsx", "ecbp@v2.xlsx"]
 

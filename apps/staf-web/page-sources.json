@@ -67,7 +67,7 @@
   },
   "css/deep/deep.css": {
    "source": "apps/deep/www/deep.css",
-   "sha256": "42ddff22dc915e75b18669d6d08196991d20b0ba69082d3c03711650c7e88241"
+   "sha256": "2a66b3ce06bd4e91647985d270d6f95abe268a2eb5cf336df5a9965afaf1e4ea"
   },
   "css/deep/styles.css": {
    "source": "apps/deep/www/styles.css",
@@ -211,7 +211,7 @@
   },
   "js/deep/coverage.js": {
    "source": "apps/deep/www/coverage.js",
-   "sha256": "ffe00febc6b9ea032bc3ffa5664e00664ee3e191dabcdc98422d9385cfaf4559"
+   "sha256": "12b8128668a9b43efe4bd3509516c8f1e110c83f7db00182e95283f2d53b2b88"
   },
   "js/deep/measure.js": {
    "source": "apps/deep/www/measure.js",

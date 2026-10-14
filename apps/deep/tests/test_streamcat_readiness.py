@@ -248,7 +248,10 @@ def import_scope(tmp_path, d):
                  session=app.session, measured_values=Value({"old": {"value": 9}}),
                  computed_for=Value("old"), loaded_assessment=Value(object()), selected_ref=Value("old"),
                  current_fn=Value(1), current_step=Value("identify"), _HAS_MAP=False,
-                 _restore_scenarios=restore, _saved_fp=Value(None), _work_fp=lambda: None)
+                 _restore_scenarios=restore, _saved_fp=Value(None), _work_fp=lambda: None,
+                 # Open goes through the Draft notice (owner, 2026-10-14); these files hold no Draft
+                 _through_draft_notice=lambda raw, proceed: proceed() or True)
+    function("_restore_session", scope)
     scope["_no_watershed"].update(generation=7, anchor=ANCHOR)
     return scope
 

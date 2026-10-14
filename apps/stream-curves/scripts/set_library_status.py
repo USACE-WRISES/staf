@@ -6,8 +6,11 @@
 
 Each change is one audited record appended to the assessment's status.json, the record
 library.set_version_status writes (status, actor, timestamp, note), so nothing a version holds
-changes: not its content or digest, its calculator, its manifest or its Show in DEEP. The catalog
-is rebuilt once, after every record is written, and DEEP's registry is then rebaked
+changes: not its content or digest, its manifest or its Show in DEEP. Its calculator states its
+status (owner, 2026-10-14), so each changed version that has one gets it rebuilt with the new
+status (library.restamp_calculator, a new artifacts.json record); a version whose rebuild fails
+keeps its new status and is listed, and build_deep_calculators.py --check names it stale. The
+catalog is rebuilt once, after every record is written, and DEEP's registry is then rebaked
 (library.rebake_deep, which also rewrites the site's calculator list; canonical root only).
 
 What is selected: DEEP assessments only (an EASI method is never touched) and never the state SQT
@@ -100,11 +103,20 @@ def select(*, to: str, frm: str | None = None, kind: str | None = None,
     return out
 
 
-def apply(changes, *, to: str, actor: str, note: str | None) -> None:
-    """One status record per change, then the catalog, rebuilt once."""
+def apply(changes, *, to: str, actor: str, note: str | None) -> list:
+    """One status record per change, then each changed version's calculator restamped, then
+    the catalog, rebuilt once. Returns ``[(assessment id, version, error)]`` for the
+    calculators that could not be restamped (their status change stands)."""
     for aid, v, _old in changes:
         _retry(lib._append_status, aid, int(v), to, actor, note)
+    failed = []
+    for aid, v, _old in changes:
+        try:
+            _retry(lib.restamp_calculator, aid, int(v), actor=actor)
+        except Exception as exc:  # noqa: BLE001 - listed; a workbook never blocks a status
+            failed.append((aid, int(v), f"{type(exc).__name__}: {exc}"))
     _retry(lib._regenerate_catalog)
+    return failed
 
 
 def main(argv=None) -> int:
@@ -142,8 +154,13 @@ def main(argv=None) -> int:
     if not lib.writable():
         raise Refused(f"the library at {lib.library_root()} is not writable here")
 
-    apply(changes, to=args.to, actor=actor, note=args.note)
+    failed = apply(changes, to=args.to, actor=actor, note=args.note)
     print(f"recorded {len(changes)} status change(s); catalog rebuilt")
+    for aid, v, error in failed:
+        print(f"  calculator not restamped: {aid} v{v} ({error})")
+    if failed:
+        print(f"{len(failed)} calculator(s) left stale: build_deep_calculators.py --all "
+              "--recorded rebuilds them")
     if args.no_rebake:
         print("DEEP registry not rebaked (--no-rebake)")
     else:

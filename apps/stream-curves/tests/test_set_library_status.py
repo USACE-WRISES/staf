@@ -100,8 +100,14 @@ def test_the_change_appends_one_record_each_and_rebuilds_the_catalog_once(librar
     # nothing a version holds moved
     assert dict((p, p.read_bytes()) for p in library.rglob("manifest.json")) == manifests
     assert dict((p, p.read_bytes()) for p in library.rglob("assessment.deep.json")) == bundles
+    # but each changed version's calculator now states Draft (owner, 2026-10-14)
+    for aid, v in (("alpha", 1), ("alpha", 3), ("bravo", 1)):
+        assert lib.version_artifact(aid, v)["status"] == "draft", (aid, v)
+        assert lib.calculator_state(aid, v) == "present", (aid, v)
+    assert lib.version_artifact("keep-me", 1)["status"] == "preliminary"
+    assert len(lib.read_artifacts("keep-me")["history"]) == 1, "an unchanged version: untouched"
     out = capsys.readouterr().out
-    assert "recorded 3 status change(s)" in out
+    assert "recorded 3 status change(s)" in out and "not restamped" not in out
     assert "DEEP registry not rebaked: " in out and "(not the canonical" in out, \
         "DEEP's registry is rebuilt from apps/library only"
 
@@ -145,6 +151,20 @@ def test_a_write_held_for_a_moment_is_tried_again(library, sls, monkeypatch):
     monkeypatch.setattr(lib, "_append_status", broken)
     with pytest.raises(PermissionError):
         sls.apply([("bravo", 1, "draft")], to="preliminary", actor="GM", note=None)
+
+
+def test_a_calculator_that_cannot_be_restamped_is_listed_and_the_status_stands(library, sls,
+                                                                               monkeypatch,
+                                                                               capsys):
+    from streamcurves import deep_calculator
+    monkeypatch.setattr(deep_calculator, "build_calculator",
+                        lambda b, s=None: (_ for _ in ()).throw(RuntimeError("no")))
+    assert sls.main(["--to", "draft", "--only", "bravo", "--actor", "GM", "--no-rebake"]) == 0
+    assert _state("bravo") == ["draft"]
+    assert lib.calculator_state("bravo", 1) == "stale"
+    out = capsys.readouterr().out
+    assert "calculator not restamped: bravo v1 (RuntimeError: no)" in out
+    assert "1 calculator(s) left stale" in out
 
 
 def test_the_library_readme_names_the_script_and_the_visibility_record():

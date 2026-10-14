@@ -78,8 +78,10 @@ def _bundle(aid: str, version: int, *, name: str | None = None) -> dict:
 
 def _version(release: FakeRelease, aid: str, version: int, status: str = "preliminary", *,
              bundle: dict | None = None, calculator: bytes | None = None,
-             catalog_digest: str | None = None) -> dict:
-    """One catalog version entry, in the schema-1 shape; its assets go into the release."""
+             catalog_digest: str | None = None, calculator_status="same") -> dict:
+    """One catalog version entry, in the schema-1 shape; its assets go into the release.
+    The calculator asset states the version's status unless ``calculator_status`` names
+    another (None: a release from before workbooks carried one)."""
     bundle = bundle if bundle is not None else _bundle(aid, version)
     data = json.dumps(bundle).encode("utf-8")
     bundle_name = f"{aid}-v{version}.deep.json"
@@ -96,6 +98,9 @@ def _version(release: FakeRelease, aid: str, version: int, status: str = "prelim
         release.files[calc_name] = calculator
         assets["calculator"] = {"name": calc_name, "size": len(calculator),
                                 "sha256": _sha(calculator)}
+        stated = status if calculator_status == "same" else calculator_status
+        if stated:
+            assets["calculator"]["status"] = stated
     return {
         "version": version,
         "status": status,
@@ -653,19 +658,47 @@ def test_template_for_serves_a_remote_only_version_its_workbook(release, tmp_pat
     other = assessments.LoadedAssessment.from_dict({**la.raw, "contentDigest": "sha256:" + "1" * 64})
     assert calculator.template_for(other, nothing_baked) is None
 
-    # a baked workbook recorded for the same content still comes first
+    # a baked workbook recorded for the same content and status still comes first
     baked = tmp_path / "baked"
     baked.mkdir()
     (baked / "zz-alpha@v2.xlsx").write_bytes(b"PK baked")
-    (baked / "index.json").write_text(json.dumps({"schemaVersion": 1, "calculators": {
-        "zz-alpha@v2": {"file": "zz-alpha@v2.xlsx", "contentDigest": two["contentDigest"]}}}),
-        encoding="utf-8")
+    (baked / "index.json").write_text(json.dumps({"schemaVersion": 2, "calculators": {
+        "zz-alpha@v2": {"file": "zz-alpha@v2.xlsx", "contentDigest": two["contentDigest"],
+                        "status": "preliminary"}}}), encoding="utf-8")
     calculator.clear_cache()
     assert calculator.template_for(la, baked) == b"PK baked"
+
+    # a baked copy stamped before the status changed gives way to the release's
+    (baked / "index.json").write_text(json.dumps({"schemaVersion": 2, "calculators": {
+        "zz-alpha@v2": {"file": "zz-alpha@v2.xlsx", "contentDigest": two["contentDigest"],
+                        "status": "draft"}}}), encoding="utf-8")
+    calculator.clear_cache()
+    assert calculator.template_for(la, baked) == calc
 
     # with the remote library off, the remote-only version has no workbook
     monkeypatch.setenv("DEEP_REMOTE_LIBRARY", "0")
     assert calculator.template_for(la, nothing_baked) is None
+
+
+def test_a_workbook_stating_another_status_or_none_is_never_handed_out(release, tmp_path):
+    """Every workbook states its version's status (owner, 2026-10-14). The release names the
+    status each calculator states; one that states another, or none (a release from before),
+    is not this version's workbook."""
+    two, three = _bundle("zz-alpha", 2), _bundle("zz-alpha", 3)
+    _publish(release, ("zz-alpha", [
+        _version(release, "zz-alpha", 2, "draft", bundle=two, calculator=b"PK two",
+                 calculator_status="preliminary"),
+        _version(release, "zz-alpha", 3, bundle=three, calculator=b"PK three",
+                 calculator_status=None)]))
+    _refresh()
+    assert remote_library.calculator_path("zz-alpha", 2, status="draft") is None
+    assert remote_library.calculator_path("zz-alpha", 2, status="preliminary") is not None
+    assert remote_library.calculator_path("zz-alpha", 3, status="preliminary") is None
+    assert remote_library.calculator_path("zz-alpha", 3) is not None   # asked without a status
+    nothing_baked = tmp_path / "no-calculators"
+    calculator.clear_cache()
+    assert calculator.template_for(assessments.load_ref("zz-alpha@v2"), nothing_baked) is None
+    assert calculator.template_for(assessments.load_ref("zz-alpha@v3"), nothing_baked) is None
 
 
 def test_a_local_folder_can_stand_in_for_the_release(release, tmp_path, monkeypatch):

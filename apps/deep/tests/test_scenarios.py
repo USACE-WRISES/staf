@@ -144,6 +144,22 @@ def test_the_summary_lists_each_scenarios_claim_under_the_scores(la, template):
     assert len(list(ws.conditional_formatting)) == 1
 
 
+def test_every_tab_of_the_workbook_states_the_assessments_status(la, template):
+    """Owner, 2026-10-14: the Summary and ReferenceCurves tabs carry the status band the
+    calculator's own sheets carry, and every scenario's score sheet keeps the calculator's."""
+    openpyxl = pytest.importorskip("openpyxl")
+    from deep import session
+    line = session.status_line(session.lifecycle_status(la.raw))
+    sset = _set(la)
+    rows = [(s, s.state["measured_values"]) for s in sset.items]
+    wb = openpyxl.load_workbook(io.BytesIO(workbook.build(template, la, DELIN, rows, today=TODAY)))
+    assert wb["Summary"]["A3"].value == line and wb["ReferenceCurves"]["A3"].value == line
+    for name in ("Existing Conditions", "Restore riparian"):
+        assert wb[name]["A4"].value == line, name
+    for ws in wb.worksheets:
+        assert ws.oddHeader.center.text.startswith(line.split(". ", 1)[0] + "."), ws.title
+
+
 def _sheet_xml(z, book, name):
     rid = re.search(r'<sheet\b[^>]*name="%s"[^>]*r:id="([^"]+)"' % re.escape(name), book)
     rid = rid or re.search(r'<sheet\b[^>]*r:id="([^"]+)"[^>]*name="%s"' % re.escape(name), book)
@@ -366,8 +382,10 @@ def _report_wiring(base: str):
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
     assert 'href="staf/staf.css?v=11"' in SRC
+    # named with the assessment, its version and its status (owner, 2026-10-14)
     for ext in ("pdf", "csv", "geojson"):
-        assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
+        assert (f'{base}(\n        loaded_assessment(), staf_web.scenario_suffix(_sc["set"]), '
+                f'"{ext}"))') in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in pdf
 
@@ -381,4 +399,9 @@ def test_each_report_names_its_scenario_and_compares_nothing(la, monkeypatch):
     plain = _pdf_text(report.build_pdf(DELIN, la, mv, sc))
     assert "Scenario: Restore riparian" in named and "Replant the buffer" in named
     assert "Scenario:" not in plain
-    _report_wiring("deep-report")
+    _report_wiring("report.report_filename")
+    stem = la.raw.get("assessmentId")
+    assert report.report_filename(la, "-restore-riparian", "pdf").startswith(f"deep-report-{stem}-v")
+    assert report.report_filename(la, "", "csv").endswith(
+        "-" + __import__("deep.session", fromlist=["x"]).status_slug(
+            __import__("deep.session", fromlist=["x"]).lifecycle_status(la.raw)) + ".csv")

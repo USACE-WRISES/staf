@@ -74,13 +74,20 @@ SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its nearest StreamCat reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 #: The assessment regions' colors by status (owner, 2026-10-08): Draft gray, Preliminary amber,
-#: Final blue, outline over a light fill. www/coverage.js STATUS holds the same colors
+#: Final blue, outline over a light fill, from the one palette in deep/session.py (the files'
+#: status bands use it too). www/coverage.js STATUS holds the same colors
 #: (tests/test_region_status.py keeps them equal); hover and selection stay navy (#2f4b7c).
-REGION_STATUS_STYLE = {
-    "draft": {"label": "Draft", "color": "#475569", "fillColor": "#6b6459"},
-    "preliminary": {"label": "Preliminary", "color": "#b45309", "fillColor": "#d97706"},
-    "certified": {"label": "Final", "color": "#303f9f", "fillColor": "#3f51b5"},
-}
+REGION_STATUS_STYLE = dict(
+    (status, {"label": session.status_label(status), "color": line, "fillColor": fill})
+    for status, (line, fill) in session.STATUS_COLORS.items())
+#: The statuses the map's legend starts with turned off (owner, 2026-10-14): a Draft is for
+#: research and regional assessment development only, so its regions show when the user turns
+#: Draft on. www/coverage.js starts its ``off`` set the same way (tests keep the two equal).
+REGIONS_OFF_AT_START = ("draft",)
+#: About's list of the statuses, each with its line (deep/session.py STATUS_NOTES).
+STATUS_ABOUT = "\n".join(
+    f"- **{session.status_label(status)}** ({where} on the map): {session.status_note(status)}"
+    for status, where in (("draft", "gray"), ("preliminary", "amber"), ("certified", "blue")))
 #: The status badges, in the same three colors (styles.css .deep-badge-*).
 _BADGE_CLASS = {"draft": "deep-badge-draft", "preliminary": "deep-badge-prelim",
                 "certified": "deep-badge-cert"}
@@ -680,18 +687,53 @@ def _tier_label(tier) -> str:
     return _TIER_LABELS.get(str(tier), str(tier).replace("_", " "))
 
 
-def _ref_to_adopt(current_ref, covering):
+def _entry_lifecycle(entry) -> str:
+    """The status of a covering entry's default version."""
+    ref = entry.get("defaultRef")
+    return session.lifecycle_status({"lifecycle": (entry.get("lifecycleByRef") or {}).get(ref)})
+
+
+def _ref_to_adopt(current_ref, covering, *, drafts: bool = False):
     """The ref Basin should adopt on its own, or None to leave the choice alone.
 
     Adopting reloads the assessment, which clears every measured value, so this has to
     be one-shot: once a ref is set (automatically, by hand, by a ?assessment= link, or
-    by a restored session) it stands until the user picks another.
+    by a restored session) it stands until the user picks another. ``covering`` comes
+    Final first, then Preliminary, then Draft (``assessments.covering_refs``). A Draft is
+    adopted on its own only while ``drafts`` (Draft is on in the map's legend, owner
+    2026-10-14), and then only after its notice; otherwise Basin offers it.
     """
-    if current_ref:
+    if current_ref or not covering:
         return None
-    if not covering:
-        return None
-    return covering[0].get("defaultRef") or None
+    for entry in covering:
+        if not entry.get("defaultRef"):
+            continue
+        if not drafts and _entry_lifecycle(entry) == "draft":
+            continue
+        return entry["defaultRef"]
+    return None
+
+
+def _with_current_lifecycle(state: dict) -> dict:
+    """An opened file's assessment, with the status the library gives that version today.
+
+    A file keeps the status its assessment had when it was saved. When the library holds the
+    same version with the same content, today's status is the one to show and print (a version
+    saved as a Draft may be Preliminary now), and the one its calculator states."""
+    raw = (state or {}).get("assessment") or {}
+    ref = _session_ref(state or {}, raw)
+    if not raw or not ref:
+        return state
+    try:
+        rec = config.load_ref(ref)
+    except Exception:  # noqa: BLE001 - the file's own status stands
+        return state
+    if not rec or session.bundle_digest(rec) != session.bundle_digest(raw):
+        return state
+    life = session.lifecycle_status(rec)
+    if life == session.lifecycle_status(raw):
+        return state
+    return {**state, "assessment": {**raw, "lifecycle": life}}
 
 
 def _session_ref(state: dict, raw: dict):
@@ -738,6 +780,76 @@ def _badge_class(lifecycle) -> str:
     return _BADGE_CLASS[session.lifecycle_status({"lifecycle": lifecycle})]
 
 
+def _status_pill(lifecycle, *, cls: str = ""):
+    """The status pill (owner, 2026-10-14): DRAFT, PRELIMINARY or FINAL in the status's color
+    (styles.css .deep-badge-*, uppercase), its line of meaning on hover."""
+    life = session.lifecycle_status({"lifecycle": lifecycle})
+    return ui.span(session.status_label(life),
+                   class_=f"deep-card-badge {_badge_class(life)}" + (f" {cls}" if cls else ""),
+                   title=session.status_note(life))
+
+
+def _version_of(raw):
+    """The version a bundle is: its library block's, else the stamped top-level one."""
+    raw = raw or {}
+    lib = raw.get("library") or {}
+    return lib.get("version") if lib.get("version") is not None else raw.get("version")
+
+
+def _assessment_line(name, version, lifecycle):
+    """The worksheet's first line (owner, 2026-10-14): the assessment in use, its version and its
+    status, so the page never leaves the status in question. A long name ends in an ellipsis
+    (deep.css); its title holds it whole."""
+    life = session.lifecycle_status({"lifecycle": lifecycle})
+    return ui.div(
+        ui.span(name, class_="deep-ws-name", title=name),
+        (ui.span(f"v{version}", class_="deep-ws-ver") if version not in (None, "") else None),
+        _status_pill(life),
+        class_="deep-ws-assess", **{"data-status": life})
+
+
+def _report_heading(la):
+    """The report's heading: the assessment's name and its status pill."""
+    if la is None:
+        return ui.h3("Detailed assessment", style="margin:0;")
+    return ui.h3(la.assessment_name,
+                 _status_pill(session.lifecycle_status(la.raw), cls="deep-report-pill"),
+                 style="margin:0;")
+
+
+def _draft_notice(name, version):
+    """What DEEP asks before it uses a Draft (owner, 2026-10-14), once per visit: Use the Draft
+    goes on, Cancel leaves everything as it was. Escape and the backdrop do not dismiss it."""
+    return ui.modal(
+        _assessment_line(name, version, "draft"),
+        ui.p(session.status_note("draft"), class_="deep-draft-note"),
+        title="Draft assessment",
+        footer=ui.TagList(ui.modal_button("Cancel"),
+                          ui.input_action_button("draft_accept", "Use the Draft",
+                                                 class_="btn-primary")),
+        easy_close=False)
+
+
+def _draft_pending_block(entry, *, several: bool = False):
+    """Basin when only Drafts cover the site and none is in use (owner, 2026-10-14): the Draft
+    that applies and the way to use it (or Choose, when several do), through the notice."""
+    ref = entry.get("defaultRef") or ""
+    version = (entry.get("versionByRef") or {}).get(ref)
+    line = " · ".join(x for x in (entry.get("regionName") or "",
+                                   f"v{version}" if version else "") if x)
+    return ui.div(
+        ui.div(ui.span("Assessment", class_="deep-pane-label"), _status_pill("draft"),
+               class_="deep-pane-head"),
+        ui.div(entry.get("assessmentName") or entry.get("assessmentId") or "",
+               class_="deep-pane-name"),
+        (ui.div(line, class_="deep-pane-line") if line else None),
+        ui.div(session.status_note("draft"), class_="deep-pane-note"),
+        ui.div(ui.input_action_link("change_assessment", "Choose") if several
+               else ui.input_action_link("use_draft", "Use the Draft"),
+               class_="deep-pane-change"),
+        class_="deep-pane-assess is-draft")
+
+
 def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = True):
     """The resolved-assessment block that sits under the basin card.
 
@@ -746,7 +858,6 @@ def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = Tru
     one candidate almost every time.
     """
     f = _assessment_facts(la, ref)
-    badge_cls = _badge_class(f["lifecycle"])
     meta = ([f'v{f["version"]}'] if f["version"] else []) + [f["counts"]]
     lines = []
     if f["region"]:
@@ -755,8 +866,7 @@ def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = Tru
     if f["tier"]:
         lines.append(ui.div(f'Reference tier: {f["tier"]}', class_="deep-pane-line"))
     if f["lifecycle"] == "draft":
-        lines.append(ui.div("Draft assessment: its curves have not been reviewed yet.",
-                            class_="deep-pane-note"))
+        lines.append(ui.div(session.status_note("draft"), class_="deep-pane-note"))
     if f["best_available"]:
         lines.append(ui.div("Scores compare the site with the best remaining streams of the "
                             "region, not with unimpaired condition.", class_="deep-pane-note"))
@@ -764,9 +874,7 @@ def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = Tru
         lines.append(ui.div("This assessment's region does not contain your site.",
                             class_="deep-pane-caution"))
     return ui.div(
-        ui.div(ui.span("Assessment", class_="deep-pane-label"),
-               ui.span(session.status_label(f["lifecycle"]),
-                       class_=f"deep-card-badge {badge_cls}"),
+        ui.div(ui.span("Assessment", class_="deep-pane-label"), _status_pill(f["lifecycle"]),
                class_="deep-pane-head"),
         ui.div(f["name"], class_="deep-pane-name"),
         *lines,
@@ -896,11 +1004,13 @@ def _region_key(regions):
         rgb = tuple(int(style["fillColor"][i:i + 2], 16) for i in (1, 3, 5))
         swatch = (f"--swatch-line:{style['color']};"
                   f"--swatch-fill:rgba({rgb[0]},{rgb[1]},{rgb[2]},.28);")
+        off = status in REGIONS_OFF_AT_START        # Drafts start hidden (owner, 2026-10-14)
         rows.append(ui.div(ui.span(class_="deep-reg-sw", style=swatch),
                            ui.div(style["label"], class_="easi-legend-label"),
-                           class_="easi-legend-row deep-reg-row", role="button", tabindex="0",
-                           title=f"Hide {style['label']} regions",
-                           **{"data-status": status, "aria-pressed": "true"}))
+                           class_="easi-legend-row deep-reg-row" + (" is-off" if off else ""),
+                           role="button", tabindex="0",
+                           title=f"{'Show' if off else 'Hide'} {style['label']} regions",
+                           **{"data-status": status, "aria-pressed": "false" if off else "true"}))
     if not rows:
         return None
     return ui.div(ui.div("Assessment regions", class_="easi-legend-sub"), *rows,
@@ -1130,7 +1240,7 @@ TOOL_FULL_NAME = "Detailed Evaluation of Ecosystem Processes"
 
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
 HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=27"),
-        ui.tags.link(rel="stylesheet", href="deep.css?v=17"),
+        ui.tags.link(rel="stylesheet", href="deep.css?v=18"),
         ui.tags.link(rel="stylesheet", href="staf/staf.css?v=11"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
@@ -1143,7 +1253,7 @@ HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=27"),
         ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
         ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
         ui.tags.script(src="measure.js?v=8", defer=""),
-        ui.tags.script(src="coverage.js?v=11", defer=""))
+        ui.tags.script(src="coverage.js?v=12", defer=""))
 
 
 def _nav_actions(prefix=""):
@@ -1462,6 +1572,41 @@ def server(input, output, session_):  # noqa: C901
                     "batch": None, "batches": None}
     _no_watershed: dict = {}                   # the pending continuation after an engine failure
 
+    # The Draft notice (owner, 2026-10-14): a Draft is for research and regional assessment
+    # development only, so DEEP asks before it uses one, once per visit (this session; nothing
+    # is stored). Every way an assessment comes into use goes through the gate: the automatic
+    # pick at Basin, Use the Draft, the Change dialog, a link and Open.
+    _draft = {"accepted": False, "pending": None, "asked": None}
+    drafts_shown = reactive.value(False)        # Draft is on in the map's legend (coverage.js)
+
+    def _through_draft_notice(raw, proceed) -> bool:
+        """Run ``proceed()`` now, unless ``raw`` (the bundle about to be in use) is a Draft not
+        yet accepted this visit: then show the notice, and Use the Draft runs it. True when it
+        ran now."""
+        if _draft["accepted"] or session.lifecycle_status(raw or {}) != "draft":
+            proceed()
+            return True
+        _cancel_report()                         # a finishing report must not replace the notice
+        _draft["pending"] = proceed
+        raw = raw or {}
+        ui.modal_show(_draft_notice(raw.get("assessmentName") or raw.get("assessmentId") or "",
+                                    _version_of(raw)))
+        return False
+
+    @reactive.effect
+    @reactive.event(input.draft_accept)
+    def _draft_accepted():
+        proceed, _draft["pending"] = _draft["pending"], None
+        _draft["accepted"] = True
+        ui.modal_remove()
+        if proceed is not None:
+            proceed()
+
+    @reactive.effect
+    @reactive.event(input.coverage_drafts)
+    def _drafts_toggled():
+        drafts_shown.set(input.coverage_drafts() is True)
+
     # One-shot deep-link ingest from the URL query string:
     #   ?assessment=<assessmentId>            -> load that library/predefined assessment (latest)
     #   ?assessment=<assessmentId>@<version>  -> same, noting when the requested version is not
@@ -1502,18 +1647,22 @@ def server(input, output, session_):  # noqa: C901
             ui.notification_show(f"Could not open the linked assessment: {exc}",
                                  type="error", duration=8)
             return
-        loaded_assessment.set(la); selected_ref.set(resolved_ref)
-        _coverage["focus"] = True                    # the map shows the linked region
-        measured_values.set({}); current_fn.set(0)
-        _reset_scenarios()
-        current_step.set(STEP_IDENTIFY)
-        if requested_ref and resolved_ref != requested_ref:
-            ui.notification_show(
-                f"Requested v{req_version} of {la.assessment_name} is not available; "
-                f"loaded {resolved_ref.split('@')[-1]} instead.", type="warning", duration=7)
-        else:
-            ui.notification_show(f"Loaded {la.assessment_name} from link.",
-                                 type="message", duration=4)
+
+        def _open():
+            loaded_assessment.set(la); selected_ref.set(resolved_ref)
+            _coverage["focus"] = True                    # the map shows the linked region
+            measured_values.set({}); current_fn.set(0)
+            _reset_scenarios()
+            current_step.set(STEP_IDENTIFY)
+            if requested_ref and resolved_ref != requested_ref:
+                ui.notification_show(
+                    f"Requested v{req_version} of {la.assessment_name} is not available; "
+                    f"loaded {resolved_ref.split('@')[-1]} instead.", type="warning", duration=7)
+            else:
+                ui.notification_show(f"Loaded {la.assessment_name} from link.",
+                                     type="message", duration=4)
+        # a linked Draft opens after its notice; Cancel opens DEEP with nothing loaded
+        _through_draft_notice(la.raw, _open)
 
     # Assessment regions (www/coverage.js): the outlines of the available assessments for the
     # sidebar and the map layer, sent once per session in answer to the page's ready handshake
@@ -2441,9 +2590,8 @@ def server(input, output, session_):  # noqa: C901
             "reference curve and the reference tier it was drawn at), and turns your measured "
             "metric values into function scores that roll up to Physical / Chemical / Biological "
             "outcome sub-indices and an Ecosystem Condition Index. Assessments are built in the "
-            "companion StreamCurves builder, and each is labeled with its status: a Draft (gray "
-            "on the map) has not been reviewed yet, a Preliminary one (amber) has been reviewed, "
-            "and a Final one (blue) has been certified by the scientific team.\n\n"
+            "companion StreamCurves builder, and each is labeled with its status:\n\n"
+            + STATUS_ABOUT + "\n\n"
             "Two watershed engines answer the desktop metrics. The STAF site engine "
             "computes the HR reach watershed: the drainage area of the high-resolution "
             "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
@@ -2468,7 +2616,8 @@ def server(input, output, session_):  # noqa: C901
             "connector. It changes only the display. Zoomed out, the shaded regions are "
             "DEEP's assessments, colored by status (gray Draft, amber Preliminary, blue "
             "Final): hover one for its name, click it to zoom in, or find one "
-            "in the **Assessment regions** list. Every click "
+            "in the **Assessment regions** list. Draft regions stay hidden until you turn on "
+            "**Draft** in the map's legend. Every click "
             "snaps to the high-resolution NHD. Wait for the StreamCat lookup to finish "
             "before clicking **Delineate**. Temporary failures are retried up to three "
             "times after waits of 5, 10, and 15 seconds. If the lookup fails, the point stays on the map; "
@@ -2478,7 +2627,9 @@ def server(input, output, session_):  # noqa: C901
             "minutes on a large basin.\n"
             "2. **Basin**: review the watershed and reach. The published assessment "
             "whose area of applicability covers your site is resolved here (Final before "
-            "Preliminary before Draft); use **Change** when more than one applies.\n"
+            "Preliminary before Draft); use **Change** when more than one applies. A Draft is "
+            "resolved only while Draft is on in the legend, and otherwise **Use the Draft** "
+            "offers it. DEEP asks you to accept a Draft before it uses one, once per visit.\n"
             "3. **Assessment**: enter each metric's measured value; the reference curve converts "
             "it to an index and the function and outcome scores update live. Metrics DEEP can "
             "answer from desktop data fill in on their own, marked **Desktop**, and stay "
@@ -2719,14 +2870,24 @@ def server(input, output, session_):  # noqa: C901
 
     @reactive.effect
     def _resolve_assessment():
-        """Adopt an assessment as soon as there is a basin for it to apply to."""
+        """Adopt an assessment as soon as there is a basin for it to apply to. A Draft is
+        adopted only while Draft is on in the legend, and asked about once per site: after
+        a Cancel, Basin offers Use the Draft instead of asking again."""
         if not _current_delineation():
             return
         covering = _covering_here()
         with reactive.isolate():
-            ref = _ref_to_adopt(selected_ref(), covering)
-        if ref:
-            _load_ref_into_state(ref, quiet=True)
+            ref = _ref_to_adopt(selected_ref(), covering, drafts=drafts_shown())
+            site = _map_pick["generation"]
+        if not ref:
+            return
+        draft = any(e.get("defaultRef") == ref and _entry_lifecycle(e) == "draft"
+                    for e in covering)
+        if draft and not _draft["accepted"]:
+            if _draft["asked"] == site:
+                return
+            _draft["asked"] = site
+        _load_ref_into_state(ref, quiet=True)
 
     @render.ui
     def assess_pane():
@@ -2735,6 +2896,9 @@ def server(input, output, session_):  # noqa: C901
         covering = _covering_here()
         la = loaded_assessment()
         if la is None:
+            drafts = [e for e in covering if _entry_lifecycle(e) == "draft"]
+            if drafts and len(drafts) == len(covering):
+                return _draft_pending_block(drafts[0], several=len(drafts) > 1)
             return _no_assessment_block(has_candidates=bool(covering))
         return _assessment_pane_block(
             la, selected_ref(),
@@ -2761,15 +2925,13 @@ def server(input, output, session_):  # noqa: C901
             default_life = life_by_ref.get(entry["defaultRef"], "preliminary")
             tier_by_ref = entry.get("referenceTierByRef") or {}
             default_tier = _tier_label(tier_by_ref.get(entry["defaultRef"]))
-            badge_cls = _badge_class(default_life)
             is_sel = sel is not None and sel in refs
             pick_label = "✓ Selected" if is_sel else "Select this assessment"
             pick_cls = "btn btn-sm btn-primary" if is_sel else "btn btn-sm btn-outline-primary"
             cards.append(ui.div(
                 ui.div(
                     ui.span(entry["assessmentName"], class_="deep-card-name"),
-                    ui.span(session.status_label(default_life),
-                            class_=f"deep-card-badge {badge_cls}"),
+                    _status_pill(default_life),
                     class_="deep-card-head"),
                 ui.div(entry.get("regionName") or "", class_="deep-card-region"),
                 (ui.div(ui.span("Reference tier", class_="deep-card-verlabel"),
@@ -2799,19 +2961,32 @@ def server(input, output, session_):  # noqa: C901
                                easy_close=True, footer=ui.modal_button("Cancel")))
 
     def _load_ref_into_state(ref: str, *, quiet: bool = False) -> bool:
+        """Put ``ref`` in use. A Draft waits for its notice: False then (the notice is showing),
+        and when the load failed."""
         try:
             la = assessments.load_ref(ref)
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
             return False
-        loaded_assessment.set(la)
-        selected_ref.set(ref)
-        measured_values.set({})
-        _reset_scenarios()
-        current_fn.set(0)
-        if not quiet:
-            ui.notification_show(f"Selected {la.assessment_name}.", type="message", duration=3)
-        return True
+
+        def _adopt():
+            loaded_assessment.set(la)
+            selected_ref.set(ref)
+            measured_values.set({})
+            _reset_scenarios()
+            current_fn.set(0)
+            if not quiet:
+                ui.notification_show(f"Selected {la.assessment_name}.", type="message", duration=3)
+        return _through_draft_notice(la.raw, _adopt)
+
+    @reactive.effect
+    @reactive.event(input.use_draft)
+    def _use_draft():
+        """Basin's Use the Draft: the Draft that covers the site, through the notice."""
+        _cancel_report()
+        drafts = [e for e in _covering_here() if _entry_lifecycle(e) == "draft"]
+        if drafts and drafts[0].get("defaultRef"):
+            _load_ref_into_state(drafts[0]["defaultRef"])
 
     def _make_pick_handler(idx: int):
         @reactive.effect
@@ -3152,6 +3327,16 @@ def server(input, output, session_):  # noqa: C901
                                 {"data-idx": str(idx)}, class_=cls))
         return ui.TagList(*items)
 
+    def _ws_line():
+        """The worksheet's first line: the assessment in use, its version and its status
+        (owner, 2026-10-14). Inside the function panel, whose footer keeps to the bottom."""
+        with reactive.isolate():
+            la = loaded_assessment()
+        if la is None:
+            return None
+        return _assessment_line(la.assessment_name, _version_of(la.raw),
+                                session.lifecycle_status(la.raw))
+
     @render.ui
     def fn_panel():
         if current_step() not in (STEP_MEASURE, STEP_REPORT):
@@ -3168,7 +3353,8 @@ def server(input, output, session_):  # noqa: C901
         if fn.get("unassessed"):
             with reactive.isolate():
                 panel = _unassessed_panel(fn, loaded_assessment(), eyebrow=eyebrow)
-            return ui.div(panel, _fn_footer(idx, len(fns)), class_="sfari-fnpanel-inner")
+            return ui.div(_ws_line(), panel, _fn_footer(idx, len(fns)),
+                          class_="sfari-fnpanel-inner")
         with reactive.isolate():
             mvs = measured_values()
             _sc, fresults = scored()
@@ -3191,6 +3377,7 @@ def server(input, output, session_):  # noqa: C901
         total = len(fn.get("metrics", []))
         entered = sum(1 for mm in fn.get("metrics", []) if _is_entered(mvs.get(mm["metricId"])))
         return ui.div(
+            _ws_line(),
             _fn_head(eyebrow, fn.get("functionName", "")),
             ui.div(_sec_lbl(entered, total), *rows, class_="sfari-ev-card"),
             _scorecard(fid, fr.score if fr else None),
@@ -3476,7 +3663,7 @@ def server(input, output, session_):  # noqa: C901
         minimap = minimap_html
         header = ui.div(
             ui.div(
-                ui.h3(la.assessment_name if la else "Detailed assessment", style="margin:0;"),
+                _report_heading(la),
                 ui.div(f"{(la.source_citation if la else '')} · {dl.get('gnis_name') or '(unnamed reach)'}",
                        style="font-size:12px;color:#667;margin-top:3px;"),
                 ui.div(f"Lat/Lon {coord}  ·  COMID {dl.get('comid')}  ·  HUC8 {dl.get('huc8')}",
@@ -3766,8 +3953,9 @@ def server(input, output, session_):  # noqa: C901
             pdf = report.build_field_forms_pdf(la, ref=selected_ref() or "",
                                                measured=measured_values(),
                                                delineation=delin() or {})
+        name = report.field_forms_filename(la)
         return Response(pdf, media_type="application/pdf",
-                        headers={"Content-Disposition": "inline; filename=deep-field-forms.pdf",
+                        headers={"Content-Disposition": f"inline; filename={name}",
                                  "Cache-Control": "no-store"})
 
     _ff_preview_url = session_.dynamic_route("field_forms_preview", _ff_preview_route)
@@ -3801,19 +3989,22 @@ def server(input, output, session_):  # noqa: C901
         _saved_fp.set(_work_fp())
         yield session.dump(delin() or {}, _assessment_raw(), _session_scenarios(), region=_site_region())
 
-    @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.csv")
+    @render.download(filename=lambda: report.report_filename(
+        loaded_assessment(), staf_web.scenario_suffix(_sc["set"]), "csv"))
     def dl_csv():
         sc, _fr = scored()
         yield report.build_csv(delin() or {}, loaded_assessment(), measured_values(), sc,
                                region=_site_region())
 
-    @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.geojson")
+    @render.download(filename=lambda: report.report_filename(
+        loaded_assessment(), staf_web.scenario_suffix(_sc["set"]), "geojson"))
     def dl_geojson():
         sc, _fr = scored()
         yield report.build_geojson(delin() or {}, loaded_assessment(), sc, region=_site_region(),
                                    measured=measured_values())
 
-    @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.pdf")
+    @render.download(filename=lambda: report.report_filename(
+        loaded_assessment(), staf_web.scenario_suffix(_sc["set"]), "pdf"))
     def dl_pdf():
         sc, _fr = scored()
         yield report.build_pdf(delin() or {}, loaded_assessment(), measured_values(), sc,
@@ -3858,6 +4049,13 @@ def server(input, output, session_):  # noqa: C901
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
             return
+        # today's status of the same version, then a Draft's notice; Cancel leaves the work
+        # on screen as it is
+        st = _with_current_lifecycle(st)
+        _through_draft_notice(st.get("assessment") or {}, lambda: _restore_session(st))
+
+    def _restore_session(st):
+        """Put an opened assessment file on screen: its site, its assessment, its scenarios."""
         _map_pick["generation"] += 1
         d = st.get("delineation") or {}
         delin.set(d)

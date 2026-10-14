@@ -1,6 +1,7 @@
 """A small worksheet writer for the authored sheets (Summary, ReferenceCurves): inline strings,
 numbers, formulas with stored results, merges, column widths, a frozen header, conditional formats,
-the printed page, and an optional drawing. Elements are written in the order the schema requires."""
+the printed page, an optional print header and tab color, and an optional drawing. Elements are
+written in the order the schema requires."""
 from __future__ import annotations
 
 import math
@@ -55,6 +56,8 @@ class SheetWriter:
         self.orientation = "landscape"
         self.fit_height = 0                  # 0 = as many pages tall as needed
         self.center_horizontally = False
+        self.header: Optional[tuple] = None  # (text, RRGGBB): the print header, centred and bold
+        self.tab_color: Optional[str] = None  # RRGGBB
 
     def _put(self, ref: str, xml_body: str, style: Optional[int], cell_type: Optional[str] = None) -> None:
         col, row = split_ref(ref)
@@ -146,12 +149,21 @@ class SheetWriter:
                 f'<mergeCell ref="{m}"/>' for m in self.merges) + "</mergeCells>"
         drawing = f'<drawing r:id="{self.drawing_rid}"/>' if self.drawing_rid else ""
         options = '<printOptions horizontalCentered="1"/>' if self.center_horizontally else ""
-        margins = '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>'
+        # a print header of up to two lines needs more paper above the sheet
+        top = "0.8" if self.header else "0.6"
+        margins = (f'<pageMargins left="0.5" right="0.5" top="{top}" bottom="0.6" header="0.3" '
+                   'footer="0.3"/>')
         setup = (f'<pageSetup orientation="{self.orientation}" fitToWidth="1" '
                  f'fitToHeight="{int(self.fit_height)}"/>')
+        header = ""
+        if self.header:
+            text, color = self.header
+            code = '&C&"Calibri,Bold"&K' + color + _NOT_XML.sub("", str(text)).replace("&", "&&")
+            header = f"<headerFooter><oddHeader>{escape(code)}</oddHeader></headerFooter>"
+        tab = f'<tabColor rgb="FF{self.tab_color}"/>' if self.tab_color else ""
         return (f'<worksheet xmlns="{NS_MAIN}" xmlns:r="{NS_R}">'
-                '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>'
+                f'<sheetPr>{tab}<pageSetUpPr fitToPage="1"/></sheetPr>'
                 f"{dim}<sheetViews>{view}</sheetViews>"
                 '<sheetFormatPr defaultRowHeight="15"/>'
                 f"{cols}<sheetData>{''.join(rows)}</sheetData>{merges}{self._conditional_xml()}"
-                f"{options}{margins}{setup}{drawing}</worksheet>")
+                f"{options}{margins}{setup}{header}{drawing}</worksheet>")

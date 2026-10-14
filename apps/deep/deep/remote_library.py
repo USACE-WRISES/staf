@@ -158,6 +158,9 @@ class CatalogVersion:
     calculator: Optional[Asset] = None
     #: False when StreamCurves' Show in DEEP is off (``visibleInDeep: false``).
     visible: bool = True
+    #: The status the release calculator states (its asset's ``status``, owner 2026-10-14);
+    #: None when the release does not say (a workbook from before calculators carried one).
+    calculator_status: Optional[str] = None
 
     @property
     def ref(self) -> str:
@@ -234,14 +237,17 @@ def _parse_version(aid: str, raw) -> Optional[CatalogVersion]:
     if bundle is None:
         logger.warning("remote library: skipped %s, which has no usable bundle asset", ref)
         return None
-    calculator = None
+    calculator, calculator_status = None, None
     if assets.get("calculator") is not None:
         calculator = _parse_asset(assets.get("calculator"))
         if calculator is None:
             logger.warning("remote library: %s lists an unusable calculator; "
                            "it is served without one", ref)
+        else:
+            stated = assets["calculator"].get("status")
+            calculator_status = stated.strip().lower() if isinstance(stated, str) else None
     return CatalogVersion(aid, number, status, _norm_digest(raw.get("contentDigest")),
-                          bundle, calculator)
+                          bundle, calculator, calculator_status=calculator_status or None)
 
 
 def parse_catalog(raw) -> Catalog:
@@ -316,6 +322,8 @@ class CalculatorFile:
     #: The content digest of the bundle the workbook belongs to (the catalog's,
     #: else the bundle's own), in :func:`_norm_digest` spelling; None when unknown.
     content_digest: Optional[str]
+    #: The status the workbook states, as the catalog records it; None when unknown.
+    status: Optional[str] = None
 
 
 @dataclass(frozen=True, eq=False)
@@ -550,7 +558,8 @@ class _Library:
             if v.calculator is not None:
                 calculators[v.ref] = CalculatorFile(
                     str(files[v.calculator]),
-                    v.content_digest or _norm_digest(bundle.get("contentDigest")))
+                    v.content_digest or _norm_digest(bundle.get("contentDigest")),
+                    v.calculator_status)
         if download:
             _write_atomic(self.catalog_file, body)
         with self.lock:
@@ -721,14 +730,17 @@ def catch_up(timeout: float) -> bool:
 
 
 def calculator_path(assessment_id: str, version,
-                    content_digest: Optional[str] = None) -> Optional[Path]:
+                    content_digest: Optional[str] = None, *,
+                    status: Optional[str] = None) -> Optional[Path]:
     """The cached release calculator of ``assessment_id`` version ``version``, or None.
 
     Only the eligible versions of the current snapshot have one (downloaded and
     sha256-checked by the refresh). With ``content_digest`` (the loaded
     bundle's) the path comes back only when the workbook belongs to that
     content: the catalog's digest for the version, else its bundle's own, must
-    equal it, so a workbook built for other curves is never handed out.
+    equal it, so a workbook built for other curves is never handed out. With
+    ``status`` (the one DEEP shows the version with) it comes back only when the
+    catalog records the workbook stating that status (owner, 2026-10-14).
     """
     try:
         ref = f"{assessment_id}@v{int(version)}"
@@ -739,6 +751,8 @@ def calculator_path(assessment_id: str, version,
         return None
     if content_digest is not None and (
             not entry.content_digest or _norm_digest(content_digest) != entry.content_digest):
+        return None
+    if status is not None and entry.status != status:
         return None
     path = Path(entry.path)
     return path if path.is_file() else None

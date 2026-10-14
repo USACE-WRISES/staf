@@ -144,7 +144,7 @@ class Book:
     def __init__(self, bundle: dict, folder: Path):
         self.bundle = bundle
         self.path = folder / "calculator.xlsx"
-        self.path.write_bytes(dc.build_calculator(bundle))
+        self.path.write_bytes(dc.build_calculator(bundle, "draft"))
         wb = openpyxl.load_workbook(self.path)
         self.names = {k: v.attr_text for k, v in wb.defined_names.items()}
         self.entries = [n for n in self.names if n.startswith(("in_", "st_", "site_"))]
@@ -336,7 +336,7 @@ def test_the_installed_excel_agrees(tmp_path):
     curves, measure, LoadedAssessment = _deep()
     bundle = _synthetic()
     path = tmp_path / "calculator.xlsx"
-    path.write_bytes(dc.build_calculator(bundle))
+    path.write_bytes(dc.build_calculator(bundle, "draft"))
     la = LoadedAssessment.from_dict(bundle)
     state = {"spring-phab-xembed": {"value": 3.0, "stratum": "ge_2"},
              "spring-pctimp2019ws": {"value": 12.0}, "spring-step": {"value": 5.0}}

@@ -20,6 +20,8 @@ import {
   coverageLabel, desktopBasisLabel, functionRows, pyStrOf, rows, sourceCellText, streamcatReachLabel, watershedBasisLabel, withheldRows,
 } from './report'
 import { flaggedSummary, referenceMethodStatement, withheld, withheldNote } from './support'
+import { statusLabel, statusLine } from '../../app/deepStatus'
+import { pageMarker, TOP_MARGIN_IN } from './statusmark'
 
 /** str.title() */
 function pyTitle(s: string): string {
@@ -46,10 +48,13 @@ export interface DeepPdfOptions {
 /** build_pdf: the report for the scored assessment ("DEEP Detailed Assessment Report"). */
 export async function buildPdf(delin: Rec, la: Bundle | null, measured: Record<string, Rec>, sc: Scored, region: Rec | null,
   scenario: [string, string] | null, opts: DeepPdfOptions = {}): Promise<Uint8Array> {
+  const markStatus = la && Object.keys(la).length ? lifecycleStatus(la) : null
   const doc = new SimpleDocTemplate({
-    pagesize: letter, topMargin: 0.6 * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch, rightMargin: 0.6 * inch,
+    pagesize: letter, topMargin: TOP_MARGIN_IN * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch, rightMargin: 0.6 * inch,
     title: 'DEEP Detailed Assessment Report', invariant: opts.invariant ?? false,
+    subject: markStatus ? statusLine(markStatus) : null,
   })
+  const mark = pageMarker(markStatus)
   const styles = getSampleStyleSheet()
   const small = new ParagraphStyle('small', { parent: styles.BodyText, fontSize: 7, leading: 8.4 })
   const grid = HexColor('#d5deea')
@@ -76,7 +81,7 @@ export async function buildPdf(delin: Rec, la: Bundle | null, measured: Record<s
   const verTxt = version === null || version === undefined ? 'unversioned' : `v${pyStrOf(raw.library, 'version')}`
   const hdr: CellValue[][] = [
     ['Source', String((la ? la.sourceCitation : '') || '')],
-    ['Version / status', `${verTxt}  ·  ${pyTitle(status)}`],
+    ['Version / status', `${verTxt}  ·  ${statusLabel(status)}`],
     ['Predictor source', predictorSourceOf(la)],
     ['Region match', regionParts.length ? regionParts.join('  ·  ') : 'Not resolved'],
     ['Coordinates', `${pyStrOf(dl, 'snapped_lat')}, ${pyStrOf(dl, 'snapped_lon')}`],
@@ -181,13 +186,16 @@ export function buildMetricsPdf(la: Bundle | null, ref: string, measured: Record
   const dim = new ParagraphStyle('m_dim', { parent: small, textColor: HexColor('#66708a') })
   const ital = new ParagraphStyle('m_it', { parent: small, fontName: 'Helvetica-Oblique', textColor: HexColor('#66708a') })
   const headBg = HexColor('#eef2f8')
+  const markStatus = la && Object.keys(la).length ? lifecycleStatus(la) : null
   const doc = new SimpleDocTemplate({
-    pagesize: letter, topMargin: 0.6 * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch, rightMargin: 0.6 * inch, title: 'DEEP Metrics',
-    invariant: true,
+    pagesize: letter, topMargin: TOP_MARGIN_IN * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch, rightMargin: 0.6 * inch, title: 'DEEP Metrics',
+    invariant: true, subject: markStatus ? statusLine(markStatus) : null,
   })
+  const mark = pageMarker(markStatus)
   const name = (la ? assessmentNameOf(la) : '') || 'Detailed assessment'
   const dl: Rec = (delineation ?? {}).delineation || {}
-  const story: Flowable[] = [new Paragraph('DEEP Metrics', base.Title), new Paragraph(xmlEscape(safe(name + (ref ? `  (${ref})` : ''))), base.Heading2)]
+  const heading = name + (ref ? `  (${ref})` : '') + (markStatus ? `  |  ${statusLabel(markStatus)}` : '')
+  const story: Flowable[] = [new Paragraph('DEEP Metrics', base.Title), new Paragraph(xmlEscape(safe(heading)), base.Heading2)]
   if (Object.keys(dl).length) {
     const hdr: CellValue[][] = [['Stream', safe(dl.gnis_name || '(unnamed reach)')],
       ['Coordinates', `${pyStrOf(dl, 'snapped_lat')}, ${pyStrOf(dl, 'snapped_lon')}`],
@@ -216,5 +224,5 @@ export function buildMetricsPdf(la: Bundle | null, ref: string, measured: Record
     + 'the value is shown and kept out of the score, because the curve was '
     + 'fitted on another data source. Not scored: the assessment withholds the '
     + 'metric for insufficient reference support.', dim))
-  return doc.build(story)
+  return doc.build(story, mark, mark)
 }

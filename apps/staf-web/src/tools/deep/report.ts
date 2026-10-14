@@ -9,7 +9,7 @@ import { csvText, type Cell, PyNum } from '../../files/csv'
 import { lifecycleStatus, bundleDigest } from '../../session/deep'
 import { reportFooter } from '../../shared/downloads'
 import { modal } from '../../shared/shinyui'
-import { statusLabel } from '../../app/deepChange'
+import { reportHeading, statusLabel } from '../../app/deepStatus'
 import { reachText, synthetic } from '../sfari/anchorText'
 import {
   type Bundle, coverageOf, curveStrata, enginePairingAdvisory, FUNCTION_SCORE_BAND_SHORT, FUNCTION_SCORE_BANDS, functionScoreBandColor,
@@ -386,7 +386,7 @@ export function reportModal(st: DeepReportState): Tag {
   const small = (text: string, top: string) => h.div(text, { style: `font-size:12px;color:#667;margin-top:${top};` })
   const header = h.div(
     h.div(
-      h.h3(la ? assessmentName(la) : 'Detailed assessment', { style: 'margin:0;' }),
+      reportHeading(la),
       small(`${la ? sourceCitation(la) : ''} · ${dl.gnis_name || '(unnamed reach)'}`, '3px'),
       small(`Lat/Lon ${coord}  ·  COMID ${pyStrOf(dl, 'comid')}  ·  HUC8 ${pyStrOf(dl, 'huc8')}`, '1px'),
       small(`Drainage ${fmtKm2(dl.drainage_area_sqkm)}  ·  Reach ${fmtFt(dl.reach_length_ft)}`, '1px'),

@@ -71,7 +71,8 @@ def _bundle() -> dict:
 
 @pytest.fixture(scope="module")
 def template() -> bytes:
-    return _generator().build_calculator(_bundle())
+    # stamped with the status DEEP reads for the bundle (no lifecycle: Preliminary)
+    return _generator().build_calculator(_bundle(), "preliminary")
 
 
 DELIN = {"delineation": {"gnis_name": "Mink Brook", "network": "nhdplus-hr",
@@ -176,7 +177,8 @@ def test_a_workbook_is_offered_only_for_the_version_it_was_built_from(template, 
     calculator.clear_cache()
     (tmp_path / "fill-test@v2.xlsx").write_bytes(template)
     index = {"calculators": {"fill-test@v2": {"file": "fill-test@v2.xlsx",
-                                              "contentDigest": "sha256:abc"}}}
+                                              "contentDigest": "sha256:abc",
+                                              "status": "preliminary"}}}
     (tmp_path / "index.json").write_text(json.dumps(index), encoding="utf-8")
     la = LoadedAssessment.from_dict(_bundle())
     assert calculator.template_for(la, tmp_path) == template
@@ -184,11 +186,23 @@ def test_a_workbook_is_offered_only_for_the_version_it_was_built_from(template, 
     assert calculator.template_for(moved, tmp_path) is None
     other = LoadedAssessment.from_dict({**_bundle(), "assessmentRef": "fill-test@v9"})
     assert calculator.template_for(other, tmp_path) is None
+    # the version is shown as a Draft now: a workbook that says Preliminary is not handed out
+    draft = LoadedAssessment.from_dict({**_bundle(), "lifecycle": "draft"})
+    calculator.clear_cache()
+    assert calculator.template_for(draft, tmp_path) is None
+    # an index from before workbooks carried a status: not handed out either
+    del index["calculators"]["fill-test@v2"]["status"]
+    (tmp_path / "index.json").write_text(json.dumps(index), encoding="utf-8")
+    calculator.clear_cache()
+    assert calculator.template_for(la, tmp_path) is None
     calculator.clear_cache()
     assert calculator.template_for(la, tmp_path / "nowhere") is None
-    # plain names, with no site id (owner, 2026-10-08)
-    assert calculator.blank_filename(la) == "deep-calculator-fill-test-v2-blank.xlsx"
-    assert calculator.filled_filename(la) == "deep-calculator-fill-test-v2.xlsx"
+    # plain names, with no site id (owner, 2026-10-08), with the status (owner, 2026-10-14)
+    assert calculator.blank_filename(la) == "deep-calculator-fill-test-v2-preliminary-blank.xlsx"
+    assert calculator.filled_filename(la) == "deep-calculator-fill-test-v2-preliminary.xlsx"
+    assert calculator.filled_filename(draft) == "deep-calculator-fill-test-v2-draft.xlsx"
+    final = LoadedAssessment.from_dict({**_bundle(), "lifecycle": "certified"})
+    assert calculator.blank_filename(final) == "deep-calculator-fill-test-v2-final-blank.xlsx"
     calculator.clear_cache()
 
 

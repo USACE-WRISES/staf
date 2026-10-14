@@ -187,4 +187,68 @@ def test_the_metrics_pdf_lists_every_metric_with_its_status():
                  report.STATUS_AVAILABLE, report.STATUS_FIELD, report.STATUS_WITHHELD,
                  "HR reach watershed (STAF site engine v0.4.1)"):
         assert word in text, word
-    assert report.metrics_filename(la) == "deep-metrics-form-test.pdf"
+    # the version and the status in the name (owner, 2026-10-14)
+    assert report.metrics_filename(la) == "deep-metrics-form-test-v3-preliminary.pdf"
+
+
+# --------------------------------------------------------------------------- #
+# Every page states the assessment's status (owner, 2026-10-14)
+# --------------------------------------------------------------------------- #
+LABELS = {"draft": "Draft", "preliminary": "Preliminary", "certified": "Final"}
+_REAL = (__import__("pathlib").Path(__file__).resolve().parents[2] / "library" / "assessments"
+         / "acadian-plains-and-hills" / "v1" / "assessment.deep.json")
+
+
+def _pages(pdf: bytes) -> list:
+    """Each page's text, whitespace collapsed (the band's bold head and its note are two
+    runs, which the extractor sets on two lines)."""
+    pypdf = pytest.importorskip("pypdf")
+    return [" ".join((p.extract_text() or "").split())
+            for p in pypdf.PdfReader(io.BytesIO(pdf)).pages]
+
+
+def _stamped(status: str, *, real: bool = False) -> LoadedAssessment:
+    import json
+    if real:
+        if not _REAL.is_file():
+            pytest.skip("the library is not in this checkout")
+        bundle = json.loads(_REAL.read_text(encoding="utf-8"))
+    else:
+        bundle = _bundle()
+    return LoadedAssessment.from_dict({**bundle, "lifecycle": status})
+
+
+@pytest.mark.parametrize("status", ["draft", "preliminary", "certified"])
+def test_every_page_of_the_field_forms_states_the_status(status):
+    from deep import session
+    la = _stamped(status, real=True)          # twenty functions: several pages
+    pages = _pages(report.build_field_forms_pdf(la, ref="acadian-plains-and-hills@v1",
+                                                delineation=DELIN))
+    assert len(pages) > 1
+    for n, text in enumerate(pages, 1):
+        assert f"Assessment status: {LABELS[status]}." in text, n
+        assert session.STATUS_NOTES[status] in text, n
+        assert f"Page {n}" in text
+        assert ("DRAFT" in text) == (status == "draft"), "the watermark is a Draft's alone"
+    assert f"acadian-plains-and-hills@v1 | {LABELS[status]}" in pages[0]
+    assert "Certified" not in " ".join(pages)
+
+
+@pytest.mark.parametrize("status", ["draft", "certified"])
+def test_the_metrics_pdf_and_the_report_state_the_status(status, monkeypatch):
+    from deep import session, workbook
+    la = _stamped(status)
+    metrics = _pages(report.build_metrics_pdf(la, ref="form-test@v3", delineation=DELIN))
+    monkeypatch.setattr(report.reportmap, "pdf_flowable", lambda *a, **k: None)
+    pdf = _pages(report.build_pdf(DELIN, la, {}, workbook.score(la, {})))
+    line = session.status_line(status)
+    for text in metrics + pdf:
+        assert line in text
+        assert ("DRAFT" in text) == (status == "draft")
+        assert "Certified" not in text
+    assert f"form-test@v3) | {LABELS[status]}" in metrics[0]
+
+
+def test_no_assessment_no_band():
+    pages = _pages(report.build_field_forms_pdf(None))
+    assert "Assessment status" not in pages[0] and "Page 1" in pages[0]

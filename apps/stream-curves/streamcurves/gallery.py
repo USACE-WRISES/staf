@@ -84,6 +84,9 @@ class Asset:
     name: str
     size: int
     sha256: str
+    #: A calculator's stated status (owner, 2026-10-14: every DEEP workbook states its
+    #: version's status); None for every other asset, and then never written.
+    status: str | None = None
 
 
 @dataclass(frozen=True)
@@ -364,7 +367,8 @@ def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
                 "publishedAt": v.published_at, "publishedBy": v.published_by,
                 "contentDigest": v.content_digest, "metrics": v.metrics,
                 "functionsCovered": v.functions_covered, "revisionNotes": v.revision_notes,
-                "assets": {k: ({"name": a.name, "size": a.size, "sha256": a.sha256}
+                "assets": {k: ({"name": a.name, "size": a.size, "sha256": a.sha256,
+                                **({"status": a.status} if a.status else {})}
                                if a is not None else None) for k, a in v.assets.items()},
                 **({"methodVersion": v.method_version} if e.type == "easi" else {}),
                 **({"evidence": v.evidence}
@@ -387,7 +391,9 @@ def _asset(raw) -> Asset | None:
         return None
     if not isinstance(size, int) or size <= 0:
         return None
-    return Asset(name=name, size=size, sha256=sha)
+    status = raw.get("status")
+    return Asset(name=name, size=size, sha256=sha,
+                 status=status if isinstance(status, str) and status else None)
 
 
 def parse_catalog(text: str) -> list[Entry]:

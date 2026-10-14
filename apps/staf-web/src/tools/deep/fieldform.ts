@@ -17,6 +17,8 @@ import { assessmentName, coords, measureCode, reachId } from './forms'
 import { type Bundle, CATEGORY_ORDER, FUNCTIONS_BY_ID, type Metric, methodText, type Rec, unitsOf, withheldForFunction, withheldOnlyFunctions } from './method'
 import { pyStrOf, rows, sourceLabel, watershedBasisLabel } from './report'
 import { stratumLabel, withheld, withheldNote, withheldReason } from './support'
+import { lifecycleStatus, statusLabel, statusLine } from '../../app/deepStatus'
+import { pageMarker, TOP_MARGIN_IN } from './statusmark'
 
 export const TITLE = 'Detailed Evaluation of Ecosystem Processes (DEEP) Field Worksheet'
 const BAND_FILL = '#D9D9D9'
@@ -139,25 +141,21 @@ export function buildFieldFormsPdf(la: Bundle | null, ref: string, measured: Rec
     colWidths: [full], style: [['BACKGROUND', [0, 0], [-1, -1], bandFill], ['BOX', [0, 0], [-1, -1], line, black],
       ['TOPPADDING', [0, 0], [-1, -1], 2], ['BOTTOMPADDING', [0, 0], [-1, -1], 2]],
   })
-  const pageNumber = (canvas: Canvas, doc: SimpleDocTemplate) => {
-    canvas.saveState()
-    canvas.setFont('Times-Roman', 9)
-    canvas.drawCentredString(letter[0] / 2.0, letter[1] - 0.32 * inch, String(doc.page))
-    canvas.restoreState()
-  }
+  const raw: Rec = la ?? {}
+  // the status DEEP shows the version with (Final, never Certified), on every page (status_mark.py)
+  const status = Object.keys(raw).length ? lifecycleStatus(raw) : null
   const doc = new SimpleDocTemplate({
-    pagesize: letter, title: 'DEEP Field Worksheet', author: 'STAF DEEP', invariant: true, topMargin: PAGE_MARGIN_IN * inch,
-    bottomMargin: PAGE_MARGIN_IN * inch, leftMargin: PAGE_MARGIN_IN * inch, rightMargin: PAGE_MARGIN_IN * inch,
+    pagesize: letter, title: 'DEEP Field Worksheet', author: 'STAF DEEP', invariant: true, subject: status ? statusLine(status) : null,
+    topMargin: TOP_MARGIN_IN * inch, bottomMargin: PAGE_MARGIN_IN * inch, leftMargin: PAGE_MARGIN_IN * inch, rightMargin: PAGE_MARGIN_IN * inch,
   })
+  const mark = pageMarker(status, true)
 
   const name = (la ? assessmentName(la) : '') || 'Detailed assessment'
-  const raw: Rec = la ?? {}
   const version = (raw.library || {}).version
-  const status = String(raw.lifecycle || (raw.library || {}).status || '').trim()
   const about = [esc(name)]
   if (ref) about.push(esc(ref))
   else if (version !== null && version !== undefined) about.push(`version ${pyStrOf(raw.library, 'version')}`)
-  if (status) about.push(esc(pyTitle(status.replace(/_/g, ' '))))
+  if (status) about.push(esc(statusLabel(status)))
   const cite = la?.sourceCitation
   const story: Flowable[] = [new Paragraph(esc(TITLE), title), new Paragraph(about.join('  |  '), body)]
   if (cite) story.push(new Paragraph(esc(String(cite)), small))
@@ -240,5 +238,5 @@ export function buildFieldFormsPdf(la: Bundle | null, ref: string, measured: Rec
         + ' No measurement is needed for the score. A value may still be recorded under Notes.'), body)]],
       { colWidths: [full], style: [['BOX', [0, 0], [-1, -1], line, black]] }))
   }
-  return doc.build(story, pageNumber, pageNumber)
+  return doc.build(story, mark, mark)
 }

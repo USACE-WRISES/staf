@@ -89,15 +89,18 @@ def sheet_for(built: Built, index: int, template_sheet: str) -> str:
 
 
 def assemble(template: bytes, spec: AssemblySpec, scenarios: list, *, summary, cells, scores: list,
-             curves=None, generated_on=None) -> bytes:
+             curves=None, generated_on=None, banner=None) -> bytes:
     """The whole workbook: Summary, Existing Conditions, the alternatives, ReferenceCurves, then
-    the template's other sheets."""
+    the template's other sheets. ``banner`` (:class:`sheets.Banner`) puts a line across the top
+    of the two authored tabs (DEEP's assessment status); the template's own sheets carry theirs."""
     from .sheets import add_curves_sheet, add_summary_sheet
     from .xlsx.styles import StyleBook
     built = build(template, spec, scenarios)
     styles = StyleBook(built.pkg)
-    first = [add_summary_sheet(built, spec, styles, summary, cells, scores, scenarios, generated_on)]
-    after = [add_curves_sheet(built, styles, curves)] if curves is not None and curves.blocks else []
+    first = [add_summary_sheet(built, spec, styles, summary, cells, scores, scenarios, generated_on,
+                               banner=banner)]
+    after = ([add_curves_sheet(built, styles, curves, banner=banner)]
+             if curves is not None and curves.blocks else [])
     styles.save()
     return finish(built, spec, first=first, after=after)
 

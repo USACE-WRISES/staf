@@ -32,7 +32,7 @@ def _names(data: bytes) -> dict:
     return out
 
 
-def _deep(scenarios, scores, *, n_fns=3, statements=None, note=""):
+def _deep(scenarios, scores, *, n_fns=3, statements=None, note="", banner=None):
     if not DEEP.is_file():
         pytest.skip("DEEP template not present")
     data = DEEP.read_bytes()
@@ -43,7 +43,8 @@ def _deep(scenarios, scores, *, n_fns=3, statements=None, note=""):
                          statements=statements or [], note=note)
     curves = RefCurves("", [CurveBlock("Embeddedness", "", "Percent", "Index", [("All", [(0, 1), (100, 0)])])])
     out = assemble(data, AssemblySpec("DEEP", "DEEP Score"), scenarios, summary=SummaryInfo("DEEP", "Mink Brook", 1000, 5,
-                   2, regions_for_l3("59")), cells=cells, scores=scores, curves=curves)
+                   2, regions_for_l3("59")), cells=cells, scores=scores, curves=curves,
+                   generated_on=__import__("datetime").date(2026, 10, 14), banner=banner)
     return out, fns
 
 
@@ -173,3 +174,31 @@ def test_formulas_recalculate_each_scenario_from_its_own_calculator():
                    k.upper().endswith(f"SUMMARY'!{cell}"))
         got[cell] = sol[key].value[0, 0]
     assert len(set(map(str, got.values()))) == 1                 # blank inputs: both calculators agree
+
+
+# --------------------------------------------------------------------------- #
+# DEEP's assessment status across the authored tabs (owner, 2026-10-14)
+# --------------------------------------------------------------------------- #
+def test_a_banner_heads_the_authored_tabs_and_nothing_else_moves():
+    from staf_workbook.sheets import Banner
+    scenarios = [ScenarioInput("ec", "Existing Conditions"), ScenarioInput("a1", "Restore riparian")]
+    scores = [ScenarioScores(), ScenarioScores()]
+    line = "Assessment status: Draft. For research and regional assessment development only."
+    banner = Banner(line, "475569", "Assessment status: Draft.\nFor research and regional "
+                                    "assessment development only.")
+    marked, _ = _deep(scenarios, scores, banner=banner)
+    plain, _ = _deep(scenarios, scores)
+    again, _ = _deep(scenarios, scores)
+    assert plain == again, "without a banner the workbook is what it was"
+    wb, ws = _summary(marked)
+    assert ws["A3"].value == line and ws["A3"].font.bold
+    assert ws["A3"].fill.fgColor.rgb.endswith("475569")
+    assert any(str(r).startswith("A3:") for r in ws.merged_cells.ranges)
+    assert ws["A5"].value == "Reach name", "the summary block starts under the band"
+    curves = wb["ReferenceCurves"]
+    assert curves["A3"].value == line
+    for name in ("Summary", "ReferenceCurves"):
+        assert wb[name].oddHeader.center.text.startswith("Assessment status: Draft.")
+        assert wb[name].sheet_properties.tabColor.rgb.endswith("475569")
+    _pwb, pws = _summary(plain)
+    assert pws["A3"].value is None and pws["A4"].value == "Reach name"

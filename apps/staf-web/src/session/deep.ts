@@ -6,29 +6,17 @@
 // recomputed on Open, never read from the file. Files from before the shared format (schema v2, and v1
 // or version-less ones, whose provenance is rebuilt from the bundle) still open.
 import { pyCopy, pyDumps } from '../app/pyjson'
+import { lifecycleStatus } from '../app/deepStatus'
 import { sha256Hex } from '../files/bytes'
 import { AssessmentFileError, dump as dumpFile, legacyScenarios, parse } from './file'
 
 type Obj = Record<string, any>
 export const TOOL = 'DEEP'
 export const SCHEMA_VERSION = 2
-export const LIFECYCLES = ['draft', 'preliminary', 'certified']
 const isObj = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v)
 
-/** lifecycle_status: draft, preliminary or certified (preliminary when the bundle names none it runs). */
-export function lifecycleStatus(bundle: Obj | null): string {
-  const lib = (bundle ?? {}).library ?? {}
-  for (const src of [bundle ?? {}, lib]) {
-    for (const key of ['lifecycle', 'status']) {
-      const v = src?.[key]
-      if (v) {
-        const s = String(v).trim().toLowerCase()
-        if (LIFECYCLES.includes(s)) return s
-      }
-    }
-  }
-  return 'preliminary'
-}
+// lifecycle_status and the statuses live with the rest of DEEP's status words (app/deepStatus.ts)
+export { LIFECYCLES, lifecycleStatus } from '../app/deepStatus'
 
 /** content_digest: ``sha256:`` over the bundle's canonical JSON (sorted keys, compact, UTF-8); "" for none. */
 export function contentDigest(bundle: Obj | null): string {

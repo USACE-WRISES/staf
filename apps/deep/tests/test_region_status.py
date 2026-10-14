@@ -39,6 +39,11 @@ def test_every_status_has_its_own_color_and_none_is_the_selection_or_a_stream():
 
 
 def test_the_badges_follow_the_status():
+    from deep import session
+    for status, label in (("draft", "Draft"), ("preliminary", "Preliminary"), ("certified", "Final")):
+        pill = str(app._status_pill(status))
+        assert f">{label}</span>" in pill and app._badge_class(status) in pill
+        assert f'title="{session.status_note(status)}"' in pill
     assert app._badge_class("draft") == "deep-badge-draft"
     assert app._badge_class("preliminary") == "deep-badge-prelim"
     assert app._badge_class("certified") == "deep-badge-cert"
@@ -68,14 +73,22 @@ def test_the_legend_keys_only_the_statuses_on_the_map():
 
 def test_each_status_row_of_the_key_is_a_toggle():
     """owner, 2026-10-09: a click on a status's row (or Enter or Space) hides and shows its
-    regions on the map and in the list (www/coverage.js); the server draws every row on."""
+    regions on the map and in the list (www/coverage.js). The server draws the Draft row off
+    and every other row on (owner, 2026-10-14: Drafts show when the user asks)."""
     html = str(app._legend_ui(app.STEP_IDENTIFY, False, "hr", None, False,
                               regions=("draft", "preliminary")))
-    rows = re.findall(r'<div class="easi-legend-row deep-reg-row"[^>]*>', html)
+    rows = re.findall(r'<div class="easi-legend-row deep-reg-row[^"]*"[^>]*>', html)
     assert len(rows) == 2
     for row, status, label in zip(rows, ("draft", "preliminary"), ("Draft", "Preliminary")):
         assert f'data-status="{status}"' in row and 'role="button"' in row and 'tabindex="0"' in row
-        assert 'aria-pressed="true"' in row and f'title="Hide {label} regions"' in row
+    draft, prelim = rows
+    assert "deep-reg-row is-off" in draft and 'aria-pressed="false"' in draft
+    assert 'title="Show Draft regions"' in draft
+    assert "is-off" not in prelim and 'aria-pressed="true"' in prelim
+    assert 'title="Hide Preliminary regions"' in prelim
+    assert app.REGIONS_OFF_AT_START == ("draft",)
+    js = (WWW / "coverage.js").read_text(encoding="utf-8")
+    assert "var off = { draft: true };" in js, "the page starts with the same statuses off"
     css = (WWW / "deep.css").read_text(encoding="utf-8")
     assert ".deep-reg-row.is-off .deep-reg-sw {" in css and ".deep-reg-row:focus-visible {" in css
 
@@ -85,5 +98,14 @@ def test_the_help_names_the_three_statuses_and_their_order():
     copy = re.sub(r'"\s*\n\s*"', "", src.split("def _about():", 1)[1].split("# ---- left pane ----", 1)[0])
     assert "colored by status (gray Draft, amber Preliminary, blue Final)" in copy
     assert "(Final before Preliminary before Draft)" in copy
-    assert "a Draft (gray on the map) has not been reviewed yet" in copy
-    assert "\u2014" not in copy
+    # About lists each status with its line (owner, 2026-10-14)
+    from deep import session
+    assert "+ STATUS_ABOUT +" in copy
+    for status in ("draft", "preliminary", "certified"):
+        assert session.status_note(status) in app.STATUS_ABOUT
+    assert "- **Draft** (gray on the map): For research and regional assessment development only." \
+        in app.STATUS_ABOUT
+    # Help says Drafts hide until asked, and that DEEP asks before it uses one
+    assert "Draft regions stay hidden until you turn on **Draft** in the map's legend." in copy
+    assert "DEEP asks you to accept a Draft before it uses one, once per visit." in copy
+    assert "\u2014" not in copy + app.STATUS_ABOUT

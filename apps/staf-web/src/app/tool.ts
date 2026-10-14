@@ -10,7 +10,9 @@ import type { DeepWorksheet } from '../tools/deep/worksheet'
 import type { EasiWorksheet } from '../tools/easi/worksheet'
 import type { SfariWorksheet } from '../tools/sfari/worksheet'
 import { Basin } from './basin'
-import { assessPane, type Covering, coveringRefs, defaultRefFor, loadRef, parseAssessmentRef, refExists } from './deepAssess'
+import { assessPane, type Covering, coveringRefs, currentLifecycle, defaultRefFor, entryLifecycle, loadRef, parseAssessmentRef,
+  refExists, refToAdopt } from './deepAssess'
+import { draftNotice, lifecycleStatus, REGIONS_OFF_AT_START, versionOf } from './deepStatus'
 import { changeDialog } from './deepChange'
 import { esc, flowLoading, FLOW_ZOOM, identifyPane, legend, readout, START, type ToolKey, zoomCue } from './markup'
 import { Identify } from './identify'
@@ -75,6 +77,13 @@ export class Tool {
   private covering: Covering[] = []
   private selectedRef: string | null = null
   private loaded: Record<string, any> | null = null
+  /** The Draft notice (app.py _draft, owner 2026-10-14): accepted once per page load; what runs on
+   * Use the Draft; the site (its delineation) the automatic pick already asked about. */
+  private draftAccepted = false
+  private draftPending: (() => void) | null = null
+  private draftAskedFor: unknown = null
+  /** Draft is on in the map's legend (app.py drafts_shown, posted by coverage.js) */
+  private draftsShown = false
   /** the pick was ready at the last change (its regions were asked for then) */
   private warmed = false
   /** the leave-page guard: the work against the last Save or Open */
@@ -551,6 +560,18 @@ export class Tool {
     const ws = await this.loadDeep()
     const [s, sf] = await Promise.all([import('../session/deep'), import('../session/sfari')])
     const st = s.load(text)
+    // today's status of the same version (app.py _with_current_lifecycle), then a Draft's notice;
+    // Cancel leaves the work on screen as it is
+    if (Object.keys(st.assessment).length) {
+      const life = await currentLifecycle(this.data.src, s.sessionRef(st, st.assessment), st.assessment).catch(() => null)
+      if (life && life !== lifecycleStatus(st.assessment)) st.assessment = { ...st.assessment, lifecycle: life }
+    }
+    this.throughDraftNotice(st.assessment, () => this.restoreDeep(ws, s, sf, st))
+  }
+
+  /** _restore_session: an opened file's site, its assessment and its scenarios on screen. */
+  private restoreDeep(ws: Awaited<ReturnType<Tool['loadDeep']>>, s: typeof import('../session/deep'),
+    sf: typeof import('../session/sfari'), st: ReturnType<typeof import('../session/deep').load>): void {
     this.cancelReport()
     this.basin!.invalidate()
     let d = st.delineation
@@ -620,7 +641,8 @@ export class Tool {
     if (await this.loadRefIntoState(ref || entry.defaultRef)) removeModal()
   }
 
-  /** _load_ref_into_state: the version loaded, its values empty, the scenarios reset. */
+  /** _load_ref_into_state: the version loaded, its values empty, the scenarios reset. A Draft waits for
+   * its notice: false then (the notice is showing), and when the load failed. */
   private async loadRefIntoState(ref: string, quiet = false): Promise<boolean> {
     let la: Record<string, any>
     try {
@@ -629,12 +651,43 @@ export class Tool {
       notify(`Could not load assessment: ${err instanceof Error ? err.message : String(err)}`, { type: 'error', seconds: 6 })
       return false
     }
-    this.loaded = la
-    this.selectedRef = ref
-    this.deep?.assessmentLoaded()
-    if (!quiet) notify(`Selected ${la.assessmentName ?? la.assessmentId ?? ''}.`, { type: 'message', seconds: 3 })
-    this.assessmentChanged()
-    return true
+    return this.throughDraftNotice(la, () => {
+      this.loaded = la
+      this.selectedRef = ref
+      this.deep?.assessmentLoaded()
+      if (!quiet) notify(`Selected ${la.assessmentName ?? la.assessmentId ?? ''}.`, { type: 'message', seconds: 3 })
+      this.assessmentChanged()
+    })
+  }
+
+  /** app.py _through_draft_notice: run ``proceed`` now, unless ``raw`` is a Draft not yet accepted this
+   * visit: then show the notice, and Use the Draft runs it. True when it ran now. */
+  private throughDraftNotice(raw: Record<string, any> | null, proceed: () => void): boolean {
+    if (this.draftAccepted || lifecycleStatus(raw ?? {}) !== 'draft') {
+      proceed()
+      return true
+    }
+    this.cancelReport()               // a finishing report must not replace the notice
+    this.draftPending = proceed
+    const r = raw ?? {}
+    showModal(draftNotice(r.assessmentName || r.assessmentId || '', versionOf(r)))
+    return false
+  }
+
+  /** app.py _draft_accepted */
+  private draftAccept(): void {
+    const proceed = this.draftPending
+    this.draftPending = null
+    this.draftAccepted = true
+    removeModal()
+    proceed?.()
+  }
+
+  /** app.py _use_draft: Basin's Use the Draft, the Draft that covers the site, through the notice. */
+  private useDraft(): void {
+    this.cancelReport()
+    const draft = this.covering.find((e) => entryLifecycle(e) === 'draft')
+    if (draft?.defaultRef) void this.loadRefIntoState(draft.defaultRef)
   }
 
   /** What reads the loaded assessment draws again: the Basin pane, the worksheet, the map's region. */
@@ -670,15 +723,18 @@ export class Tool {
       notify(`Could not open the linked assessment: ${err instanceof Error ? err.message : String(err)}`, { type: 'error', seconds: 8 })
       return
     }
-    this.loaded = la
-    this.selectedRef = resolved
-    this.focusOnce = true
-    this.deep?.assessmentLoaded()
-    this.setStep('identify')
-    const name = la.assessmentName ?? la.assessmentId ?? ''
-    if (requested && resolved !== requested) {
-      notify(`Requested v${req} of ${name} is not available; loaded ${resolved.split('@').pop()} instead.`, { type: 'warning', seconds: 7 })
-    } else notify(`Loaded ${name} from link.`, { type: 'message', seconds: 4 })
+    // a linked Draft opens after its notice; Cancel opens DEEP with nothing loaded
+    this.throughDraftNotice(la, () => {
+      this.loaded = la
+      this.selectedRef = resolved
+      this.focusOnce = true
+      this.deep?.assessmentLoaded()
+      this.setStep('identify')
+      const name = la.assessmentName ?? la.assessmentId ?? ''
+      if (requested && resolved !== requested) {
+        notify(`Requested v${req} of ${name} is not available; loaded ${resolved.split('@').pop()} instead.`, { type: 'warning', seconds: 7 })
+      } else notify(`Loaded ${name} from link.`, { type: 'message', seconds: 4 })
+    })
   }
 
   /** DEEP adopts an assessment once there is a basin for it (app.py _resolve_assessment). */
@@ -691,13 +747,24 @@ export class Tool {
     this.regions ??= this.regionSource()
     const features = await this.regions.catch(() => [])
     this.covering = await coveringRefs(this.data.src, features as any[], lat, lon).catch(() => [])
-    if (!this.selectedRef && this.covering.length) {
-      const ref = this.covering[0].defaultRef
-      this.loaded = await loadRef(this.data.src, ref).catch(() => null)
-      if (this.loaded) {
+    // a Draft only while Draft is on in the legend, asked about once per site (app.py _resolve_assessment)
+    const ref = refToAdopt(this.selectedRef, this.covering, this.draftsShown)
+    const la = ref ? await loadRef(this.data.src, ref).catch(() => null) : null
+    if (ref && la) {
+      const site = this.basin?.delin ?? null
+      const draft = this.covering.some((e) => e.defaultRef === ref && entryLifecycle(e) === 'draft')
+      const adopt = () => {
+        this.loaded = la
         this.selectedRef = ref
         this.deep?.assessmentLoaded()
         if (this.step === 'basin') this.deep?.computeAhead()
+        this.deep?.seedAutoStrata()
+        this.assessmentChanged()
+      }
+      if (!draft || this.draftAccepted) adopt()
+      else if (this.draftAskedFor !== site) {
+        this.draftAskedFor = site
+        this.throughDraftNotice(la, adopt)
       }
     }
     this.deep?.seedAutoStrata()
@@ -856,7 +923,8 @@ export class Tool {
     const rows = (Object.keys(REGION_STATUS) as RegionStatus[]).filter((s) => this.regionStatuses.includes(s))
       .map((s) => {
         const st = REGION_STATUS[s]
-        return `<div class="easi-legend-row deep-reg-row" role="button" tabindex="0" title="Hide ${st.label} regions" data-status="${s}" aria-pressed="true">
+        const off = REGIONS_OFF_AT_START.includes(s)       // Drafts start hidden (owner, 2026-10-14)
+        return `<div class="easi-legend-row deep-reg-row${off ? ' is-off' : ''}" role="button" tabindex="0" title="${off ? 'Show' : 'Hide'} ${st.label} regions" data-status="${s}" aria-pressed="${off ? 'false' : 'true'}">
       <span class="deep-reg-sw" style="--swatch-line:${st.color};--swatch-fill:rgba(${st.fill},.28);"></span>
       <div class="easi-legend-label">${st.label}</div>
     </div>`
@@ -908,6 +976,15 @@ export class Tool {
         break
       case 'change_assessment':
         this.openChange()
+        break
+      case 'coverage_drafts':
+        this.draftsShown = value === true
+        break
+      case 'use_draft':
+        if (this.key === 'deep') this.useDraft()
+        break
+      case 'draft_accept':
+        if (this.key === 'deep') this.draftAccept()
         break
       case 'nav_new':
         this.navNew()

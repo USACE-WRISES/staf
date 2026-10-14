@@ -6,7 +6,8 @@
 import { xmlUnescape } from '../../files/py'
 import { assemble, type AssemblySpec, type ScenarioInput } from '../../files/xlsx/assemble'
 import { pyStr } from '../../files/xlsx/calcfill'
-import { curveBlock, type RefCurves, type SummaryCells, summaryCells } from '../../files/xlsx/sheets'
+import { type Banner, curveBlock, type RefCurves, type SummaryCells, summaryCells } from '../../files/xlsx/sheets'
+import { lifecycleStatus, STATUS_COLORS, statusLine, statusParts } from '../../app/deepStatus'
 import { readZip } from '../../files/zip'
 import type { Scenario, ScenarioScores } from '../../shared/scenarios'
 import type { SummaryInfo } from '../../shared/summary'
@@ -133,5 +134,13 @@ export async function buildWorkbook(template: Uint8Array, assessment: Bundle | n
     used.push([s.name, measured])
   }
   return assemble(template, SPEC, inputs, { summary: info, cells: await deepSummaryCells(template, assessment, claims), scores: bookScores,
-    curves: referenceCurves(assessment, used), generatedOn: today })
+    curves: referenceCurves(assessment, used), generatedOn: today, banner: statusBanner(assessment) })
+}
+
+/** workbook.status_banner: the assessment's status across the top of the Summary and ReferenceCurves
+ * tabs, as the calculator's own sheets carry it (owner, 2026-10-14). */
+export function statusBanner(assessment: Bundle | null): Banner {
+  const status = lifecycleStatus(assessment ?? {})
+  const [head, note] = statusParts(status)
+  return { text: statusLine(status), color: STATUS_COLORS[status][0].replace('#', '').toUpperCase(), header: head + '\n' + note }
 }
