@@ -40,6 +40,48 @@
       "builtAt": "2026-09-30T07:07:36Z",
       "actor": "StreamCurves regional analysis (STAF)",
       "note": "Built at publish."
+    },
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:06efdd680e6932160b236c87794763ecc97cb189ea5678e4f7ef13e077b81f62",
+      "bytes": 40380,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:58Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 2,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:f1b17c1c96c7d5e28b8e3411973898a84a2f644e21d93c7fbb501dad0bdc7751",
+      "bytes": 41118,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:58Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
+    },
+    {
+      "version": 3,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:0572f37166e27be7c13b73bb029382d592b98114ddcf080efa8463bf9e9946dd",
+      "bytes": 43373,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.1",
+      "contentDigest": "sha256:f8065d8b324379ff10ce6632fb9e38d3d01b51b0fca26383b3949649e9b4a039",
+      "status": "draft",
+      "builtAt": "2026-10-14T11:17:59Z",
+      "actor": "GM",
+      "note": "Restamped with the version's status (generator 1.1)."
     }
   ]
 }

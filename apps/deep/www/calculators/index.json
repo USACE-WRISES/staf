@@ -1,754 +1,861 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "calculators": {
     "acadian-plains-and-hills@v1": {
       "file": "acadian-plains-and-hills@v1.xlsx",
-      "sha256": "sha256:97995e479742434deef2a3cba4dae9a54ea6fac5d036711a82151d2cea91f162",
-      "bytes": 41790,
+      "sha256": "sha256:0d4e07547d5bddcc0bf34c2dd69df7a8bb14dffbf23307473d32403b9f807d05",
+      "bytes": 43247,
       "contentDigest": "sha256:c3e8edf06ed458480ab2ea0387e6a2e90ccceee15e8809591dbf7d1fe58f75ae",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "ak-sqt-adapted@v2": {
       "file": "ak-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:c58bc6657e7387879307cba860a7d11c39e1398a867672e68a7bf32bad316e0b",
-      "bytes": 37136,
+      "sha256": "sha256:6170c30e8c517c9ab3b78788a2d33c5873514209a968aeb0776cbd3c94ce582d",
+      "bytes": 38737,
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "arizona-new-mexico-mountains@v1": {
       "file": "arizona-new-mexico-mountains@v1.xlsx",
-      "sha256": "sha256:2363f69db9c9deac70c56bfeb32739e2b32b27f31ecd5821ad6180d36188175f",
-      "bytes": 41694,
+      "sha256": "sha256:3b6c490895f1bea8bea554a192d3cb688ad1ee3c024f3b129c38b01e378129a4",
+      "bytes": 43184,
       "contentDigest": "sha256:82ef65e38b0ce93611e0ff9901eaa8d06d8b7add52eaf9665a6a9118a095e03c",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "arizona-new-mexico-plateau@v1": {
       "file": "arizona-new-mexico-plateau@v1.xlsx",
-      "sha256": "sha256:55ac7020ba047f3ce8a47c2483809f6e7b4d9f349a7313f91bde86345c46a43f",
-      "bytes": 42603,
+      "sha256": "sha256:a6cee97fff524787558fb7bc491cb7af55d330813c3f263cd43831b64a000b06",
+      "bytes": 44082,
       "contentDigest": "sha256:00079a58968ceaa2562f116890f1d0fa22eb94616ce75aaa52ca59a127a4cd88",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "arkansas-valley@v1": {
       "file": "arkansas-valley@v1.xlsx",
-      "sha256": "sha256:a85dde87c872b8b66a5d9a3e9c46a3cdc214af26086f7ec63213915fb15596c8",
-      "bytes": 43697,
+      "sha256": "sha256:2872ac170ec83584e4e1e2d03dc139dc408461d1e3011f4ec62f41f2b300f28d",
+      "bytes": 45172,
       "contentDigest": "sha256:ba846cc11891c8219c558ce0b9687ecc17465d0a82f92530a7a72859a998ae0e",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "atlantic-coastal-pine-barrens@v1": {
       "file": "atlantic-coastal-pine-barrens@v1.xlsx",
-      "sha256": "sha256:32f684199a399b6b6befb601e3da579deceffee8b20d2563f0504733db7e016e",
-      "bytes": 44117,
+      "sha256": "sha256:2b7002b0a525c6ee3bb071cfdb05ad47eeb7b8f0ff407f87d816693d4353b16b",
+      "bytes": 45588,
       "contentDigest": "sha256:aa270bf0739bcae77f15ac1c9d309300368e1cfb280a0bdcd9a22c1ad259252b",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "blue-mountains@v1": {
       "file": "blue-mountains@v1.xlsx",
-      "sha256": "sha256:a0b26608170c1ad5cefa6115931c749d9870110baea84a92ab7e8a7d5aad2ca7",
-      "bytes": 43521,
+      "sha256": "sha256:93f0ce5052d078f516b30db51f41f37f730a9d6c00d23d5963debeb239df8de0",
+      "bytes": 45010,
       "contentDigest": "sha256:2ec853341a60f85ec296bc5d8a0f0dfd60f3d65c86ee2811f59a3f5f70dc13b0",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "blue-ridge@v1": {
       "file": "blue-ridge@v1.xlsx",
-      "sha256": "sha256:08b1e742ba81ac9b46aa18725db371b71f8948fabfad2c44ce1c57c26db6b17f",
-      "bytes": 41718,
+      "sha256": "sha256:7178088048013bfbc93fb934ac601e6c5eeb2476b0967f8e46ee28b0b7bb1cf1",
+      "bytes": 43203,
       "contentDigest": "sha256:b53b6ffc1cfad0c64bbbc490d51e26ab1be617a91919a9d1c75a6560520e9616",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "boston-mountains@v1": {
       "file": "boston-mountains@v1.xlsx",
-      "sha256": "sha256:daab60d1015041061db133951d59f92df8c3c42c29d6c7937d0febb58600a9d0",
-      "bytes": 40665,
+      "sha256": "sha256:75e5cf336590209d88cddf9e7b58f6b0166059ec66c6fa604276f219cd8d2ca9",
+      "bytes": 42146,
       "contentDigest": "sha256:397e2ca5c762906ce6fe27fa3bde50aafd2dfa89e66f34d2a907838257d34f1a",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "canadian-rockies@v1": {
       "file": "canadian-rockies@v1.xlsx",
-      "sha256": "sha256:6f0805abfcecc68b08f8fbda8399a7c638add8178a95cfd85509a2b45cfbcb86",
-      "bytes": 42241,
+      "sha256": "sha256:6d52aed490564e7f7cf2821c422d9b39c29b0e13e520b84cf69426a6e69bd677",
+      "bytes": 43727,
       "contentDigest": "sha256:7719ed984f8ef2ad6f2371d2c04ed9b694f1442a63356dedef8539f6260b1d33",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "cascades@v1": {
       "file": "cascades@v1.xlsx",
-      "sha256": "sha256:a62de14686d660ce268381d20bbb8b7e087e33930d93286c1311d717e06739b8",
-      "bytes": 39436,
+      "sha256": "sha256:2c16fbdc67b9cb1d4f5368e110710a9fb01e4b6729b6daab2262169d770ffb06",
+      "bytes": 40888,
       "contentDigest": "sha256:5a4d596751a1e3d7f5d849168a8a2c624ea83c462045cf8a285a437ced67d27a",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-appalachians@v1": {
       "file": "central-appalachians@v1.xlsx",
-      "sha256": "sha256:db60e2951146c693caa61a0b77d935156c320daaaedd2cd0e9dd158b04a0ba09",
-      "bytes": 43382,
+      "sha256": "sha256:751f4a35fb8564b796360f7285c87548bb2efb21dae7a62898c67e6f74506061",
+      "bytes": 44871,
       "contentDigest": "sha256:bde3f4beb2e0c2b766df7c9d09afb029919152992a2d7fca92d93a64a629593b",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-basin-and-range@v1": {
       "file": "central-basin-and-range@v1.xlsx",
-      "sha256": "sha256:2512084ccd039274a5e671b31e8f8a370e7ca7845574785233bbfeb580596813",
-      "bytes": 40112,
+      "sha256": "sha256:9143fd058614aa4f6e3b32d10b36ec28eecb6d89370c47d8ca1f95c9739ece3f",
+      "bytes": 41600,
       "contentDigest": "sha256:632f70661f0e013ef7afb9e58bb9c7520c0b52b7bcf443ef434748b0d2fd5770",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-basin-and-range@v2": {
       "file": "central-basin-and-range@v2.xlsx",
-      "sha256": "sha256:d57717d573ab8ba909833763e51080082d38f424b3336879e3506af6adb430a2",
-      "bytes": 39779,
+      "sha256": "sha256:94fe34e4780499cf986c7d2c1308177c7f7bcc9d67e752889df85d5223ddead1",
+      "bytes": 41226,
       "contentDigest": "sha256:9d3ed96f17757f4623dcc4a5b9b3a280f7e19c6c4a1004370469cb3841b2fe01",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-california-foothills-and-coastal-mountains@v1": {
       "file": "central-california-foothills-and-coastal-mountains@v1.xlsx",
-      "sha256": "sha256:b1e82ede295a82fec475c3cd19eac0ba0fd46710d1dcd14e22e8e465ebced958",
-      "bytes": 42637,
+      "sha256": "sha256:4bdae7638c0c50fef9e9a4ad8920f7bcc959eac101759b09ee161594857706c9",
+      "bytes": 44100,
       "contentDigest": "sha256:2ec24dcbc9840b9ecdc5528d501d1e0c431e76a4e1900c6f02110240e2f18f11",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-california-valley@v1": {
       "file": "central-california-valley@v1.xlsx",
-      "sha256": "sha256:6acfa8df340f06986286487835403ec99810770744b8515c0ed483bc5bce19d9",
-      "bytes": 42092,
+      "sha256": "sha256:094d38078bef7df53d59c18903cfd139be785ecb99bd1aade5cc397140932cfc",
+      "bytes": 43573,
       "contentDigest": "sha256:95741053578fdd4bd4b7444ada7d74ccfd82fc54fe6d9c04f4bd7cfefb926aa5",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-corn-belt-plains@v1": {
       "file": "central-corn-belt-plains@v1.xlsx",
-      "sha256": "sha256:9d0dee0811eda2aebf25deb68c908b3df88ff936159d1d9ccbe71ced2f001392",
-      "bytes": 43506,
+      "sha256": "sha256:1adde290aeba47e719f6f4bcbba9d3ad2744629102ade80cc2ec62bd4530319a",
+      "bytes": 44983,
       "contentDigest": "sha256:debdf0750b17be3fdd4a04382e529b54ccea278078d0a6198790a494289e8aef",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-great-plains@v1": {
       "file": "central-great-plains@v1.xlsx",
-      "sha256": "sha256:2336e0eefc2df67057d9ea1877c15429ac0765be5f8d7d90093bb2e6773991b9",
-      "bytes": 38444,
+      "sha256": "sha256:27ab05d9ceb9139dfa776783babe82a5827cf1d48ac5f73343cb205c25fbf73d",
+      "bytes": 39913,
       "contentDigest": "sha256:a8d63f254bc0d56a5c1bee680104279a79f13f69b3a4d7c73c28e64948597a6f",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-great-plains@v2": {
       "file": "central-great-plains@v2.xlsx",
-      "sha256": "sha256:ea59d6fa16eec3cfe56d69139ed3346aa38de2360f6f35dfc1ea3d9e8ac09c80",
-      "bytes": 43011,
+      "sha256": "sha256:ef8f22cb2ce4dc7de76efc57bd0dd0205ecf92c9576949c3e1dff76be991e7f0",
+      "bytes": 44475,
       "contentDigest": "sha256:1512c029854b1ceeb5dfee29a960e4877dff0c0c3bbd7bf92341194b91c16419",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "central-irregular-plains@v1": {
       "file": "central-irregular-plains@v1.xlsx",
-      "sha256": "sha256:188674983db2f0fb64ca41ada91e1afec2b19ca7ba18d9150015bfe122f1b3d8",
-      "bytes": 41414,
+      "sha256": "sha256:b3a2a08447ca8734edb11eacd34bb9eac68ec55634cf913623b9cb1cbfdf4591",
+      "bytes": 42896,
       "contentDigest": "sha256:634a596acf7bebaaae71c4a97de625faf04627947d01e5419d5d9ce33a9998e6",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "chihuahuan-deserts@v1": {
       "file": "chihuahuan-deserts@v1.xlsx",
-      "sha256": "sha256:be553fba2189f4989b841d5d5860ba4694d164e5c7765ccd29208aa5a8b5a731",
-      "bytes": 42574,
+      "sha256": "sha256:8a1ddd41964d59ec9a02efb39abcc64541432fb29aa48ec49aabb11e1fdbb41d",
+      "bytes": 44060,
       "contentDigest": "sha256:9e917fb454ed3df7f93e83eb09b4518bd7342bf61a2fdca64676e86e63da426b",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "co-sqt-adapted@v2": {
       "file": "co-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:765b1560e6226c331550de4f9e159cd266e9109dfdbb28f6b02305124325cbf1",
-      "bytes": 39551,
+      "sha256": "sha256:92d1c4b648439ac38e57a4aee4664d48f643d9072ac5db50a80206deb10fdc1a",
+      "bytes": 41145,
       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "coast-range@v1": {
       "file": "coast-range@v1.xlsx",
-      "sha256": "sha256:bae8983ce9321fdef3a6ea802ef9a3946c91939dadc2c562bf78ae4eb65d6ac9",
-      "bytes": 42955,
+      "sha256": "sha256:d37a2564c93e5a263013ca4111e005f829dfdbd7f489da1dd47159d1ed14e58d",
+      "bytes": 44425,
       "contentDigest": "sha256:93b11715e3d1b0f98e4e067f7b8bf80cd247c890d90747216de80ba30ef9f7ee",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "colorado-plateaus@v1": {
       "file": "colorado-plateaus@v1.xlsx",
-      "sha256": "sha256:f67202d77864b751d7075a65103bc480c9f8a99b36d50ce9bb177290a9440570",
-      "bytes": 42973,
+      "sha256": "sha256:28581b14b30e0a3d5bec61365eccc06d5408ffbc1c3d5a6198c2ed2eb1a8b3f4",
+      "bytes": 44440,
       "contentDigest": "sha256:07eb4455d1599dccc180a7c20fb08aa3b4a5cd03a65c24883eeb71ce3134aef1",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "columbia-plateau@v1": {
       "file": "columbia-plateau@v1.xlsx",
-      "sha256": "sha256:933a8b6209665ca06519471e4b1e7327056e6974a1c1af3632bc1f86e473530f",
-      "bytes": 42693,
+      "sha256": "sha256:d971a8380a6baa6f10cd6c4971dfd4d472964856c892de76b259c655e1da04a8",
+      "bytes": 44155,
       "contentDigest": "sha256:de9c4339da83ede757cc7c4e1d0fcb290220c703402a5b49d55652ed21413b42",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "cross-timbers@v1": {
       "file": "cross-timbers@v1.xlsx",
-      "sha256": "sha256:c4b1ab83ad56009acf2928d87a0a2aab701aa5a958e6893bddfc4ecfb7c5c02e",
-      "bytes": 42003,
+      "sha256": "sha256:02523a5b5045cbb7b7a2b99baf6f0d7419ffb509c60a0ed0fed95f03430e2085",
+      "bytes": 43480,
       "contentDigest": "sha256:4ac69278cd70b3a5a34488fd6431a81a3a5b57ff80780ee04df7fa62d3360b6e",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "driftless-area@v1": {
       "file": "driftless-area@v1.xlsx",
-      "sha256": "sha256:545407a2d4774f3598eb090c7d450d2af1f34c5a9611bebced630f56cb854e55",
-      "bytes": 44764,
+      "sha256": "sha256:4d098030d39f0207cff82fd68f81cf0d7225044c4d87f25efa7bf36871df291f",
+      "bytes": 46234,
       "contentDigest": "sha256:413ad5065a70fe7abf205d81bf6fe5d0da9d4e74a301ea882a1dc26ec4811a26",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "east-central-texas-plains@v1": {
       "file": "east-central-texas-plains@v1.xlsx",
-      "sha256": "sha256:8935995d241c7a6a3b64e9148e3980a94e7562a44bf3cb0725e41d10abe52a4c",
-      "bytes": 42444,
+      "sha256": "sha256:0198bbda4c48409745d830e2bfe3033cc1eb77b42bbc384d0acce9da6edb9ccc",
+      "bytes": 43917,
       "contentDigest": "sha256:90bba9709b8a833d0c95e21d59a0b40797f2e736d2f049f535f8148a4350034c",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "eastern-cascades-slopes-and-foothills@v1": {
       "file": "eastern-cascades-slopes-and-foothills@v1.xlsx",
-      "sha256": "sha256:81bf0bd886068ef701ac8a89611a89112ffb6aad29167a054ba78967a1d1b066",
-      "bytes": 44202,
+      "sha256": "sha256:57f2cab59baf3069629cd6c77c2b731789f2ce2f64b89709903d9fef70a9889f",
+      "bytes": 45688,
       "contentDigest": "sha256:c9589a714fa80105b206cc42102f14cb3b9d278d5c093b89a858261bb6b6a6ea",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "eastern-corn-belt-plains@v6": {
       "file": "eastern-corn-belt-plains@v6.xlsx",
-      "sha256": "sha256:2527d61e2e0f2885574f32f66a229e641c8da223f6a5776f025ae0feca3a18f5",
-      "bytes": 34931,
+      "sha256": "sha256:acb652d6fd859b95cf4ebec1122d122ab9c8cba5a58967aa502a560aee74777c",
+      "bytes": 36612,
       "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "eastern-corn-belt-plains@v7": {
       "file": "eastern-corn-belt-plains@v7.xlsx",
-      "sha256": "sha256:0c7c3bb0303434f3c014446a88be5d15a7e57e6d9e7cbb2c0f087e7250e30713",
-      "bytes": 38320,
+      "sha256": "sha256:87d8d4dd822a3679d0060eadc4b34e9425129458a3516f50fc66a6ddcde197b6",
+      "bytes": 39872,
       "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "eastern-corn-belt-plains@v8": {
       "file": "eastern-corn-belt-plains@v8.xlsx",
-      "sha256": "sha256:7145fda88b74015626baa3d0ed6cb0e3a0d1eb0db6076fab8ed247d6cd678d66",
-      "bytes": 40752,
+      "sha256": "sha256:d8c6a51063ce56469a07522769ddd79bc8b77881e9aff5258a51ec658875e432",
+      "bytes": 42355,
       "contentDigest": "sha256:2b9698cd3554ba99507d73f0a0e17f82561acdbc0d6fe5b31983ae6926e23f7f",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "eastern-corn-belt-plains@v9": {
       "file": "eastern-corn-belt-plains@v9.xlsx",
-      "sha256": "sha256:d2455376bc968df90c8350358221db534e16cdd96aaf8bf22f1da028a992f1c9",
-      "bytes": 44353,
+      "sha256": "sha256:b96329bfa0c1ee33febb1d82a8bb1157591dbdc00364d629a709c4868717094a",
+      "bytes": 45952,
       "contentDigest": "sha256:02e720a6278c02080a796cab5402bed6b80080f418b44e76edf3c661ddc38a29",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "eastern-great-lakes-lowlands@v1": {
       "file": "eastern-great-lakes-lowlands@v1.xlsx",
-      "sha256": "sha256:ed6b3a9f2f18d970eec7ef139912eb84465b06e3e018d590560bbffcbf2d261b",
-      "bytes": 43750,
+      "sha256": "sha256:b107d18b19c569930c3f28f6f1aaaae073e74b9a0aa7882aa4c19f7a9688120a",
+      "bytes": 45219,
       "contentDigest": "sha256:12db39cbdd89986caa0fd435228a56c068a50ea0cab2a4df3881bb3db1d608ae",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "edwards-plateau@v1": {
       "file": "edwards-plateau@v1.xlsx",
-      "sha256": "sha256:64942da95daa7f6f1635d17ecf9847486aa59fa5dee204272d3c5682ba3ece6b",
-      "bytes": 41969,
+      "sha256": "sha256:f68f52133d20f3bad0fccd1a877d0b17fff09a22b1cd0ed256dc8e6a2d16fff2",
+      "bytes": 43459,
       "contentDigest": "sha256:e40f0aed31715b50e1964dde3752a12a020048bccb50698d7bfa7022eb9a0c00",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "erie-drift-plain@v1": {
       "file": "erie-drift-plain@v1.xlsx",
-      "sha256": "sha256:25a3a41d5f79a9de8d3f06a811f7208167c4ef1ed340bd07c12b6f0caf40051f",
-      "bytes": 43383,
+      "sha256": "sha256:93eac26e3362c831c737ceef8381688e79500a4902825582d39b47dbb6ce17a4",
+      "bytes": 44871,
       "contentDigest": "sha256:657f4325208401fe972d8ff9a33445e34184e9c63b485e421563b0385b0f5546",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "flint-hills@v1": {
       "file": "flint-hills@v1.xlsx",
-      "sha256": "sha256:aff7a01d761938b5e8bc9f7df553b0ccddd6e6ac89b9d23badac60f379497107",
-      "bytes": 43280,
+      "sha256": "sha256:ca9fa9b4de1e2ac9c607116d8bddc9a59cdf39f5f7b30e43c2b27e03706e9b06",
+      "bytes": 44767,
       "contentDigest": "sha256:ccfa82b988c0f4175c6c6a9671be4532ca6dbac35154676375017e7ad4327d5d",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "high-plains@v1": {
       "file": "high-plains@v1.xlsx",
-      "sha256": "sha256:b70ef403ea11024cf12d7290a9ca9d666a4119d805af0aebf8f83598ec843b05",
-      "bytes": 41807,
+      "sha256": "sha256:9cbe94e912756f6c1823a54130f6d1f5964c45262c8c72e44abc0b6a21838203",
+      "bytes": 43263,
       "contentDigest": "sha256:67c58200e3e02d38d26e241a33792fe24ddf61c7332dddfa6b5d94be135c8c92",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "huron-erie-lake-plains@v1": {
       "file": "huron-erie-lake-plains@v1.xlsx",
-      "sha256": "sha256:deea39d7526d93c5603b13afaaffe6fd608a7ac40dd6315ddbbd51f00d117117",
-      "bytes": 42904,
+      "sha256": "sha256:0ee4d8cd23c311ae77308ce6917e013ec48af0f6587f29608802191ea51a9111",
+      "bytes": 44378,
       "contentDigest": "sha256:530f47d876ae5d98534a6d2e289afacf27db21c654a2b72cafd25eadcd439b25",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "idaho-batholith@v1": {
       "file": "idaho-batholith@v1.xlsx",
-      "sha256": "sha256:e7201a420461e741250df29dfb87035e3e5a56bbd484c1ba9c864dc6d74947cd",
-      "bytes": 41339,
+      "sha256": "sha256:e407b9b737cd38742f8ea298cd4a9a41df22967af85d4537be1c20a55d863adf",
+      "bytes": 42823,
       "contentDigest": "sha256:a8de2e1de74d0a7299718a14798911df70102cdd3e381f79a384d96ec068894f",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "interior-plateau@v4": {
       "file": "interior-plateau@v4.xlsx",
-      "sha256": "sha256:ff9f700b1fa1d69a9e680242c61a68180df52e61ea2c7440f75ed71adb43cccb",
-      "bytes": 40286,
+      "sha256": "sha256:9ed86712f54cee9f1bae99b07a74954d133cbb96f4652ce127e54c989679d851",
+      "bytes": 41776,
       "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "interior-plateau@v5": {
       "file": "interior-plateau@v5.xlsx",
-      "sha256": "sha256:1e25be3e4c7494f8f9371dee7aa55b1b7c3f42ec6f154448fb92b3939820c585",
-      "bytes": 40974,
+      "sha256": "sha256:7d07ed26a48d0a28aae7f1500842a9229462c06cada7e72a0725fa188f37d52c",
+      "bytes": 42417,
       "contentDigest": "sha256:d339376ab846e645ef6ae9c7c41e9ea0c58f19cca552e72c7e686bf680a19f19",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "interior-plateau@v6": {
       "file": "interior-plateau@v6.xlsx",
-      "sha256": "sha256:ac766db3e241a50643ae184e9976948129213d9cccfaf337ab152eda69e3a5c3",
-      "bytes": 40436,
+      "sha256": "sha256:a96fd75c180668eda84e0fd342af0b25b8f8add7b93843fb390ea4eae63e3a6c",
+      "bytes": 41927,
       "contentDigest": "sha256:c7f3ba4aab6330c47fa23613a0ca1969469bd4b99a8f5b268498601311da0f73",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "interior-plateau@v7": {
       "file": "interior-plateau@v7.xlsx",
-      "sha256": "sha256:c58a5e91443775bee152df4daff197c29aa8aea67ae02b321d3316ff4049e992",
-      "bytes": 43985,
+      "sha256": "sha256:cba73a366165cb7d8b2d67e26fabaea5fbd082b4740026aac3a4f1454593c6a4",
+      "bytes": 45468,
       "contentDigest": "sha256:3dfc705427d34238acf676460286484e2d45c1661e24944b32fa3eec61e60b9e",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "interior-river-valleys-and-hills@v1": {
       "file": "interior-river-valleys-and-hills@v1.xlsx",
-      "sha256": "sha256:28fdfde23c9d3a6ff607bcc2335ae536aa12a0dfddb9b3548dee41b67e3ade05",
-      "bytes": 42084,
+      "sha256": "sha256:98fcb0a0d8a04a2e7305ff4b097783b7c7926dde20bc97f07c650d5baec87cb5",
+      "bytes": 43578,
       "contentDigest": "sha256:3ed23f4a8c1793a122a750cf8cb113a90f16ca70f47b09b96cb6984cd1aa6e56",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "klamath-mountains-california-high-north-coast-range@v1": {
       "file": "klamath-mountains-california-high-north-coast-range@v1.xlsx",
-      "sha256": "sha256:dcf6a85c7e645cafaf9d07897d007489e1f50ef6f6c3c3299461366d1c25ce85",
-      "bytes": 43164,
+      "sha256": "sha256:377ac12c0f1a319af634e2f0d45c9e96679f23db23af9b99e5dc0bbd4068ef48",
+      "bytes": 44639,
       "contentDigest": "sha256:0956ade172c734babc0e8b6dacdbb5b3b9d978c386e1a59034237ca5b30ebc49",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "lake-agassiz-plain@v1": {
       "file": "lake-agassiz-plain@v1.xlsx",
-      "sha256": "sha256:8239881b843749920d86e2acc094bc36d5df3e2e999e18f20ef342c8ac23d612",
-      "bytes": 39797,
+      "sha256": "sha256:b7dd87e3fc95ad721f8da104d9ce412691dff924105dc23a6a9335f4ffbe06dd",
+      "bytes": 41265,
       "contentDigest": "sha256:0dc290898d5c02b8b449b8d4a910b8192353f89f3aa6854d3fd7770a0d92b910",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "madrean-archipelago@v1": {
       "file": "madrean-archipelago@v1.xlsx",
-      "sha256": "sha256:b960ad5eca1b9ec553ac518439947ce8bd461af6cf129b1db1acfd23ed3f9b11",
-      "bytes": 43123,
+      "sha256": "sha256:5dffd90ba82704864d159ec5f4e17913b6d80fdbfec4e641ccf22bdbf9aebf86",
+      "bytes": 44594,
       "contentDigest": "sha256:f738d6007f5794d91d26bf56f86265a511249180aa054ff9fa2b411c2735f0f7",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "mi-sqt-adapted@v2": {
       "file": "mi-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:d5853ba6699aa4bccbff75cd8dd00bbd70ec4ddd853443f168d5f9d5583095ac",
-      "bytes": 35927,
+      "sha256": "sha256:588847217f5daee48424b3a63896e4e2635492e7594cd220413e76d7bf308b75",
+      "bytes": 37516,
       "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "middle-atlantic-coastal-plain@v1": {
       "file": "middle-atlantic-coastal-plain@v1.xlsx",
-      "sha256": "sha256:6059ba874fe69d7172bccf1a701041ed240d0bc5a7a61390b5280fe7e9536f20",
-      "bytes": 41671,
+      "sha256": "sha256:e0bede0782a884ad97027eaf911a0a343c93553e4d5e5e288e6b2bcb75d78d8b",
+      "bytes": 43146,
       "contentDigest": "sha256:479d76c5e211ba08519ef4a041f5b64afc72a7fd16eb1410bfe8b6051ee0e73f",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "middle-rockies@v1": {
       "file": "middle-rockies@v1.xlsx",
-      "sha256": "sha256:a593686d8b5042cf25ce8691e06086869fdc3d0531f914864633f76efa9c7f6c",
-      "bytes": 43445,
+      "sha256": "sha256:b2e20b536edc3a474a2e9785f5ebe8c93acbadeeb8b44bbfe3eecf28c087d5cf",
+      "bytes": 44917,
       "contentDigest": "sha256:339fff1f7ffbb4a19aa8b413de8622374061211fd9b377a482b8137e717f0040",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "mississippi-alluvial-plain@v1": {
       "file": "mississippi-alluvial-plain@v1.xlsx",
-      "sha256": "sha256:f96e2fa80e02a5502d16ea1cdd0fd30be1d2e28160e4702b64a1b6fdc25ef886",
-      "bytes": 40004,
+      "sha256": "sha256:8e4bc323f01838980501653a9315fb1297e2839b43a623f47af2d79a23b2fba4",
+      "bytes": 41470,
       "contentDigest": "sha256:9336561580d8e41687d31817b1579fb511ab74d35a4d22f42f39f881f566ea83",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "mississippi-valley-loess-plains@v1": {
       "file": "mississippi-valley-loess-plains@v1.xlsx",
-      "sha256": "sha256:76d6e8668f187de06f5ce0a6ade4fef299d728f779980cff1f16c7ea18188620",
-      "bytes": 45107,
+      "sha256": "sha256:4f4f20827f2a3c1cc750e4e3aa5c8646babce2edb50772534a4a1cf385ecce1e",
+      "bytes": 46584,
       "contentDigest": "sha256:2e1f1494c6fc759e91d21e33e8620a4b2248511d593a5413e9aa153d526b18d7",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "mn-sqt-adapted@v2": {
       "file": "mn-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:2f0f5b7943e8a5226f3128a8177ddfcc9ccd02cc3281a7d441297aadd7ba831d",
-      "bytes": 37046,
+      "sha256": "sha256:10993d3522744016c59bbdb6b7ba1ef3b8467e3dbdc51fdb821b43a74201fe6e",
+      "bytes": 38657,
       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "mojave-basin-and-range@v1": {
       "file": "mojave-basin-and-range@v1.xlsx",
-      "sha256": "sha256:f3effbac7ff6e7da49b3626e6035a2630315cc4bb64bc9fb7ca7ec7123927a2c",
-      "bytes": 43176,
+      "sha256": "sha256:86082b3e7def67eee5265f3e5bf10ab32d4076ae2b3556685ddfda006db069b6",
+      "bytes": 44659,
       "contentDigest": "sha256:a2f609ab57cacc1f979cf660bf059a767f48deeb868039177847e2e98c537d55",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "nc-sqt-adapted@v2": {
       "file": "nc-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:8d60a421163dc5aae6bb49329614d8df4ab10a59867b635fd99a09b348731ff4",
-      "bytes": 43861,
+      "sha256": "sha256:2ddf0a21a39c4b8ac6ea885b81beb4d653afbcae56c00657bb6e4ba7d8b8ecf5",
+      "bytes": 45483,
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "nebraska-sand-hills@v1": {
       "file": "nebraska-sand-hills@v1.xlsx",
-      "sha256": "sha256:384efd7ce0ca9999e4d482693d8308ab5b70ad0d58551e0d7d0ced4d8056e056",
-      "bytes": 38552,
+      "sha256": "sha256:f5fbe9beab9169fdcf75b842f6f42656c4ff1493df5b1ef1993432f40f96fbee",
+      "bytes": 40026,
       "contentDigest": "sha256:42e3b24ac13c2e8355bcc07b3527d336957a041a5b611a31dd7d74b565528b21",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "north-cascades@v1": {
       "file": "north-cascades@v1.xlsx",
-      "sha256": "sha256:bfbd3db7f997bbc375761dbc9f4853a1f9ab680b7c461807b1293a08f4275014",
-      "bytes": 42967,
+      "sha256": "sha256:38e0bc387d3c7f919b777f28bb7da9400c6abc56ded9db0553ddbaf19bcc8b7e",
+      "bytes": 44467,
       "contentDigest": "sha256:1d757ddc17ed4dfc1b32ada21fec34f70173b24616c01d9bc494fd8e9908b9a3",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "north-central-appalachians@v1": {
       "file": "north-central-appalachians@v1.xlsx",
-      "sha256": "sha256:c716419e09302bbf1bfa0a1ae1f8261b15708b8bf9614d5f47e65dfb4abd6bdf",
-      "bytes": 41284,
+      "sha256": "sha256:7db2bcfc40aed143cdc5824de550d188a6d5c48351a2fa74b782c4f44cacc6b8",
+      "bytes": 42745,
       "contentDigest": "sha256:4b78e8a7e1dd9ab8d95886e4543651a204b2641b3dbf7905b314b0638b63fae3",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "north-central-hardwood-forests@v1": {
       "file": "north-central-hardwood-forests@v1.xlsx",
-      "sha256": "sha256:3ba351a4899ea254e230f46e79f04f4e964c30153a537c2bf0d16755400613e9",
-      "bytes": 43780,
+      "sha256": "sha256:d15d4a252ffb45f93314ae53d1c07bcf3fbe8e5bdf47399c4ee55cfbe42e865c",
+      "bytes": 45243,
       "contentDigest": "sha256:b38d91140db054378edba33178d80b027f785c0512477a6a3e9223df25834371",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northeastern-coastal-zone@v1": {
       "file": "northeastern-coastal-zone@v1.xlsx",
-      "sha256": "sha256:572e0cb35aa458d29a2524b734ef790f0e750c5fa12fecbf76b4a95d150369a4",
-      "bytes": 43365,
+      "sha256": "sha256:e960fb5b4550c06ef4c7c8418773fb433977f63aeed5bb01e887f2a96bada20b",
+      "bytes": 44838,
       "contentDigest": "sha256:c896d50a5c3e71f8877c9d0c06a7b77032900ce3d20235f2793d58ac8eef3c7f",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northeastern-highlands@v10": {
       "file": "northeastern-highlands@v10.xlsx",
-      "sha256": "sha256:679a6ffabd7febf01b23a1baf273c37d3faa7bf298e15b85147b69ce0e09e160",
-      "bytes": 42719,
+      "sha256": "sha256:299ec86470e2cdb41005065973abd95e8835d60e2f1d69598a915ca5d6858c9b",
+      "bytes": 44324,
       "contentDigest": "sha256:3803702732ec6e7191238f165ffae1d5e6588465a682a891fbf58f3d1e2256ca",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "northeastern-highlands@v7": {
       "file": "northeastern-highlands@v7.xlsx",
-      "sha256": "sha256:40b3e974ccd7b748a4f47f875492c03ff6e22f5d28e46894d3172c50d52defa6",
-      "bytes": 43705,
+      "sha256": "sha256:36fb084b75388b90b07c6f38a0344236422ed13079245232dd5d1cad1bb43bff",
+      "bytes": 45341,
       "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "northeastern-highlands@v8": {
       "file": "northeastern-highlands@v8.xlsx",
-      "sha256": "sha256:cd4447f76385db824998536064244c7cd1e3b8e7db0c2a732341cc4f70fbc2be",
-      "bytes": 44661,
+      "sha256": "sha256:f85b7123d10f7026f1b8005d2289f80ce410c3366ec3b89d1dad19201f02309a",
+      "bytes": 46135,
       "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "northeastern-highlands@v9": {
       "file": "northeastern-highlands@v9.xlsx",
-      "sha256": "sha256:18da87e1247c774507717177f748e12faadd32c59c0dd9d2821b81902f5c2604",
-      "bytes": 45003,
+      "sha256": "sha256:f81b82ca4e972069bce6c28fe5b1b59a989b3f68dc4505e277ae05c6f734bbc8",
+      "bytes": 46636,
       "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "northern-allegheny-plateau@v1": {
       "file": "northern-allegheny-plateau@v1.xlsx",
-      "sha256": "sha256:1d5c843836ca4bb0bf0fdf3f3b627672c6877c9146ece5ec8fd7657bee4090e4",
-      "bytes": 42890,
+      "sha256": "sha256:b9f6866badac20e925f76dac8440b52c14284d237e9764a3b53bc8f82797dad1",
+      "bytes": 44370,
       "contentDigest": "sha256:5df6c9488a79114c6215e178da1af460c45eba625faa2e7d1c747147d9752e59",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-basin-and-range@v1": {
       "file": "northern-basin-and-range@v1.xlsx",
-      "sha256": "sha256:d562ae27df17b0f54de98f9b0bcd255b1579d82eb25e397b75de2e000d0dac87",
-      "bytes": 40438,
+      "sha256": "sha256:7d2dd8cd3f8e6839214701a68495ffe803f2fdcd2ca1f8b7b9f8ec1629d6ec66",
+      "bytes": 41940,
       "contentDigest": "sha256:5387b5f5ed77e5fe3ef14c2de352f0f32c6a1b0f7d9d26c4939687a59529d4fd",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-glaciated-plains@v1": {
       "file": "northern-glaciated-plains@v1.xlsx",
-      "sha256": "sha256:5d47bfe7446f7915d4a81af2a3216a115b3977cf73333eac0c45086c47f9a94d",
-      "bytes": 41909,
+      "sha256": "sha256:99dfbc171cc575411c5128c7a6922daab6458a41a4db1e33b4ce525f98333e9d",
+      "bytes": 43381,
       "contentDigest": "sha256:701cf91abc42d9051c404b1101f22595620e96dd750b70df5529043d65a7d151",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-lakes-and-forests@v1": {
       "file": "northern-lakes-and-forests@v1.xlsx",
-      "sha256": "sha256:49db634f06c1a80945ed9833518da3c25b128c5070ffcf2dc299e39d8d364a8e",
-      "bytes": 43498,
+      "sha256": "sha256:8b3ed43ec341036c42e494f3780864c87cb74f4d108b6a9fad8585b494c93d02",
+      "bytes": 45001,
       "contentDigest": "sha256:7d8d5bed086c24c7ac118c4008ca58ae2190f42e4209dca35415d0fa8e24277a",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-lakes-and-forests@v2": {
       "file": "northern-lakes-and-forests@v2.xlsx",
-      "sha256": "sha256:174ae37a2c5efcb54299fa6cc9787421e85d7393b4c9697a110f3b9c51e6e254",
-      "bytes": 43263,
+      "sha256": "sha256:df2806b5b58bde42e3a59b0914724287b67bb6997d6aebb2d554044f230b9fa6",
+      "bytes": 44739,
       "contentDigest": "sha256:7ead5bd14988d461b5b3687d466eec875a8eeecd805375e02438fa07b97c866d",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-minnesota-wetlands@v1": {
       "file": "northern-minnesota-wetlands@v1.xlsx",
-      "sha256": "sha256:e10b4b20551d0e01341f88c0c1256eb7fde60ef6aaa987273ee8ba1e3b512819",
-      "bytes": 40145,
+      "sha256": "sha256:05f14282f3036ce11f2e1b323578254aec6dabba2b95b67400dfec7633ac051d",
+      "bytes": 41604,
       "contentDigest": "sha256:bffd5e693018df99058152b461a81651ccc3cad7ed90b46339045a82b3946abc",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-piedmont@v1": {
       "file": "northern-piedmont@v1.xlsx",
-      "sha256": "sha256:f7e006987c8506c3495c65a1e900d0581bd28798fe78762f3bec6cb553eef1e3",
-      "bytes": 43633,
+      "sha256": "sha256:a8ec369a7483ba13361fd5f5d5732827714fb5d361796b655a4f7088aafece53",
+      "bytes": 45128,
       "contentDigest": "sha256:09ae1a8c033c66db35838eed39ca7248e6522810e202cdb9ac70d6b1192b8913",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northern-rockies@v1": {
       "file": "northern-rockies@v1.xlsx",
-      "sha256": "sha256:5575e37b2bc71dc0118a8d099bc6b573292f0f43a3c0e054c6cbb04bf9317eec",
-      "bytes": 40234,
+      "sha256": "sha256:f0af558d205e3afb7f7027c35e8e72fdafa59606ed2feef9ad42bb5dec4a82e1",
+      "bytes": 41726,
       "contentDigest": "sha256:fecfe0278f4c869c64c06f10c3399754bc83c9b40b1774b2db2254d0686711d7",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northwestern-glaciated-plains@v1": {
       "file": "northwestern-glaciated-plains@v1.xlsx",
-      "sha256": "sha256:2854af5a696a991bf2503c62aad46249b51277f23e18f0032e193f7c94491ee7",
-      "bytes": 43724,
+      "sha256": "sha256:7676cd995710b44d84153afc99ce1a63a2dad25669f890b3e929e8a58dd1aefb",
+      "bytes": 45208,
       "contentDigest": "sha256:e8b385250dbbd57d44d3747e0997c5e5e927792fb203cd67bb912ae2c0fbb387",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "northwestern-great-plains@v1": {
       "file": "northwestern-great-plains@v1.xlsx",
-      "sha256": "sha256:8a4a82b52428953885d7df1937d63e8d00bf4171b956e6d287bff7895ec28f95",
-      "bytes": 42577,
+      "sha256": "sha256:6c0f6f6a4348f084f2e7721d9fd505b6e557e4a078cd1ababa9a31bf43b49fdc",
+      "bytes": 44048,
       "contentDigest": "sha256:2ee7911c0fe28c2bbedb454948482840707ed71438e2a395efd4bd899b6f1d2d",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "ouachita-mountains@v1": {
       "file": "ouachita-mountains@v1.xlsx",
-      "sha256": "sha256:0380655dfb664d997171f88ab6a4d44834239e52c3ee0959460815b5338d8fc8",
-      "bytes": 43185,
+      "sha256": "sha256:a24c7395324febd91d0a6a93d36cb8074bf02ad9c151190838ca21dc5d701692",
+      "bytes": 44653,
       "contentDigest": "sha256:ccaedde6c64137dd680e54a83fd08f8972dd6e695bd7996f28b6a1b62212f650",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "ozark-highlands@v1": {
       "file": "ozark-highlands@v1.xlsx",
-      "sha256": "sha256:d0cb4d376ea2886ec095bd947bfd16788063d93a52d2b9ba2d564faf1c1b20d1",
-      "bytes": 43337,
+      "sha256": "sha256:91a1d31cbf8635657c6a27d0fcb972dd9608b55b0677448d7a54859eb1763c79",
+      "bytes": 44812,
       "contentDigest": "sha256:f2e324139fc4a85fd4b125de9ffac8c865fd3ce27c36de7999c7ff541a7e314c",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "piedmont@v1": {
       "file": "piedmont@v1.xlsx",
-      "sha256": "sha256:901930956a6a060f77fd9f8512197e2e652356e67d4c0d6d8db4d4450b4ab493",
-      "bytes": 42870,
+      "sha256": "sha256:81ded411dfa55c6257e4f0b64d0336fe7191067c4d14947d50e1f117af84418a",
+      "bytes": 44367,
       "contentDigest": "sha256:ef86450941a9a31167adbb7221d44e97362454c65b225649d3a68715d361feea",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "puget-lowland@v1": {
       "file": "puget-lowland@v1.xlsx",
-      "sha256": "sha256:5b3b61a341a480951bd177af90e3db31f0f4bd6b9abf8731839a4781a0967025",
-      "bytes": 42604,
+      "sha256": "sha256:f1184fb0a0e42972457beee7b99f4e509b60c9f389fb260371f5cdc120b527c4",
+      "bytes": 44076,
       "contentDigest": "sha256:2cd02b48a19d50288dc835356ab09fd696bd1497e8ea93643aa11cb0a0d25ed2",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "ridge-and-valley@v1": {
       "file": "ridge-and-valley@v1.xlsx",
-      "sha256": "sha256:fc4e265781388a8436c7154762e747f06791d65367d0fd77750fd09ffe7d535d",
-      "bytes": 41848,
+      "sha256": "sha256:74718de2ecad1784f5020f154a4e86ece81aed2acd2db0e38ec70f101ec74ffa",
+      "bytes": 43326,
       "contentDigest": "sha256:91a68c2969f895e3f2d8fca8f6d2d55f49f7d805da284cc0fca54025a48390a6",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "sc-sqt-adapted@v2": {
       "file": "sc-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:05960db85e274c3337f5a3008232851fdaa37cd782c0b895fbb6a61880b50c60",
-      "bytes": 39153,
+      "sha256": "sha256:4a2a1e0bb5007df3da2e91b4511e1adbf7e85132231ee965f190166b4c39d550",
+      "bytes": 40755,
       "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "sierra-nevada@v1": {
       "file": "sierra-nevada@v1.xlsx",
-      "sha256": "sha256:5fe0e2e499e69f09f33fa980bb5f4289cb1e5e5915a6918e8fff384ec68bc71c",
-      "bytes": 43651,
+      "sha256": "sha256:81f369646b7778efb20745d2ff89b5f832a9670503ba6dea36328398c713fa7c",
+      "bytes": 45138,
       "contentDigest": "sha256:5213157ece683a99b559d6118a2e8f9a8464d6bda539e56288457793753c5949",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "snake-river-plain@v1": {
       "file": "snake-river-plain@v1.xlsx",
-      "sha256": "sha256:9769a4279cf2fc2b7272298513edf03ed77b5a895ebf6e35c2117edd4ecb28b9",
-      "bytes": 41739,
+      "sha256": "sha256:2b01ece5b7a87b30d5942567d595bf274b1f5481eee0530db7fbe9ffb448661f",
+      "bytes": 43211,
       "contentDigest": "sha256:507919d17c919c6c2c5e298aed3e207a0e5105d4e38654b055fd606ac8a86ad5",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "sonoran-basin-and-range@v1": {
       "file": "sonoran-basin-and-range@v1.xlsx",
-      "sha256": "sha256:7dc15b0a8e8a10d7349092fafa10ee19012b09544cede7a7d4c859f432731391",
-      "bytes": 43177,
+      "sha256": "sha256:989a6cf7b995c99e00e1e536a0511c55e8bf026e9ce06128a4470e0488d23cf7",
+      "bytes": 44659,
       "contentDigest": "sha256:1cb320e5cd5a1be90a9432c7aa302dd5b7b88ebf1c106885c9fa8848ffb6015b",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "south-central-plains@v1": {
       "file": "south-central-plains@v1.xlsx",
-      "sha256": "sha256:e85e0d22c7cd526cc858b971d8eb5786bd8b860f0d8dd1867c0aa429e4a895da",
-      "bytes": 41764,
+      "sha256": "sha256:8212037862816bd08ba098e897fd5576b5fe0334837797aeae79cbd57ddedbb9",
+      "bytes": 43250,
       "contentDigest": "sha256:1ea97f3cd875254bf1ee6f9126c68a5dae471dfd87505be612cbcc78abdcdd94",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southeastern-plains@v1": {
       "file": "southeastern-plains@v1.xlsx",
-      "sha256": "sha256:c4b892762040da526b15f4bdb01909bd398c62dc94bb29047a08183bac85cf70",
-      "bytes": 38913,
+      "sha256": "sha256:06efdd680e6932160b236c87794763ecc97cb189ea5678e4f7ef13e077b81f62",
+      "bytes": 40380,
       "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southeastern-plains@v2": {
       "file": "southeastern-plains@v2.xlsx",
-      "sha256": "sha256:a52adbf445a9c1560c61cb0b997257226c5a0900b88b852683a6267f5db26a71",
-      "bytes": 39635,
+      "sha256": "sha256:f1b17c1c96c7d5e28b8e3411973898a84a2f644e21d93c7fbb501dad0bdc7751",
+      "bytes": 41118,
       "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southeastern-plains@v3": {
       "file": "southeastern-plains@v3.xlsx",
-      "sha256": "sha256:e6cc186c587f821b74537413222eaff63f8054569db3f8a9ed83348f39b94855",
-      "bytes": 41886,
+      "sha256": "sha256:0572f37166e27be7c13b73bb029382d592b98114ddcf080efa8463bf9e9946dd",
+      "bytes": 43373,
       "contentDigest": "sha256:f8065d8b324379ff10ce6632fb9e38d3d01b51b0fca26383b3949649e9b4a039",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southeastern-wisconsin-till-plains@v1": {
       "file": "southeastern-wisconsin-till-plains@v1.xlsx",
-      "sha256": "sha256:c04387a047fccbe659188f3ad752a331a4fcd39d0450cbb5653179d0602c32bf",
-      "bytes": 43782,
+      "sha256": "sha256:bcbe950772fc5b7a4fa28af6df622480209300aa37f16e891d182c556f395964",
+      "bytes": 45257,
       "contentDigest": "sha256:2848e7844509a72cc7b8e5b4dc2fbdb04e5620e28e72e2ccf298cff1054877f4",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-california-mountains@v1": {
       "file": "southern-california-mountains@v1.xlsx",
-      "sha256": "sha256:42c6637d39a86d9d48945f8fc12df77dadd03f4ba042403b999b0f1d4a54b49e",
-      "bytes": 44954,
+      "sha256": "sha256:79cb3ba2485f7d54e8e4cd3617f1efb80ce5dc6ccd59f8735af3980b92b37ef3",
+      "bytes": 46461,
       "contentDigest": "sha256:7835f7893b911d983d2458bd0793454e4de7070e951803c1b3b7bc1ffa18ec89",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-california-northern-baja-coast@v1": {
       "file": "southern-california-northern-baja-coast@v1.xlsx",
-      "sha256": "sha256:a5193249c4af3e6ebc9b03324f6f1c978062087d3e759b28442d77907169fc1d",
-      "bytes": 42607,
+      "sha256": "sha256:1b53cc6e2ce49847365168fc2403c17acd583c8a62470ee9b9448c7cd8156484",
+      "bytes": 44090,
       "contentDigest": "sha256:9495d1086469a49d1ba727bb0e48248603b22cad0da72033e7ddebf1cbeee925",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-coastal-plain@v1": {
       "file": "southern-coastal-plain@v1.xlsx",
-      "sha256": "sha256:b56169b25a412ff8d97dcf18a1248fe1570b541d58225137819a63c4796b547b",
-      "bytes": 41006,
+      "sha256": "sha256:44cc8e12471cc5c49b2578d22782fd75d397007df207b8a285efad4e9a6369b9",
+      "bytes": 42486,
       "contentDigest": "sha256:82ddc4b7db486f58ea8a429fbe185553877029b158b451b34bb45dd1827aa0dd",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-florida-coastal-plain@v1": {
       "file": "southern-florida-coastal-plain@v1.xlsx",
-      "sha256": "sha256:8181e9970c8bddefb95a55f0d327594a16ac9f6bef1db24c9488474b95e1dcc0",
-      "bytes": 44796,
+      "sha256": "sha256:c7be53b340996d8f4462fc0f68659e2e5e3977bad35f4009345092cfdad43c66",
+      "bytes": 46265,
       "contentDigest": "sha256:61561a49a080e992ce47797a3b72993a0ac0134243f7db799b012c295f7c0c39",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-michigan-northern-indiana-drift-plains@v1": {
       "file": "southern-michigan-northern-indiana-drift-plains@v1.xlsx",
-      "sha256": "sha256:f0a7a248905b448f5de89938b9a162f2869d2328a37463e8485d93ead7d9166b",
-      "bytes": 41966,
+      "sha256": "sha256:42e274d4a0dc8735f5e63441cd45f590eb274a7489171b7e63e300b9a2a35869",
+      "bytes": 43425,
       "contentDigest": "sha256:ce867283331e82b389853145b2b381e0a6d12e26c4507893a2b10a028235bf43",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-rockies@v1": {
       "file": "southern-rockies@v1.xlsx",
-      "sha256": "sha256:00c6e55df5f00b7ccdd998f18d725901ae61f916246507e82c2d87ba81b088b3",
-      "bytes": 39693,
+      "sha256": "sha256:b371ee2f3fc9111739241612713aad71aba97e6721295759c7e23dcab3c637bc",
+      "bytes": 41148,
       "contentDigest": "sha256:cbd87ee5b27929c7eb7568292ae4ed1c4d62e06eec8db8f124eeb308fb5b0066",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southern-texas-plains@v1": {
       "file": "southern-texas-plains@v1.xlsx",
-      "sha256": "sha256:a628a7ac69c702e32edef178128f0d075256f4c8154e59b9bc765006963acd95",
-      "bytes": 41003,
+      "sha256": "sha256:8e8389759d8f540e447927e06a6e0b4758c0abf2cfc064571d5ad9e92e84b05f",
+      "bytes": 42477,
       "contentDigest": "sha256:02f7c5121deb91a8f91feb1585915e517f99487fcc250e88c36dea740d9e242c",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southwestern-appalachians@v1": {
       "file": "southwestern-appalachians@v1.xlsx",
-      "sha256": "sha256:682369eee0e2b822ac4dffa07262370918162ece6711690b4300651547bd5cfb",
-      "bytes": 43972,
+      "sha256": "sha256:2ab3e94cc184576a1fce20308368c7378e40bb6253eb3f3c3b93fcba04e889b6",
+      "bytes": 45456,
       "contentDigest": "sha256:48a56ca74a25bfd4daffb1237b01e70292c5cc499804def3577ed2af0fb45fa0",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "southwestern-tablelands@v1": {
       "file": "southwestern-tablelands@v1.xlsx",
-      "sha256": "sha256:baa632e9b47d6ae952bc007e593740b276c18b5125960a587fab40a5db68d9cc",
-      "bytes": 39961,
+      "sha256": "sha256:b58632a311fe194da7eb256c3ca76bb029c06ba04e5549eaaf132e353f6f1c71",
+      "bytes": 41441,
       "contentDigest": "sha256:5526f67dbe8297beb4ad280cfc84a34a4342457bbbcca8438fbb882e5a960c34",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "texas-blackland-prairies@v1": {
       "file": "texas-blackland-prairies@v1.xlsx",
-      "sha256": "sha256:b6bd5dedf5eaa7764d025335e5958ed10c4e05a9ef69d54eda7eb5d34f4d7c4b",
-      "bytes": 41852,
+      "sha256": "sha256:6d87931e0a5d30cd0c7ca997348d860273649878e614c17462b5314e31b76ed4",
+      "bytes": 43340,
       "contentDigest": "sha256:f4f3b6b4fb55cb03e2fcea4ccf0eade80f5994eca514149efbffe0dd082adea4",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "wasatch-and-uinta-mountains@v1": {
       "file": "wasatch-and-uinta-mountains@v1.xlsx",
-      "sha256": "sha256:9a29056069b3bd90540faf5e12aa6c67168420c303d2d4f98b39e6ecc1c22201",
-      "bytes": 43276,
+      "sha256": "sha256:a3c94338edfcd0e271359a021b77f49cd7238be38233b95bda874dfdffd8710c",
+      "bytes": 44760,
       "contentDigest": "sha256:cff8e647901ecbc9f56eb0f867bc7037e1e09f79bbf95e894d2f55dbdc28cafb",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "western-allegheny-plateau@v1": {
       "file": "western-allegheny-plateau@v1.xlsx",
-      "sha256": "sha256:c7eb59463ae9e12032ebc7436eb24af6a76453dd7c8f1486f4a82933dc47801a",
-      "bytes": 43997,
+      "sha256": "sha256:da823bf16473648ec68be79c53e5eb940e0c5d2e0ab264b19c0d4b94c9c952ef",
+      "bytes": 45487,
       "contentDigest": "sha256:2bcc053d3d14cdb214b4cbdf43c9e8482685813f27af6528a45e79e000f13e3e",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "western-corn-belt-plains@v1": {
       "file": "western-corn-belt-plains@v1.xlsx",
-      "sha256": "sha256:eaff9aa790cbd0030c0bdb14ad87980395f5f9fec23f3845630116b2be5d9b97",
-      "bytes": 40837,
+      "sha256": "sha256:73caa89b3b11cd43dae0fc122d51e605e747f9a39987f759d8b85c1fa982a2be",
+      "bytes": 42317,
       "contentDigest": "sha256:092d2889575f3acb05db781b0b33f88e0b11642276ae64635ee7c62ad87aaa1a",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "western-gulf-coastal-plain@v1": {
       "file": "western-gulf-coastal-plain@v1.xlsx",
-      "sha256": "sha256:f0b4a067c5ded310ded9dcca617196bc896ca75e8a28dec2bc5a0b3b93d84fed",
-      "bytes": 38356,
+      "sha256": "sha256:5db8bdc6a8f9b8d5bf683df851bab7b721d9007157b0b2acaa22aa0595516bd5",
+      "bytes": 39828,
       "contentDigest": "sha256:5e5fa2b7d4658d1a0a9fec1ea953ce9f61c3610fc882279f3a9d2c5354499b79",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "wi-sqt-adapted@v2": {
       "file": "wi-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:9914cf889f9ee2041ca2513c3a8d57cec11ccffa9b796bbee8c8dd1e560827a7",
-      "bytes": 38035,
+      "sha256": "sha256:12f6daaee2ac3b1aa3f7d7b7613f979ed5aa3db2af4f87027d5bcb627ed490b0",
+      "bytes": 39647,
       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "willamette-valley@v1": {
       "file": "willamette-valley@v1.xlsx",
-      "sha256": "sha256:000dfcaa99cc809125a7940f17d17f375022bfdd2b7e5cf8080d7abd3ede6e28",
-      "bytes": 41470,
+      "sha256": "sha256:ed63205a321f7b7c446e22f13bac3b1f4e9dff710794f26200e80e7155e273f8",
+      "bytes": 42968,
       "contentDigest": "sha256:240ddb45e155df064882b97c9de783d1375d92d9c2e3780e20f78634617f920c",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     },
     "wy-sqt-adapted@v2": {
       "file": "wy-sqt-adapted@v2.xlsx",
-      "sha256": "sha256:43be48b9b6266d31ca27d41d8dba32f480d53200b247310c33da13dd108736ab",
-      "bytes": 38750,
+      "sha256": "sha256:682b1be706382b94b74ca56cfa96dce4466cb455df8090eda0d5ec1d52020a9c",
+      "bytes": 40349,
       "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "preliminary"
     },
     "wyoming-basin@v1": {
       "file": "wyoming-basin@v1.xlsx",
-      "sha256": "sha256:d95530ad2b71ac9f272ffa5d08f6b89a2b98a318fe48b742b97fcb9fba1dc45a",
-      "bytes": 40485,
+      "sha256": "sha256:4695568eb674db8e51cc306e14a213d778890caacadfc3844408044d27209ffd",
+      "bytes": 41972,
       "contentDigest": "sha256:0273b0d6091ed8fa689f0ed1646df9de86d7e8be8ffbde8cbaa91de12393d280",
-      "generatorVersion": "1.0"
+      "generatorVersion": "1.1",
+      "status": "draft"
     }
   },
   "default": {
