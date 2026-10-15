@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { MetricDetailSchema } from '../src/lib/metricLibrary/schemas.ts';
+import { buildToolbox, toolboxPath, workbookSnapshot } from '../src/lib/metricLibrary/toolbox.ts';
 
 const loadJson = async (filePath: string) => {
   const raw = await fs.readFile(filePath, 'utf8');
@@ -58,6 +59,20 @@ const run = async () => {
 
   // eslint-disable-next-line no-console
   console.log('Metric library schema tests passed.');
+
+  // The committed Metric Toolbox workbook matches the library
+  const rebuild = 'Run `npm run build:metric-toolbox` and commit the workbook.';
+  await fs.access(toolboxPath).catch(() => {
+    assert.fail(`Missing ${path.basename(toolboxPath)}. ${rebuild}`);
+  });
+  const { buffer } = await buildToolbox();
+  assert.ok(
+    (await workbookSnapshot(toolboxPath)) === (await workbookSnapshot(buffer)),
+    `${path.basename(toolboxPath)} is out of date with the metric library. ${rebuild}`
+  );
+
+  // eslint-disable-next-line no-console
+  console.log('Metric Toolbox workbook matches the library.');
 };
 
 run().catch((error) => {

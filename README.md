@@ -132,14 +132,21 @@ npm test
 Generated outputs include:
 - Canonical JSON metric library (`docs/assets/data/metric-library/index.json`, `metrics/*.json`, `curves/*.json`)
 - Tier datasets (`screening-metrics.tsv`, `rapid-indicators.tsv`, `rapid-criteria.tsv`, `detailed-metrics.tsv`)
+- The Metric Toolbox workbook (`docs/assets/data/metric-library/STAF_Metric_Toolbox.xlsx`)
 
 ### Metric library download (XLSX)
 
-The Apply STAF page's **Metric Toolbox** button exports an `.xlsx` with:
+The Apply STAF page's **Metric Toolbox (Excel)** link opens `STAF_Metric_Toolbox.xlsx` in its own tab. The workbook has:
 - Sheet 1: `Metrics`
 - Sheet 2: `Reference Curves`
 
-This workbook is built at runtime from the canonical JSON metric library (`index.json` + metric detail JSON + curve-set JSON), not by rebuilding from TSV files.
+`scripts/buildMetricToolbox.ts` builds it from the canonical JSON metric library (`index.json` + metric detail JSON + curve-set JSON) at the end of `npm run build:metric-library`, and rewrites it only when its contents change. To rebuild only the workbook:
+
+```bash
+npm run build:metric-toolbox
+```
+
+`npm test` fails when the committed workbook no longer matches the library.
 
 ## Contributing
 

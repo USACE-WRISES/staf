@@ -10,7 +10,7 @@ description: "Apply each STAF tier with its web application or its spreadsheet c
 ## Downloads and resources
 
 <ul class="tools-resources">
-  <li><button type="button" class="tools-resource-link" data-metric-toolbox-download>Metric Toolbox (Excel)</button> <span class="tools-resource-note">The full STAF metric library as a spreadsheet.</span></li>
+  <li><a class="tools-resource-link" href="{{ '/assets/data/metric-library/STAF_Metric_Toolbox.xlsx' | relative_url }}" target="_blank" rel="noopener">Metric Toolbox (Excel)</a> <span class="tools-resource-note">The full STAF metric library as a spreadsheet.</span></li>
   <li><a class="tools-resource-link" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url }}">STAF Factsheet (PDF)</a> <span class="tools-resource-note">Overview of the framework.</span></li>
 </ul>
 
@@ -27,5 +27,4 @@ description: "Apply each STAF tier with its web application or its spreadsheet c
 - Wisconsin Stream Quantification Tool Steering Committee (WISQT SC). 2023. Stream Quantification Tool and Debit Calculator for Wisconsin User Manual and Workbooks. Beta Version.
 - U.S. Army Corps of Engineers. 2023. Wyoming Stream Quantification Tool (WSQT) User Manual and Spreadsheet. Version 2.0, Omaha District, Wyoming Regulatory Office, Cheyenne Wyoming.
 
-<script src="{{ '/assets/js/metric-toolbox.js' | relative_url }}" defer></script>
 <script src="{{ '/assets/js/apply-staf.js?v=20261014-drafts-hidden' | relative_url }}" defer></script>
