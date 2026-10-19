@@ -28,6 +28,13 @@ def _stop(*args, **kwargs):
     raise StateMutation
 
 
+def _defines(app_name, name):
+    """Whether the app's server defines a function ``name``."""
+    source = ast.parse((APPS / app_name / "app.py").read_text(encoding="utf-8"))
+    server = next(n for n in source.body if isinstance(n, ast.FunctionDef) and n.name == "server")
+    return any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == name for n in ast.walk(server))
+
+
 def _function(app_name, name, namespace):
     source = ast.parse((APPS / app_name / "app.py").read_text(encoding="utf-8"))
     server = next(n for n in source.body if isinstance(n, ast.FunctionDef) and n.name == "server")
@@ -200,14 +207,24 @@ def test_successful_import_invalidates_pending_pick_before_loading_state(app_nam
     saved = tmp_path / "assessment.json"
     saved.write_text("{}", encoding="utf-8")
     state = {"generation": 9}
-    loader = SimpleNamespace(load=json.loads, saved_point=lambda _: None)
-    handler = _function(app_name, "_load_session", {
+    loader = SimpleNamespace(load=json.loads, saved_point=lambda _: None, lifecycle_status=lambda raw: None)
+    namespace = {
         "_map_pick": state,
         "input": SimpleNamespace(load_session=lambda: [{"datapath": str(saved)}]),
         "session_io": loader, "session": loader, "delin": SimpleNamespace(set=_stop),
         "_lookup_request": SimpleNamespace(clear=_stop), "_cancel_report": _stop,
         "comid_anchor": SimpleNamespace(saved_anchor=lambda _: None, saved_point=lambda _: None),
-    })
+        # DEEP (since 2026-10-14) first gives an opened file today's status of its version; a
+        # file that names no version comes back as it was
+        "_with_current_lifecycle": lambda st: st,
+        "_draft": {"accepted": False, "pending": None},
+    }
+    # DEEP restores through its Draft notice, which runs the restore at once for a file that is
+    # not a Draft: the production gate and restore run here, as the handler is
+    for helper in ("_restore_session", "_through_draft_notice"):
+        if _defines(app_name, helper):
+            namespace[helper] = _function(app_name, helper, namespace)
+    handler = _function(app_name, "_load_session", namespace)
     with pytest.raises(StateMutation):
         handler()
     assert state["generation"] == 10
