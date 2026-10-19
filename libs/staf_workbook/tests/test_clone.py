@@ -22,7 +22,7 @@ from templates import DEEP, EASI, SFARI
 CASES = [
     pytest.param(EASI, "EASI Score", {}, ["EASI Score", "Metrics", "Results", "ChartData"], id="easi"),
     pytest.param(DEEP, "DEEP Score", {}, ["DEEP Score", "Metrics", "Results", "ChartData"], id="deep"),
-    pytest.param(SFARI, "SFARI Score", {"Instructions": "L4:P27"}, ["SFARI Score"], id="sfari"),
+    pytest.param(SFARI, "Scenario", {"Instructions": "L4:P27"}, ["Scenario"], id="sfari"),
 ]
 SCENARIOS = [ScenarioInput("existing", "Existing Conditions"), ScenarioInput("s2", "Alternative 1"),
              ScenarioInput("s3", "Restore riparian")]

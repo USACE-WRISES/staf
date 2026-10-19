@@ -15,7 +15,7 @@ import { buildWorkbook } from '../src/tools/sfari/workbook'
 import ref from './fixtures/xlsx_ref.json'
 
 const R = ref as any
-const TEMPLATE = new Uint8Array(readFileSync(join(__dirname, '..', 'page', 'forms', 'sfari', 'SFARI_Calculator_Template_2026-10-15.xlsx')))
+const TEMPLATE = new Uint8Array(readFileSync(join(__dirname, '..', 'page', 'forms', 'sfari', 'SFARI_Calculator_Template_2026-10-19.xlsx')))
 
 describe('the zip writer', () => {
   it('copies a workbook as zipfile does, entry by entry', async () => {

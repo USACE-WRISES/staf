@@ -57,7 +57,9 @@ def test_workbook_has_a_calculator_per_scenario_behind_the_instructions_and_a_su
     z = zipfile.ZipFile(io.BytesIO(data))
     book = z.read("xl/workbook.xml").decode("utf-8")
     names = re.findall(r'<sheet\b[^>]*name="([^"]+)"', book)
-    assert names[:5] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    # the owner's 2026-10-19 calculator: Instructions, Summary, then a tab per scenario named after it
+    assert names[:4] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian"]
+    assert "ReferenceCurves" not in names and "Scenario" not in names
     assert 'activeTab="0"' in book                             # it opens on Instructions
     assert "fullCalcOnLoad=\"1\"" in book
     sheets = dict((n, None) for n in names)

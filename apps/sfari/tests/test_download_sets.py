@@ -60,6 +60,6 @@ def test_every_download_opens_its_own_tab():
 
 def test_the_download_names_are_plain():
     from sfari import calculator, report
-    assert calculator.calculator_filename() == "2026-10-15_SFARI Calculator.xlsx"   # its version (owner, 2026-10-19)
+    assert calculator.calculator_filename() == "2026-10-19_SFARI Calculator.xlsx"   # its version (owner, 2026-10-19)
     assert report.desktop_metrics_filename() == "sfari-desktop-metrics.pdf"
     assert report.field_forms_filename() == "sfari-field-forms.pdf"

@@ -14,11 +14,11 @@ type Obj = Record<string, any>
 export const FIELD_FORMS_URL = 'forms/sfari/SFARI_Field_Form_v1.0.pdf'
 export const FIELD_FORMS_FILENAME = 'sfari-field-forms.pdf'
 /** the plain calculator every workbook is assembled from (calculator.TEMPLATE_PATH) */
-export const TEMPLATE_URL = 'forms/sfari/SFARI_Calculator_Template_2026-10-15.xlsx'
+export const TEMPLATE_URL = 'forms/sfari/SFARI_Calculator_Template_2026-10-19.xlsx'
 /** the blank workbook, served as it is (calculator.BLANK_PATH); fetch encodes the space */
-export const BLANK_URL = 'forms/sfari/2026-10-15_SFARI Calculator.xlsx'
+export const BLANK_URL = 'forms/sfari/2026-10-19_SFARI Calculator.xlsx'
 /** both workbooks download under the calculator's version (owner, 2026-10-19) */
-export const BLANK_FILENAME = '2026-10-15_SFARI Calculator.xlsx'
+export const BLANK_FILENAME = '2026-10-19_SFARI Calculator.xlsx'
 
 const BADGE: Record<string, string> = {
   Available: '#d8ecd8;color:#1f6b32', Pending: '#eef1f6;color:#5a6478', Unavailable: '#f3d9d9;color:#8a2d2d',

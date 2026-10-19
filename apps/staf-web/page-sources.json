@@ -201,13 +201,13 @@
    "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, cut to the image's characters)",
    "sha256": "8f6e3e17d3b8747af3f55c5c1704be8ecede2011c71348be82947a40a7c3d302"
   },
-  "forms/sfari/2026-10-15_SFARI Calculator.xlsx": {
-   "source": "apps/sfari/data/calculator/2026-10-15_SFARI Calculator.xlsx",
-   "sha256": "186ed6da987cfa271a21489fa1d865a6fa47927d6674ef8026a7c72c2db92faf"
+  "forms/sfari/2026-10-19_SFARI Calculator.xlsx": {
+   "source": "apps/sfari/data/calculator/2026-10-19_SFARI Calculator.xlsx",
+   "sha256": "157e7bad2de4eb403ccdc033fa906772d6ad017dfa558792f874ee5789350cf8"
   },
-  "forms/sfari/SFARI_Calculator_Template_2026-10-15.xlsx": {
-   "source": "apps/sfari/data/calculator/SFARI_Calculator_Template_2026-10-15.xlsx",
-   "sha256": "808cba75cdfed2c706ff42316fd9aac34f57212cedfe360081449a3b29cbeff5"
+  "forms/sfari/SFARI_Calculator_Template_2026-10-19.xlsx": {
+   "source": "apps/sfari/data/calculator/SFARI_Calculator_Template_2026-10-19.xlsx",
+   "sha256": "513babdda938b3431d77483e6463e487f141f53793a04b74573dbc8a08a413f3"
   },
   "forms/sfari/SFARI_Field_Form_v1.0.pdf": {
    "source": "apps/sfari/data/FieldForm/SFARI_Field_Form_v1.0.pdf",

@@ -1,6 +1,6 @@
 """The SFARI Excel calculator: the template, the filled copy, and the drift gates.
 
-The template is the developers' 2026-10-15 issue after the Eco-PCX review, so the
+The template is the owner's 2026-10-19 calculator (SFARI v1.0, after the Eco-PCX review), so the
 tests that matter most are the ones asserting the app does not alter it: the package
 comes back with the same parts, the same order, the same compression, and only the
 input cells changed. The blank workbook built from it has its own tests
@@ -31,10 +31,10 @@ TOUCHED = {SHEET_PART, "xl/workbook.xml"}
 
 # The template as shipped. If this changes, the developers issued a new workbook and
 # every mapping test below has to be re-read before the digest is updated.
-# 2026-10-19: the 2026-10-15 calculator, prepared from the owner's master by
-# scripts/prepare_calculator_template.py (inputs cleared, E72 corrected again, step 1
-# names Existing Conditions); the 2026-06-29 draft was c5795f9e...
-TEMPLATE_SHA256 = "808cba75cdfed2c706ff42316fd9aac34f57212cedfe360081449a3b29cbeff5"
+# 2026-10-19: the owner's 2026-10-19 calculator, prepared by
+# scripts/prepare_calculator_template.py (the Summary left out, step 1 names each scenario
+# worksheet); the 2026-10-15 one was 808cba75..., the 2026-06-29 draft c5795f9e...
+TEMPLATE_SHA256 = "513babdda938b3431d77483e6463e487f141f53793a04b74573dbc8a08a413f3"
 #: The password the Instructions give for both protected sheets
 PASSWORD = "sfari"
 
@@ -47,7 +47,7 @@ DELIN = {"delineation": {"network": "nhdplus-hr", "nhdplus_id": 24000800011817,
                          "reach_length_ft": 1000}}
 
 
-def _template_sheet(name="SFARI Score"):
+def _template_sheet(name=calculator.SHEET_NAME):
     return openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))[name]
 
 
@@ -60,7 +60,7 @@ def _build(**kw) -> bytes:
 
 
 def _sheet_of(data: bytes):
-    return openpyxl.load_workbook(io.BytesIO(data))["SFARI Score"]
+    return openpyxl.load_workbook(io.BytesIO(data))[calculator.SHEET_NAME]
 
 
 def _cells(sheet_xml: str) -> dict:
@@ -101,7 +101,8 @@ def test_both_sheets_open_with_the_password_the_instructions_give():
     assert (ws["I6"].value, ws["I7"].value) == ("Protect/unprotect password:", PASSWORD)
     book = openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))
     assert book.security is None                    # no structure lock since 2026-10-15
-    for name in ("Instructions", "SFARI Score"):
+    assert book.sheetnames[:2] == ["Instructions", "Scenario"]   # the owner's names (2026-10-19)
+    for name in ("Instructions", calculator.SHEET_NAME):
         prot = book[name].protection
         assert prot.sheet and prot.algorithmName == "SHA-512", name
         h = hashlib.sha512(base64.b64decode(prot.saltValue) + PASSWORD.encode("utf-16-le")).digest()
@@ -110,10 +111,17 @@ def test_both_sheets_open_with_the_password_the_instructions_give():
         assert base64.b64encode(h).decode() == prot.hashValue, name
 
 
-def test_instructions_step_one_names_the_tab_every_workbook_shows():
+def test_instructions_step_one_fits_every_workbook():
+    """A blank names the score sheet "Scenario", a completed workbook names each tab after its
+    scenario (owner, 2026-10-19)."""
     assert _template_sheet("Instructions")["B16"].value == (
-        "Add the field site information into the orange cells at the top of the "
-        "Existing Conditions worksheet.")
+        "Add the field site information into the orange cells at the top of each scenario worksheet.")
+
+
+def test_the_template_is_the_owners_version_without_the_apps_tabs():
+    book = openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))
+    assert "Summary" not in book.sheetnames and "ReferenceCurves" not in book.sheetnames
+    assert book["Instructions"]["B7"].value == "SFARI v1.0"
 
 
 # --------------------------------------------------------------------------- #
@@ -155,7 +163,8 @@ def test_each_category_label_tests_its_own_range():
     range for its second threshold, so a Biology average of 0.5 read as
     Functioning whenever Physicochemistry reached 0.7. Both thresholds in all
     five labels must reference that category's own four functions. The
-    2026-10-15 master carries the bug again; the template corrects it."""
+    2026-10-15 master carried the bug again; the template corrected it, and the
+    2026-10-19 master keeps the correction."""
     ws = _template_sheet()
     for row, category, expected in ((8, "Hydrology", "H8:H23"),
                                     (24, "Hydraulics", "H24:H39"),
@@ -228,12 +237,12 @@ def test_the_workbook_stays_protected_and_validated():
     src = openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))
     got = openpyxl.load_workbook(io.BytesIO(_build()))
     assert got.security is None and src.security is None
-    for name in ("Instructions", "SFARI Score"):
+    for name in ("Instructions", calculator.SHEET_NAME):
         assert got[name].protection.sheet and got[name].protection.hashValue == src[name].protection.hashValue
     got_dv = {(dv.type, str(dv.sqref)): str(dv.formula1)
-              for dv in got["SFARI Score"].data_validations.dataValidation}
+              for dv in got[calculator.SHEET_NAME].data_validations.dataValidation}
     src_dv = {(dv.type, str(dv.sqref)): str(dv.formula1)
-              for dv in src["SFARI Score"].data_validations.dataValidation}
+              for dv in src[calculator.SHEET_NAME].data_validations.dataValidation}
     assert got_dv == src_dv
     assert ("list", "J8:J87") in {k for k in got_dv}
 
@@ -247,7 +256,7 @@ def test_formulas_and_array_formulas_survive():
 
 def test_every_metric_row_has_its_indicator():
     """P86 had none in the 2026-06-29 draft, so Watershed connectivity's check (G84) averaged
-    three of its four metrics; the 2026-10-15 calculator counts all four, as the app does."""
+    three of its four metrics; since 2026-10-15 the calculator counts all four, as the app does."""
     ws = _template_sheet()
     for row in range(8, 88):
         want = f"=VLOOKUP($J{row}:$J{row},$R$1:$S$5,2,FALSE)"
@@ -370,7 +379,7 @@ def test_a_template_without_the_expected_cells_raises(monkeypatch):
 # --------------------------------------------------------------------------- #
 def test_filenames():
     # both carry the calculator's version, no site id (owner, 2026-10-08 and 2026-10-19)
-    assert calculator.calculator_filename() == calculator.blank_filename() == "2026-10-15_SFARI Calculator.xlsx"
+    assert calculator.calculator_filename() == calculator.blank_filename() == "2026-10-19_SFARI Calculator.xlsx"
 
 
 # --------------------------------------------------------------------------- #

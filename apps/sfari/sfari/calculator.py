@@ -4,9 +4,9 @@ The calculator is the worksheet an assessment is handed over in. This module
 serves the blank copy and writes a filled one from an assessment, so nobody has
 to retype 20 function scores and 80 Likert selections.
 
-The template (``data/calculator/SFARI_Calculator_Template_2026-10-15.xlsx``) is the
-developers' 2026-10-15 revision after the Eco-PCX review, so it must come back
-unaltered except for the cells an assessor would type into. That rules out a
+The template (``data/calculator/SFARI_Calculator_Template_2026-10-19.xlsx``) is the
+owner's 2026-10-19 calculator (SFARI v1.0, after the Eco-PCX review), so it must come
+back unaltered except for the cells an assessor would type into. That rules out a
 spreadsheet library: openpyxl cannot round-trip this workbook. Measured on
 2026-09-08 (on the 2026-06-29 draft), a load-and-save drops 38 of its 64 parts,
 including every embedded image, both chart style/color pairs, the printer settings
@@ -25,18 +25,20 @@ Everything else in the worksheet is a formula. The template caches the empty
 calculator's values (322 formulas, 111 cells caching an error), so ``fullCalcOnLoad``
 is set to make Excel recalculate on open.
 
-The template is the owner's master copy (``notes/2026-10-15_SFARI_Calculator/``)
-prepared by ``scripts/prepare_calculator_template.py``, and differs from it in:
-- the 104 input cells, cleared (the master carries an example assessment) and the
-  workbook recalculated in Excel for the empty calculator;
-- cell E72, the Biology functional-category label (2026-09-08, owner decision). It
-  tested Biology's own range for its first threshold but Physicochemistry's
-  (``H56:H71``) for its second, so a Biology average of 0.5 was labelled Functioning
-  whenever Physicochemistry happened to reach 0.7. Its second ``AVERAGE`` reads
-  ``H72:H87`` like the other four categories. The master still carries the bug; the
-  same fix has to reach whoever re-issues the calculator;
-- Instructions step 1, which names the "Existing Conditions worksheet": every workbook
-  the apps serve names the score sheet so (``workbook.py``).
+The template is the owner's master copy (``notes/2026-10-19_SFARI Calculator/``: the
+2026-10-15 blank the apps served, with ReferenceCurves removed, the score sheet named
+"Scenario", the Summary's site block reworked and Model Version SFARI v1.0) prepared by
+``scripts/prepare_calculator_template.py``, and differs from it in:
+- the Summary tab, left out: the apps write it for each workbook in the owner's layout
+  (``workbook.py``);
+- Instructions step 1, which reads "...top of each scenario worksheet." (owner,
+  2026-10-19): a blank names the score sheet "Scenario", a completed workbook names each
+  tab after its scenario.
+The master keeps cell E72, the Biology functional-category label, as the apps corrected it
+(2026-09-08, owner decision): the issued draft tested Physicochemistry's range
+(``H56:H71``) for its second threshold, so a Biology average of 0.5 was labelled
+Functioning whenever Physicochemistry happened to reach 0.7. The script corrects it again
+should a master carry the bug, and clears input cells a master carries an example in.
 Both sheets keep the master's protection; the password is ``sfari``, as the
 Instructions say.
 
@@ -60,7 +62,7 @@ from . import config
 
 #: The calculator this app ships. It names every download, so a returned
 #: worksheet can be traced to the calculator it came from (owner, 2026-10-19).
-TEMPLATE_VERSION = "2026-10-15"
+TEMPLATE_VERSION = "2026-10-19"
 
 _DATA = Path(__file__).resolve().parent.parent / "data" / "calculator"
 TEMPLATE_PATH = _DATA / f"SFARI_Calculator_Template_{TEMPLATE_VERSION}.xlsx"
@@ -69,7 +71,8 @@ FILENAME = f"{TEMPLATE_VERSION}_SFARI Calculator.xlsx"
 #: The blank workbook, generated from the template; the Apply STAF page links it too.
 BLANK_PATH = _DATA / FILENAME
 
-SHEET_NAME = "SFARI Score"
+#: the template's score sheet; a completed workbook names each copy after its scenario
+SHEET_NAME = "Scenario"
 
 #: Excel's day zero for the 1900 date system. 1899-12-30 rather than 1899-12-31
 #: because it absorbs the phantom 1900-02-29 for every date from 1900-03-01 on.

@@ -56,10 +56,15 @@ export interface SummaryCells {
   /** [heading, [text per scenario]]: blocks under the table */
   statements: [string, string[]][]
   note: string
+  /** summary-block rows read live from Existing Conditions: label to [template sheet, cell, the value stored as
+   * the formula's result]; SFARI's Reach name and Reach length (owner, 2026-10-19) */
+  siteCells: Record<string, [string, string, string | number]>
+  /** the summary block right under the title lines, a gap row after it (SFARI, owner 2026-10-19) */
+  siteFirst: boolean
 }
 
 export const summaryCells = (c: Partial<SummaryCells> & Pick<SummaryCells, 'eci' | 'sub' | 'functions'>): SummaryCells =>
-  ({ indexDigits: 2, functionDigits: 0, statements: [], note: '', ...c })
+  ({ indexDigits: 2, functionDigits: 0, statements: [], note: '', siteCells: {}, siteFirst: false, ...c })
 
 /** What the ReferenceCurves tab shows (model/refcurves.py). */
 export interface CurveBlock { kind: 'curve', title: string, subtitle: string, xLabel: string, yLabel: string, series: [string, [number, number][]][], note: string }
@@ -167,7 +172,7 @@ export function textPx(text: string, bold = false): number {
 const colPx = (width: number) => 7.0 * width
 
 /** _lines: how many lines ``text`` takes wrapped in a cell ``px`` pixels wide (a greedy word wrap). */
-export function lines(text: string | null | undefined, px: number, bold = false): number {
+export function lines(text: string | number | null | undefined, px: number, bold = false): number {
   const room = Math.max(px - 7.0, 21.0)
   const space = textPx(' ', bold)
   let total = 0
@@ -258,9 +263,10 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
   for (let c = 2; c <= span; c++) restCols.push(colPx(widths.get(c)!))
   const restPx = pySum(restCols)
 
-  const pair = (row: number, key: string, value: string, keyStyle = st.key): number => {
+  const pair = (row: number, key: string, value: string | number, keyStyle = st.key, formula: string | null = null): number => {
     w.text(`A${row}`, key, keyStyle)
-    w.text(`B${row}`, value, st.val)
+    if (formula === null) w.text(`B${row}`, value as string, st.val)
+    else w.formula(`B${row}`, formula, value, st.val)
     for (let c = 3; c <= span; c++) w.blank(`${colLetter(c)}${row}`, st.val)
     w.merge(`B${row}:${colLetter(span)}${row}`)
     w.height(row, height(Math.max(lines(key, aPx), lines(value, restPx)), ROW_H))
@@ -278,7 +284,8 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
   w.text('A2', `Generated ${generatedOn} by the ${spec.appTitle} web application.`, st.sub)
   w.height(2, ROW_H)
   let row = 4
-  if (!banner) w.height(3, GAP_H)
+  if (!banner && cells.siteFirst) row = 3
+  else if (!banner) w.height(3, GAP_H)
   else {
     const style = bannerStyle(sb, banner)
     w.text('A3', banner.text, style)
@@ -289,7 +296,18 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
     mark(w, banner)
     row = 5
   }
-  for (const [key, value] of site) row = pair(row, key, value)
+  for (const [key, value] of site) {
+    const live = Object.prototype.hasOwnProperty.call(cells.siteCells, key) ? cells.siteCells[key] : null
+    if (live) {
+      const [sheet, cell, stored] = live
+      const rf = `${quoteSheet(sheetFor(built, 0, sheet))}!${cell}`
+      row = pair(row, key, stored, st.key, `IF(ISBLANK(${rf}),"",${rf})`)
+    } else row = pair(row, key, value)
+  }
+  if (!banner && cells.siteFirst) {
+    w.height(row, ROW_H)
+    row += 1
+  }
   const described = scenarios.filter((s) => pyStrip(s.description || ''))
   if (described.length) {
     row = heading(row, 'Scenarios')

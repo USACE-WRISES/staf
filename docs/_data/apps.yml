@@ -32,8 +32,8 @@
   role: Rapid-tier field assessment app
   description: Nationally applicable, function-based rapid field assessment with desktop evidence support.
   url: https://usace-wrises.github.io/staf/app/?tool=sfari
-  calculator: apps/sfari/data/calculator/2026-10-15_SFARI Calculator.xlsx
-  calculator_label: Excel, 2026-10-15
+  calculator: apps/sfari/data/calculator/2026-10-19_SFARI Calculator.xlsx
+  calculator_label: Excel, 2026-10-19
   status: live
 - id: deep
   name: DEEP

@@ -1,4 +1,4 @@
-// SFARI's Excel calculator (sfari/calculator.py): the 2026-10-15 template (page/forms/sfari, the app's
+// SFARI's Excel calculator (sfari/calculator.py): the 2026-10-19 template (page/forms/sfari, the app's
 // copy) with an assessment typed into the cells an assessor would type into, and every other part copied
 // through untouched:
 //   B2 reach id, B3 lat/long, B4 date, G2 reach length (ft)
@@ -12,7 +12,8 @@ import { BLANK_FILENAME, coordsStr, reachIdStr, TEMPLATE_URL } from './forms'
 import type { FunctionRecord, MetricRecord } from './markup'
 import { LIKERT_NA, roundHalfEven } from './method'
 
-export const SHEET_NAME = 'SFARI Score'
+/** the template's score sheet; a completed workbook names each copy after its scenario */
+export const SHEET_NAME = 'Scenario'
 /** the workbook's Likert list ($R$1:$R$6): only the not-applicable label differs from the app's */
 const NOT_APPLICABLE_LABEL = 'NA'
 const WHO = 'SFARI calculator template'

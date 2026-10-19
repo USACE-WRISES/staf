@@ -47,10 +47,10 @@ and the two ids are in `scripts/build_sfari_data.py`).
 
 ## The calculator
 
-Get Forms offers the SFARI Excel calculator (version **2026-10-15**, the developers' issue
-after the Eco-PCX review) blank or filled from the assessment, and the report's footer the
+Get Forms offers the SFARI Excel calculator (version **2026-10-19**, SFARI v1.0, the owner's
+issue after the Eco-PCX review) blank or filled from the assessment, and the report's footer the
 filled one (the same download sets in every tool, owner 2026-10-08). Both download as
-`2026-10-15_SFARI Calculator.xlsx`, so a returned workbook names its version (owner,
+`2026-10-19_SFARI Calculator.xlsx`, so a returned workbook names its version (owner,
 2026-10-19). The filled one carries the reach id, coordinates, date, reach length, the 20
 function scores on their merge anchors, and the 80 Likert values. `sfari/calculator.py`
 writes them by editing the worksheet XML inside the package and copying every other part
@@ -59,20 +59,25 @@ its parts. Never round-trip the template through a spreadsheet library, and when
 developers issue a revised workbook, re-read `tests/test_calculator.py` before updating the
 pinned digest: the row map is what keeps a Likert value off the wrong metric.
 
-`data/calculator/` holds two files:
-- `SFARI_Calculator_Template_2026-10-15.xlsx`, the plain calculator every workbook is made
-  from. `scripts/prepare_calculator_template.py` (Windows, Excel, `py -3.12`) makes it from
-  the owner's master under `notes/`: it clears the 104 input cells (the master carries a worked
-  example) and recalculates them in Excel, corrects **E72** (2026-09-08, owner decision: the
-  Biology category label tested Physicochemistry's range `H56:H71` for its second threshold,
-  so a Biology average of 0.5 read as Functioning whenever Physicochemistry reached 0.7), and
-  rewords Instructions step 1 to name the Existing Conditions worksheet. Both sheets keep the
-  master's protection (password `sfari`, as the Instructions say). The master still carries the
-  E72 bug, so the same fix has to reach whoever re-issues it.
-- `2026-10-15_SFARI Calculator.xlsx`, the blank workbook: Instructions, Summary, an empty
-  Existing Conditions and ReferenceCurves, made from the template by
-  `scripts/build_blank_calculator.py` (`tests/test_calculator_blank.py` fails until it is
-  re-run). Get Forms serves it as it is, and the Apply STAF page links it raw from main.
+The owner's 2026-10-19 calculator (`notes/2026-10-19_SFARI Calculator/`) is the workbook every
+download follows: Instructions (the tab it opens on), Summary, then the score sheet, with no
+ReferenceCurves tab. Its Summary puts the site block right under the title, reads Reach name and
+Reach length live from the score sheet (B2, G2), then leaves a gap row. A blank names the score
+sheet "Scenario"; a completed workbook names each tab after its scenario as it is named online
+(owner, 2026-10-19). `data/calculator/` holds two files:
+- `SFARI_Calculator_Template_2026-10-19.xlsx`, the calculator every workbook is made from:
+  the owner's file without its Summary (the apps write it for each workbook, `workbook.py`).
+  `scripts/prepare_calculator_template.py` (Windows, Excel, `py -3.12`) makes it: it leaves the
+  apps' tabs out, rewords Instructions step 1 to "...top of each scenario worksheet.", corrects
+  **E72** should a master carry the bug again (2026-09-08, owner decision: the Biology category
+  label tested Physicochemistry's range `H56:H71` for its second threshold, so a Biology average
+  of 0.5 read as Functioning whenever Physicochemistry reached 0.7), and clears and recalculates
+  any example typed into the 104 input cells. Both sheets keep the master's protection (password
+  `sfari`, as the Instructions say).
+- `2026-10-19_SFARI Calculator.xlsx`, the blank workbook (equal cell for cell to the owner's file
+  but for step 1), made from the template by `scripts/build_blank_calculator.py`
+  (`tests/test_calculator_blank.py` fails until it is re-run). Get Forms serves it as it is, and
+  the Apply STAF page links it raw from main.
 
 **Scenarios and the one-workbook download** (owner, 2026-10-03): the chip at the top of the
 score rail keeps "Existing Conditions" and up to nine alternatives (their Likert ratings and
@@ -83,9 +88,9 @@ file, the structure EASI and DEEP write too (owner, 2026-10-05;
 cross-section, and every scenario with its entries. Files saved before (schema 1, Existing
 Conditions at the top level) still open, and a file from another tool is refused. The
 completed workbook holds the calculator's Instructions (the tab it opens on, owner
-2026-10-19), Summary, Existing Conditions, one copy of the calculator per alternative (the
-template's formulas unchanged, only sheet names differ: tell Eco-PCX), then ReferenceCurves
-(the Likert criteria and suggestion breakpoints) (`sfari/workbook.py`, `libs/staf_workbook`). Every download opens its own tab, so the page never navigates, and the
+2026-10-19), Summary, Existing Conditions, then one copy of the calculator per alternative (the
+template's formulas unchanged, only sheet names differ: tell Eco-PCX) (`sfari/workbook.py`,
+`libs/staf_workbook`). Every download opens its own tab, so the page never navigates, and the
 page warns before unsaved work is lost.
 
 ## Desktop evidence sources

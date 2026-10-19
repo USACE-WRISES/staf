@@ -91,6 +91,28 @@ def test_a_lead_sheet_comes_first_and_opens():
     assert [s.name for s in wb.sheets if s.name != "Instructions"] == rest      # nothing else moves
 
 
+def test_site_rows_can_read_the_calculator_live_right_under_the_title():
+    """SFARI's layout (owner, 2026-10-19): the summary block from row 3, a gap after it, and rows
+    that read Existing Conditions live, storing the value the calculator holds."""
+    if not DEEP.is_file():
+        pytest.skip("DEEP template not present")
+    data = DEEP.read_bytes()
+    names = _names(data)
+    cells = SummaryCells(eci=names["eci"], sub=dict((k, names["sub_index_" + k]) for k in ("physical", "chemical", "biological")),
+                         functions=[], site_cells={"Reach name": ("DEEP Score", "B2", "Reach 7"), "Reach length": ("DEEP Score", "G2", 1200)},
+                         site_first=True)
+    out = assemble(data, AssemblySpec("DEEP", "DEEP Score"), [ScenarioInput("existing", "Existing Conditions")],
+                   summary=SummaryInfo("DEEP", "Mink Brook", 1000), cells=cells, scores=[ScenarioScores(Measure(0.5))],
+                   generated_on=__import__("datetime").date(2026, 10, 19))
+    _wb, ws = _summary(out)
+    assert ws["A3"].value == "Reach name" and ws["A11"].value == "EPA Level III ecoregion" and ws["A12"].value is None
+    assert ws["B3"].value == '=IF(ISBLANK(\'Existing Conditions\'!B2),"",\'Existing Conditions\'!B2)'
+    assert ws["B5"].value == '=IF(ISBLANK(\'Existing Conditions\'!G2),"",\'Existing Conditions\'!G2)'
+    assert ws["A13"].value == "Scores"
+    xml = Package(out).text(WorkbookModel(Package(out)).sheet("Summary").part)
+    assert "<v>Reach 7</v>" in xml and "<v>1200</v>" in xml               # the stored results
+
+
 def test_a_blank_summary_leaves_the_site_and_the_day_out():
     data, _fns = _deep([ScenarioInput("existing", "Existing Conditions")], [ScenarioScores()], blank=True)
     _wb, ws = _summary(data)

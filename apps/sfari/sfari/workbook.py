@@ -1,22 +1,21 @@
-"""SFARI's workbook and summary: the calculator's Instructions, the Summary, the calculator once
-per scenario, then the ReferenceCurves tab (the shared ``libs/staf_workbook``, vendored in
-``_vendor``). It opens on Instructions (owner, 2026-10-19).
+"""SFARI's workbook and summary: the calculator's Instructions, the Summary, then the calculator
+once per scenario, each tab named after its scenario (the shared ``libs/staf_workbook``, vendored in
+``_vendor``). It opens on Instructions. The layout is the owner's 2026-10-19 calculator: no
+ReferenceCurves tab, the Summary's site block right under its title with Reach name and Reach length
+read live from Existing Conditions (B2, G2), then a gap.
 
-The calculator template stays the developers' issue; each scenario's tab is a copy of its score
-sheet with that scenario's entries, identical apart from sheet names. SFARI rates metrics on a
-Likert scale and has no numeric curves, so its ReferenceCurves tab holds the Likert criteria, the
-suggestion breakpoints and the Likert scores. The blank workbook is the same with one empty
-Existing Conditions (``build_blank``).
+The calculator template stays the owner's issue; each scenario's tab is a copy of its score sheet with
+that scenario's entries, identical apart from sheet names. The blank workbook is the same with one
+empty score sheet named "Scenario", as the owner's file has it (``build_blank``).
 """
 from __future__ import annotations
 
 import datetime as _dt
 
-from . import calculator, config, likert, scoring
-from ._vendor.staf_workbook.assemble import EC_NAME, AssemblySpec, ScenarioInput, assemble
+from . import calculator, config, scoring
+from ._vendor.staf_workbook.assemble import AssemblySpec, ScenarioInput, assemble
 from ._vendor.staf_workbook.model import compare as cmp_model
 from ._vendor.staf_workbook.model.compare import Measure, ScenarioScores
-from ._vendor.staf_workbook.model.refcurves import RefCurves, TableBlock
 from ._vendor.staf_workbook.model.summary import SummaryInfo, regions_for_l3
 from ._vendor.staf_workbook.sheets import SummaryCells
 
@@ -49,12 +48,21 @@ def comparison(names: list, function_score_sets: list):
                            index_digits=2, function_digits=0)
 
 
-def summary_cells() -> SummaryCells:
+#: the Summary's rows that read Existing Conditions live (the owner's 2026-10-19 Summary)
+SITE_CELLS = {"Reach name": "B2", "Reach length": "G2"}
+
+
+def summary_cells(delin: dict | None = None) -> SummaryCells:
+    """Where the Summary reads the calculator; ``delin`` gives the values its live site rows store
+    (what the calculator's B2 and G2 hold for this site; none for the blank)."""
     rows = dict((fid, row) for fid, row, _label in calculator.FUNCTION_ROWS)
     sheet = calculator.SHEET_NAME
+    stored = calculator.input_values(delin, {}, {}) if delin is not None else {}
     return SummaryCells(eci=(sheet, "A8"), sub=dict((k, (sheet, c)) for k, c in _SUB_CELLS.items()),
                         functions=[(fid, name, cat, (sheet, f"H{rows[fid]}")) for fid, name, cat in functions()],
-                        index_digits=2, function_digits=0)
+                        index_digits=2, function_digits=0,
+                        site_cells=dict((label, (sheet, cell, stored.get(cell, ""))) for label, cell in SITE_CELLS.items()),
+                        site_first=True)
 
 
 def summary_info(delin: dict) -> SummaryInfo:
@@ -69,37 +77,6 @@ def summary_info(delin: dict) -> SummaryInfo:
                        dl.get("stream_order"), regions_for_l3(l3))
 
 
-def reference_curves() -> RefCurves:
-    order = list(config.LIKERT_ORDER)
-    scores = TableBlock("Likert scores", ["Likert", "Score"],
-                        [[name, config.LIKERT_NUMERIC[name]] for name in order] + [[config.LIKERT_NA, "Not counted"]],
-                        widths=[22, 12])
-    rows = []
-    fn_names = dict((fid, name) for fid, name, _cat in functions())
-    for fid, _name, _cat in functions():
-        for m in config.metrics_by_function().get(fid, []):
-            crit = dict((c.get("likert"), c.get("criteria", "")) for c in (m.get("likertCriteria") or [])
-                        if isinstance(c, dict))
-            rows.append([fn_names[fid], m["name"]] + [crit.get(name, "") for name in order])
-    criteria = TableBlock("Scoring criteria", ["Function", "Metric"] + order, rows,
-                          widths=[22, 26, 24, 24, 24, 24, 24])
-    by_id = config.metrics_by_id()
-    brk = []
-    for mid, spec in likert.BREAKS.items():
-        cells = []
-        for bound, label in spec["breaks"]:
-            if bound is None:
-                cells.append("otherwise")
-            else:
-                cells.append(("below " if spec["dir"] == likert.LOW else "at least ") + f"{bound:g}")
-        brk.append([(by_id.get(mid) or {}).get("name", mid), "Lower is better" if spec["dir"] == likert.LOW
-                    else "Higher is better"] + cells)
-    breaks = TableBlock("Suggested ratings from desktop values", ["Metric", "Direction", "Strongly Agree", "Agree",
-                                                                   "Disagree", "Strongly Disagree"], brk,
-                        note="Suggestions only: the assessor's Likert rating is what scores.")
-    return RefCurves("SFARI rates metrics on a Likert scale; these are its criteria.", [scores, criteria, breaks])
-
-
 def build(delin: dict, scenarios: list, *, today: _dt.date | None = None) -> bytes:
     """The workbook for ``scenarios`` = [(Scenario, {"metric_scores", "function_scores"}), ...],
     Existing Conditions first."""
@@ -110,14 +87,13 @@ def build(delin: dict, scenarios: list, *, today: _dt.date | None = None) -> byt
         inputs.append(ScenarioInput(s.id, s.name, s.description,
                                     fill=lambda xml, v=values: calculator.fill_sheet(xml, v)))
         scores.append(scenario_scores(st.get("function_scores") or {}))
-    return assemble(calculator.template_bytes(), SPEC, inputs, summary=summary_info(delin), cells=summary_cells(),
-                    scores=scores, curves=reference_curves(), generated_on=today)
+    return assemble(calculator.template_bytes(), SPEC, inputs, summary=summary_info(delin), cells=summary_cells(delin),
+                    scores=scores, generated_on=today)
 
 
 def build_blank() -> bytes:
-    """The blank workbook (``calculator.BLANK_PATH``): the completed workbook's tabs with one empty
-    Existing Conditions, the Summary's site rows and date left out (owner, 2026-10-19). Nothing in it
-    depends on the day or a site, so ``scripts/build_blank_calculator.py`` writes it once."""
-    return assemble(calculator.template_bytes(), SPEC, [ScenarioInput("existing", EC_NAME)],
-                    summary=SummaryInfo("SFARI", blank=True), cells=summary_cells(), scores=[ScenarioScores()],
-                    curves=reference_curves())
+    """The blank workbook (``calculator.BLANK_PATH``): the owner's 2026-10-19 calculator, with one empty
+    score sheet named "Scenario" and the Summary's site rows and date left for the assessor. Nothing in
+    it depends on the day or a site, so ``scripts/build_blank_calculator.py`` writes it once."""
+    return assemble(calculator.template_bytes(), SPEC, [ScenarioInput("existing", calculator.SHEET_NAME)],
+                    summary=SummaryInfo("SFARI", blank=True), cells=summary_cells(), scores=[ScenarioScores()])

@@ -69,6 +69,11 @@ class SummaryCells:
     function_digits: int = 0
     statements: list = field(default_factory=list)  # [(heading, [text per scenario]), ...]: blocks under the table
     note: str = ""
+    #: summary-block rows read live from Existing Conditions: label -> (template sheet, cell, the value
+    #: stored as the formula's result); SFARI's Reach name and Reach length (owner, 2026-10-19)
+    site_cells: dict = field(default_factory=dict)
+    #: the summary block right under the title lines, a gap row after it (SFARI, owner 2026-10-19)
+    site_first: bool = False
 
 
 class _Styles:
@@ -245,9 +250,12 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     a_px = _col_px(widths[1])
     rest_px = sum(_col_px(widths[c]) for c in range(2, span + 1))
 
-    def pair(row, key, value, key_style=st.key):
+    def pair(row, key, value, key_style=st.key, formula=None):
         w.text(f"A{row}", key, key_style)
-        w.text(f"B{row}", value, st.val)
+        if formula is None:
+            w.text(f"B{row}", value, st.val)
+        else:
+            w.formula(f"B{row}", formula, value, st.val)
         for c in range(3, span + 1):
             w.blank(f"{col_letter(c)}{row}", st.val)
         w.merge(f"B{row}:{col_letter(span)}{row}")
@@ -266,7 +274,9 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     if not info.blank:                                     # a blank workbook names no day
         w.text("A2", f"Generated {date} by the {spec.app_title} web application.", st.sub)
     w.height(2, ROW_H)
-    if banner is None:
+    if banner is None and cells.site_first:
+        row = 3
+    elif banner is None:
         w.height(3, GAP_H)
         row = 4
     else:
@@ -280,7 +290,15 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
         _mark(w, banner)
         row = 5
     for key, value in site:
-        row = pair(row, key, value)
+        if key in cells.site_cells:
+            sheet, cell, stored = cells.site_cells[key]
+            ref = f"{quote_sheet(sheet_for(built, 0, sheet))}!{cell}"
+            row = pair(row, key, stored, formula=f'IF(ISBLANK({ref}),"",{ref})')
+        else:
+            row = pair(row, key, value)
+    if banner is None and cells.site_first:
+        w.height(row, ROW_H)
+        row += 1
     described = [s for s in scenarios if (s.description or "").strip()]
     if described:
         row = heading(row, "Scenarios")
