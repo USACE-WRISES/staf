@@ -227,6 +227,12 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   section's profile is drawn (`xsplot.ts`, plotly.js 3.6.0, plotly.py's figure) when the release stores
   it, or after the assessor presses **Pull from 3DEP**: pulls are never automatic. A pulled profile gives
   the grid's own numbers.
+  - The report's cross-section has the same button when the section it shows has no profile. A pull
+    there draws the section in the report and in its PDF, and the card shows it too.
+  - The release stores one profile per segment, and the report's section (the one nearest the reach
+    medians) is that one for only about 6 to 14% of reaches (13.5%, 5.9% and 12.5% of nine-section
+    reaches in 0108, 0710 and 0303, measured 2026-10-18). Most reports offer the pull, and the finished
+    national grid doesn't change that.
 - **EASI's report image** (`xsimage.ts`): matplotlib's figure (`easi/xsplot.py`) drawn on a canvas with
   DejaVu Sans at matplotlib's hinted text metrics (`content/easi/xsplot-text.json` and
   `page/fonts/dejavu-sans.woff2`, from `copy_page.py`). `parity/make_xsimage_fixtures.py` +

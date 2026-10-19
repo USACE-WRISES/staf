@@ -45,8 +45,8 @@ import { available as calculatorAvailable, blankFilename, buildFilled, entryCell
 import { todayIso } from '../../files/xlsx/calcfill'
 import { formsModal } from './forms'
 import {
-  buildCrossSection, type CardState, defaultHeights, type Geometry, hasProfile, pullContent, pullProfile, reportImageSpec, sourceFigure,
-  windowRange, xsCaption, xsEditor, XsPlot, xsReachTable, xsReadonly, xsSelector, xsSummary,
+  buildCrossSection, type CardState, defaultHeights, type Geometry, hasProfile, pullContent, pullProfile, type PullState, reportImageSpec,
+  sourceFigure, windowRange, xsCaption, xsEditor, XsPlot, xsReachTable, xsReadonly, xsSelector, xsSummary,
 } from './xscard'
 
 export { loadMethod } from './method'
@@ -74,6 +74,13 @@ function boxValue(el: HTMLInputElement | null): number | null {
   if (v === '') return null
   const n = Number(v)
   return Number.isFinite(n) ? n : null
+}
+
+/** The report's cross-section image of an export result (xsimage.ts, a data URL): null when the section
+ * shown has no profile, or its image cannot be drawn. */
+function xsImageUrl(res: Record<string, any>): Promise<string | null> {
+  const spec = reportImageSpec(res.report.crossSection)
+  return spec ? import('./xsimage').then((m) => m.xsImage(spec)).catch(() => null) : Promise.resolve(null)
 }
 
 /** session_io.screened: the result the page scores (the delineation without the run's inputs, with
@@ -137,6 +144,8 @@ export class EasiWorksheet {
   private reportCounter = 0
   /** the report being prepared (its request id), until it opens */
   private pendingReport: number | null = null
+  /** the open report's cross-section drawn again (reportXsDraw): the latest redraw wins */
+  private reportXsGen = 0
 
   constructor(private host: EasiHost) {
     // the report's downloads (each named for the scenario shown)
@@ -153,9 +162,7 @@ export class EasiWorksheet {
     registerDownload('easi-dl_pdf', { filename: () => `easi-report${suffix()}.pdf`, mime: 'application/pdf', build: async () => {
       const res = this.exportResult()
       if (!res) return null
-      const spec = reportImageSpec(res.report.crossSection)
-      const [{ buildPdf }, { summaryPlotPng }, xsUrl] = await Promise.all([import('./reportpdf'), import('./summaryplot'),
-        spec ? import('./xsimage').then((m) => m.xsImage(spec)).catch(() => null) : Promise.resolve(null)])
+      const [{ buildPdf }, { summaryPlotPng }, xsUrl] = await Promise.all([import('./reportpdf'), import('./summaryplot'), xsImageUrl(res)])
       const xsPng = xsUrl ? fromBase64(xsUrl.slice(xsUrl.indexOf(',') + 1)) : null
       return buildPdf(res, this.reportScenario(), { summaryPng: await summaryPlotPng(res.report), xsPng })
     } })
@@ -173,7 +180,7 @@ export class EasiWorksheet {
       registerDownload(id, { filename: () => filledFilename(), mime: XLSX_MEDIA_TYPE, build: () => this.workbookBytes() })
     }
     // the cross-section card's height boxes post as Shiny's number inputs do: typing after a 250 ms
-    // pause, a change at once; its unit as a radio group; its Pull from 3DEP button
+    // pause, a change at once; its unit as a radio group; its Pull from 3DEP button, and the report's
     const box = (e: Event): HTMLInputElement | null => {
       const el = e.target as HTMLInputElement | null
       return el && (el.id === 'easi-xs_bankfull' || el.id === 'easi-xs_lowbank') ? el : null
@@ -193,7 +200,7 @@ export class EasiWorksheet {
       } else if (el && el.name === 'easi-xs_unit' && el.checked) this.convertUnits(el.value)
     })
     document.addEventListener('click', (e) => {
-      const b = (e.target as Element | null)?.closest?.('#easi-xsection_plot [data-xs-pull]')
+      const b = (e.target as Element | null)?.closest?.('#easi-xsection_plot [data-xs-pull], #easi-report_xs [data-xs-pull]')
       if (b && !(b as HTMLButtonElement).disabled) void this.pull()
     })
   }
@@ -694,7 +701,8 @@ export class EasiWorksheet {
     void timed('xs:plot', this.xsPlot.show(sourceFigure(block, st.geometry))).catch(() => {})
   }
 
-  /** Pull from 3DEP: the shown section's profile, read as the grid build read it. */
+  /** Pull from 3DEP (the card's button or the report's): the shown section's profile, read as the grid
+   * build read it. */
   private async pull(): Promise<void> {
     const i = this.xsSelIdx()
     const block = this.xsCands()[i]
@@ -703,6 +711,7 @@ export class EasiWorksheet {
     this.xsPulling = i
     delete this.xsPullError[i]
     this.xsDraw()
+    void this.reportXsDraw()
     let ok = false
     try {
       ok = await timed('xs:pull', pullProfile(this.host.data, block))
@@ -718,8 +727,28 @@ export class EasiWorksheet {
       this.xsHeights = heights
     }
     this.changed()
+    void this.reportXsDraw()
     if (!this.shown() || i !== this.xsSelIdx()) return
     this.xsRefresh(true)
+  }
+
+  /** The report's pull state for the section it shows (the shown one). */
+  private reportPull(): PullState {
+    const sel = this.xsSelIdx()
+    return { pulling: this.xsPulling === sel, error: this.xsPullError[sel] ?? null }
+  }
+
+  /** The open report's cross-section drawn again, as a pull from it or the card starts or ends: the shown
+   * section's image, or its Pull from 3DEP button. Nothing when no report is open. */
+  private async reportXsDraw(): Promise<void> {
+    if (!document.getElementById('easi-report_xs')) return
+    const res = this.exportResult()
+    if (!res) return
+    const gen = ++this.reportXsGen
+    const png = await xsImageUrl(res)
+    const wrap = document.getElementById('easi-report_xs')
+    if (gen !== this.reportXsGen || !wrap) return
+    wrap.outerHTML = outputHtml(xsReadonly(res.report, png, this.reportPull()))
   }
 
   private curFn(): Record<string, any> {
@@ -1245,8 +1274,7 @@ export class EasiWorksheet {
     this.pendingReport = id
     shim.send('staf-report-state', { requestId: id, busy: true, ns: 'easi' })
     // the cross-section's image first (the Shiny EASI draws its PNG before sending the report)
-    const spec = reportImageSpec(res.report.crossSection)
-    const image = spec ? import('./xsimage').then((m) => m.xsImage(spec)).catch(() => null) : Promise.resolve(null)
+    const image = xsImageUrl(res)
     // the basin map over its basemap (reportmap.svg, read once and kept for the PDF)
     const ws = res.watershed_geojson ? displaySimplify(res.watershed_geojson, 700) : null
     const minimap = svg(ws, res.reach_geojson).catch(() => '')
@@ -1257,8 +1285,10 @@ export class EasiWorksheet {
         { class: 'staf-report-summary' })
       const title = new TagList(this.reportTitle(), h.span('Close to review the Assessment', { class: 'easi-modal-hint' }),
         actionButton('easi-close_modal_x', '✕', 'easi-modal-x'))
-      showModal(modal(reportBody(res, this.notes, summary, (rep) => xsReadonly(rep, png), map),
+      showModal(modal(reportBody(res, this.notes, summary, (rep) => xsReadonly(rep, png, this.reportPull()), map),
         { title, footer: reportFooter(), size: 'xl', easyClose: true }))
+      // a pull that ended while the report was being prepared: its image now
+      if (!png && hasProfile(this.xsShown())) void this.reportXsDraw()
       shim.send('staf-report-state', { requestId: id, busy: false, opened: true, ns: 'easi' })
     })
   }

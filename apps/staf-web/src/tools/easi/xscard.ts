@@ -3,10 +3,12 @@
 //
 // A reach's sections are the grid's nearest the nine reach positions (engine/xsreach.ts) and carry the
 // grid's numbers. A section's elevation profile is drawn when the release stores it (the median section
-// of its segment, staf-xs-current) or once the assessor pulls it from USGS 3DEP with the card's button:
-// a pull is never automatic (the owner, 2026-10-11). A profile is processed as the grid build processed
-// it (balanced_profile, simplify_profile, summarize_profile on the section's regional inputs), so its
-// stages and ratios are the grid's own.
+// of its segment, staf-xs-current) or once the assessor pulls it from USGS 3DEP with the card's button,
+// or the report's when the section it shows has none: a pull is never automatic (the owner, 2026-10-11).
+// The report's section is the stored one for only about 6 to 14% of reaches (measured 2026-10-18), so
+// most reports offer the pull. A profile is processed as the grid build processed it (balanced_profile,
+// simplify_profile, summarize_profile on the section's regional inputs), so its stages and ratios are
+// the grid's own.
 import { type Child, h, pyHtmlEscape, type Tag, TagList } from '../../app/htm'
 import { pyFixed, pyFixedComma, pyFloat, pyG } from '../../app/pyfmt'
 import { COEF, DIV_NAME } from '../../engine/bieger'
@@ -310,16 +312,17 @@ function unitRadio(unit: string): Tag {
       'aria-labelledby': 'easi-xs_unit-label' })
 }
 
-/** The plot's place for a section whose profile is neither stored nor pulled: the button that pulls it
- * (a section with its profile gets the plotly.js plot, drawn into the box by XsPlot). */
-export function pullContent(pulling: boolean, error: string | null): Child {
+/** The plot's place for a section whose profile is neither stored nor pulled: ``text`` and the button
+ * that pulls it (a section with its profile gets the plotly.js plot on the card, drawn into the box by
+ * XsPlot, and its image in the report). */
+export function pullContent(pulling: boolean, error: string | null,
+                            text = "Pull this section's elevation profile from USGS 3DEP to draw it and edit its heights."): Child {
   return h.div(
-    h.p("Pull this section's elevation profile from USGS 3DEP to draw it and edit its heights.",
-      { style: 'margin:0;font-size:12.5px;color:#33415c;max-width:300px;' }),
+    h.p(text, { style: 'margin:0;font-size:12.5px;color:#33415c;max-width:300px;' }),
     h.button(pulling ? 'Pulling from 3DEP…' : 'Pull from 3DEP', { type: 'button', 'data-xs-pull': '1', disabled: pulling ? 'disabled' : null },
       { class: 'sfari-btn primary' }),
     error ? h.p(error, { class: 'easi-xs-foot', style: 'margin:0;' }) : null,
-    { class: 'easi-xs-pull', style: 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;' })
+    { class: 'easi-xs-pull', style: 'height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;' })
 }
 
 /** What the card shows. */
@@ -385,9 +388,13 @@ export function reportImageSpec(xs: Obj | null | undefined): XsImageSpec | null 
     unit: drawn.unit ?? 'ft', source: block.dem_source ?? null }
 }
 
+/** A section's pull from USGS 3DEP as the report shows it: going on, and the last one's error. */
+export interface PullState { pulling: boolean, error: string | null }
+
 /** _xs_readonly_block: the shown section's ratios beside the reach medians, and its image (``png``, a data
- * URL); a section whose profile is not pulled has the note in its place. */
-export function xsReadonly(rep: Obj, png: string | null): Child {
+ * URL). A section whose profile is neither stored nor pulled has the card's Pull from 3DEP button in the
+ * image's place (``pull``); the block is ``#easi-report_xs``, drawn again in place once a pull ends. */
+export function xsReadonly(rep: Obj, png: string | null, pull: PullState = { pulling: false, error: null }): Child {
   const xs = (rep || {}).crossSection || {}
   const block = xs.geom || {}
   if (!xs.geom) return null
@@ -401,9 +408,14 @@ export function xsReadonly(rep: Obj, png: string | null): Child {
     ...reachRows(xs.reach)]
   const table = h.table(h.tbody(...rows.map(([lbl, val]) => h.tr(h.th(lbl), h.td(val)))), { class: 'easi-tbl easi-xs-tbl' })
   const panel = h.div(h.div('Cross-section geometry', { class: 'easi-xs-panel-title' }), table, { class: 'easi-xs-panel' })
-  const plot = h.div(png ? h.img({ src: png }) : h.p("Pull this section's profile from USGS 3DEP on the Assessment step to draw it.",
-    { style: 'margin:auto;font-size:12.5px;color:#33415c;' }), { class: 'easi-xsection' })
-  return h.div(panel, plot, { class: 'easi-xsection-wrap' })
+  const note = (text: string) => h.p(text, { style: 'margin:auto;font-size:12.5px;color:#33415c;' })
+  const plot = h.div(
+    png ? h.img({ src: png })
+      : hasProfile(block) ? note('The cross-section could not be drawn.')
+        : block.xs ? pullContent(pull.pulling, pull.error, "Pull this section's elevation profile from USGS 3DEP to draw it.")
+          : note('No elevation profile is available for this section.'),
+    { class: 'easi-xsection' })
+  return h.div(panel, plot, { id: 'easi-report_xs', class: 'easi-xsection-wrap' })
 }
 
 // ---------------------------------------------------------------- the plot
