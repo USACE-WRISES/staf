@@ -570,16 +570,17 @@ def _bieger_area_tip_html(current_name: str | None = None) -> str:
 # STAF top banner — a single link back to the STAF site; cross-links to the
 # other tier apps were removed to keep the banner minimal. STAF_LINKS still
 # carries every app URL: it is the in-app half of the URL mirror (docs/_data/
-# apps.yml; the site-link tests check it). EASI, SFARI and DEEP open inside the
-# STAF app (?tool=), the one web deployment since 2026-10-08; StreamCurves ships
-# as StreamCurves Desktop, so "curves" is its latest release.
+# apps.yml; the site-link tests check it). EASI, SFARI and DEEP open in the STAF
+# web app on GitHub Pages (?tool=; owner, 2026-10-18; the Posit STAF app stays up,
+# unlinked, until it is retired); StreamCurves ships as StreamCurves Desktop, so
+# "curves" is its latest release.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
-    "easi":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi",
-    "sfari":  "https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari",
+    "easi":   "https://usace-wrises.github.io/staf/app/?tool=easi",
+    "sfari":  "https://usace-wrises.github.io/staf/app/?tool=sfari",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
-    "deep":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep",
+    "deep":   "https://usace-wrises.github.io/staf/app/?tool=deep",
     # the EASI guide on the STAF site: how EASI screens and the metric reference
     "guide":  "https://usace-wrises.github.io/staf/walkthroughs/easi/",
 }

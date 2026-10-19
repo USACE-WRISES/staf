@@ -1,6 +1,7 @@
-"""The STAF site (docs/_data/apps.yml) opens EASI inside the STAF app and offers its blank calculator
-for download, linked raw from main (owner, 2026-10-08). A renamed calculator or a moved app must
-not leave the site with a dead link, and the app's STAF_LINKS mirror the site's."""
+"""The STAF site (docs/_data/apps.yml) opens EASI in the STAF web app on GitHub Pages (owner,
+2026-10-18) and offers its blank calculator for download, linked raw from main (owner, 2026-10-08).
+A renamed calculator or a moved app must not leave the site with a dead link, and the app's
+STAF_LINKS mirror the site's."""
 from __future__ import annotations
 
 import re
@@ -40,6 +41,6 @@ def test_the_site_offers_the_calculator_the_app_serves():
 
 def test_the_site_opens_easi_inside_staf():
     entry = _entry("easi")
-    assert entry["url"].startswith("https://gtmenichino-staf.") and entry["url"].endswith("/?tool=easi")
+    assert entry["url"].startswith("https://usace-wrises.github.io/staf/app/") and entry["url"].endswith("/?tool=easi")
     assert _staf_link("easi") == entry["url"]
     assert all(_staf_link(tool) == _entry(tool)["url"] for tool in ("sfari", "deep"))

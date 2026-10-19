@@ -1,20 +1,21 @@
 # Stream Tiered Assessment Framework (STAF)
 
-Monorepo for the STAF documentation site, the four Shiny-for-Python assessment apps, and
-StreamCurves Desktop, the Windows app in which StreamCurves runs.
+Monorepo for the STAF documentation site and its STAF web app, the four Shiny-for-Python assessment
+apps, and StreamCurves Desktop, the Windows app in which StreamCurves runs.
 
 | Part | Path | Where it runs |
 |---|---|---|
 | Documentation site & Apply STAF page | `docs/` | [usace-wrises.github.io/staf](https://usace-wrises.github.io/staf/) (GitHub Pages) |
-| EASI: Screening tier | `apps/easi` | Inside STAF ([`?tool=easi`](https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi)); on its own for development |
-| SFARI: Rapid tier | `apps/sfari` | Inside STAF ([`?tool=sfari`](https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari)); on its own for development |
-| DEEP: Detailed tier | `apps/deep` | Inside STAF ([`?tool=deep`](https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep)); on its own for development |
+| STAF web app: EASI, SFARI and DEEP in the browser | `apps/staf-web` (built into `docs/app/`) | [usace-wrises.github.io/staf/app](https://usace-wrises.github.io/staf/app/) (GitHub Pages), the web app the site links to; see `apps/staf-web/README.md` |
+| EASI: Screening tier | `apps/easi` | Ported to the STAF web app ([`?tool=easi`](https://usace-wrises.github.io/staf/app/?tool=easi)); the Shiny app runs inside STAF and on its own for development |
+| SFARI: Rapid tier | `apps/sfari` | Ported to the STAF web app ([`?tool=sfari`](https://usace-wrises.github.io/staf/app/?tool=sfari)); the Shiny app runs inside STAF and on its own for development |
+| DEEP: Detailed tier | `apps/deep` | Ported to the STAF web app ([`?tool=deep`](https://usace-wrises.github.io/staf/app/?tool=deep)); the Shiny app runs inside STAF and on its own for development |
 | StreamCurves: curve builder for DEEP | `apps/stream-curves` + `desktop/` | StreamCurves Desktop, a Windows app (installer and portable zip on the [latest release](https://github.com/USACE-WRISES/staf/releases/latest)) |
-| STAF: EASI, SFARI and DEEP in one app | `apps/staf` | [gtmenichino-staf.share.connect.posit.cloud](https://gtmenichino-staf.share.connect.posit.cloud/), the one web deployment; see `apps/staf/README.md` |
+| STAF: EASI, SFARI and DEEP in one Shiny app | `apps/staf` | [gtmenichino-staf.share.connect.posit.cloud](https://gtmenichino-staf.share.connect.posit.cloud/) on Posit Connect Cloud, unlinked since 2026-10-18 and to be retired; see `apps/staf/README.md` |
 
 ## Repository layout
 
-- `docs/`: Jekyll site source (GitHub Pages builds this folder; just-the-docs remote theme). The Apply STAF page (`docs/tools/`) offers each tier two ways: its web application (inside STAF) and its spreadsheet calculator, downloaded raw from `main` so always the latest. Tool URLs and calculator paths live in `docs/_data/apps.yml`; DEEP's per-ecoregion list is generated into `docs/_data/deep_calculators.json`.
+- `docs/`: Jekyll site source (GitHub Pages builds this folder; just-the-docs remote theme). The Apply STAF page (`docs/tools/`) offers each tier two ways: its web application (in the STAF web app) and its spreadsheet calculator, downloaded raw from `main` so always the latest. Tool URLs and calculator paths live in `docs/_data/apps.yml`; DEEP's per-ecoregion list is generated into `docs/_data/deep_calculators.json`.
 - `apps/`: the four Shiny for Python apps. Each folder is self-contained (own `requirements.txt`, `www/`, `data/`, tests). EASI, SFARI and DEEP deploy together inside the STAF app (`apps/staf`); each tool's `.posit/publish/*.toml` is the file list STAF's assembler copies, and each still runs on its own for development. StreamCurves ships inside StreamCurves Desktop.
 - `apps/library/`: the shared, version-controlled **STAF assessment library** of completed detailed assessments that StreamCurves publishes and DEEP runs (draft, preliminary and final versions, each labeled). CI also publishes it as the rolling `library` prerelease, which StreamCurves Desktop's Assessment library and DEEP read. See `apps/library/README.md` and "The assessment library" below.
 - `desktop/`: StreamCurves Desktop, a C#/.NET 10 WebView2 shell, modeled on HYPE Desktop, that runs StreamCurves on a self-managed Python runtime (downloaded on first run, auto-updated from this repo's GitHub Releases). `dotnet test desktop\StreamCurves.Desktop.slnx` runs its suite; launching a dev build from a checkout runs the app from the repo `.venv`. Release model: `desktop/RELEASING.md`.
@@ -50,7 +51,9 @@ cd apps\stream-curves; python -m pytest -m "not live"
 
 ## Deploying the web apps
 
-EASI, SFARI and DEEP deploy together as one Posit Connect Cloud item, the STAF app (`apps/staf`, https://gtmenichino-staf.share.connect.posit.cloud/, `?tool=easi|sfari|deep`). Their standalone items were retired on 2026-10-08; never deploy a tool on its own.
+The site's web app is the STAF web app on GitHub Pages (https://usace-wrises.github.io/staf/app/, `?tool=easi|sfari|deep`). `npm run build` in `apps/staf-web` writes it into `docs/app/`, and pushing `main` publishes it with the rest of the site. See `apps/staf-web/README.md`.
+
+The Shiny apps EASI, SFARI and DEEP deploy together as one Posit Connect Cloud item, the STAF app (`apps/staf`, https://gtmenichino-staf.share.connect.posit.cloud/, `?tool=easi|sfari|deep`). The site stopped linking to it on 2026-10-18, and it stays up until it is retired. Their standalone items were retired on 2026-10-08; never deploy a tool on its own. Until the STAF app is retired, a redeploy goes like this:
 
 - Run `apps/staf/scripts/assemble_tools.py` before every deploy. It copies each tool's files, as listed in its tracked `.posit/publish/<name>.toml`, into the gitignored `apps/staf/_tools/` (`apps/staf/tests/test_assembled.py` checks it).
 - Deploy with the Posit Publisher extension (VS Code / Positron) from `apps/staf` opened as its own window, using the tracked `staf` configuration.
@@ -59,7 +62,7 @@ EASI, SFARI and DEEP deploy together as one Posit Connect Cloud item, the STAF a
 
 StreamCurves is not deployed to Posit. It ships as StreamCurves Desktop through this repository's GitHub Releases: a `streamcurves-vX.Y.Z` tag publishes the installer, and an app update is a payload run. See `desktop/RELEASING.md`.
 
-App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `STAF_LINKS` dict (used for the STAF link in each app's header and StreamCurves' DEEP links, which open DEEP inside STAF through its `staf` entry). StreamCurves' entry is its latest release page. A URL change must be mirrored in both places; each tool's `tests/test_site_links.py` (DEEP: `test_site_calculators.py`) checks it.
+App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `STAF_LINKS` dict (used for the STAF link in each app's header and StreamCurves' DEEP links, which open DEEP in the STAF web app through its `staf` entry; installed StreamCurves Desktop copies get a change with the next payload release). StreamCurves' entry is its latest release page. A URL change must be mirrored in both places; each tool's `tests/test_site_links.py` (DEEP: `test_site_calculators.py`) checks it.
 
 ## The assessment library
 

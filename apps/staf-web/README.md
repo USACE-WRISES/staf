@@ -1,8 +1,10 @@
-# STAF static web app (in development)
+# STAF static web app
 
 EASI, SFARI and DEEP as a static TypeScript app, a section of the STAF website: a clone of the Shiny
 STAF app (`apps/staf`) that reads STAF's published data by HTTP range and computes in the browser. The
-Shiny apps are untouched. Plan and hand-off: `notes/2026-10-06_STAF_Static_Web_App/` (local only).
+Shiny apps are untouched. Since 2026-10-18 it is the site's web app: the site's app links open it, and
+the Posit Connect STAF app stays up, unlinked, until it is retired (owner). Plan and hand-off:
+`notes/2026-10-06_STAF_Static_Web_App/` (local only).
 
 Built so far:
 - Phase 1: the data layer and the cross-section pulls, with a proof page (`proof.html`).
@@ -18,10 +20,10 @@ Built so far:
     tool, computed in the browser by a port of the STAF site engine.
   - Next: the Assessment step (the metric families, then each tool's worksheet).
 
-## On the STAF website, kept apart
+## On the STAF website
 
 The owner's choice (2026-10-11): the app lives in this repo and is served by the existing STAF website
-(GitHub Pages, Jekyll from `docs/`) as a separate part, so it can be removed cleanly.
+(GitHub Pages, Jekyll from `docs/`) as a part of its own.
 
 - `npm run build` writes the app into **`docs/app/`**, served at https://usace-wrises.github.io/staf/app/.
   - The folder is generated: never edit it. Rebuild and commit it with its source.
@@ -32,22 +34,10 @@ The owner's choice (2026-10-11): the app lives in this repo and is served by the
   - It also writes `GENERATED.txt`.
 - **The app reads its data from the Hugging Face mirror,** so the website stays small (about 2 MB
   for the app, most of it the Shiny page's stylesheets and fonts).
-- **No other file of the website refers to it.** When the app is ready, the Apply STAF page gets one
-  link, added with the owner's go.
-
-## Removing the app
-
-Nothing else in the repo depends on it. Delete:
-1. `docs/app/`: the website section, gone after the next Pages build;
-2. `apps/staf-web/` (the source) and `tools/staf-web-data/` (the data tools);
-3. the link from the website, once there is one;
-4. if wanted, the Hugging Face dataset `gtmenichino/staf-data` and the `staf-web` and
-   `staf-web-built` entries of `.claude/launch.json`.
-
-Browsers that used the app keep its download worker registered for `/staf/app/download/`. It answers
-nothing else, so it does no harm once the app is gone.
-
-The cross-section release (`staf-xs-current`, `tools/xs-grid`) is not part of the app and stays.
+- **The site's app links open it** (the owner, 2026-10-18): `docs/_data/apps.yml`'s EASI, SFARI and
+  DEEP urls (`?tool=`), so the Apply STAF page, the home page, the tier pages and the `/easi/`,
+  `/sfari/` and `/deep/` addresses all lead here. Each Shiny app's `STAF_LINKS` mirrors them, and
+  StreamCurves opens a library version here (`?tool=deep&assessment=<id>@<N>`).
 
 ## The page: the Shiny app's look, in the app's own copies
 

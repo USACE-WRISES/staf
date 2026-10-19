@@ -4,9 +4,10 @@ One Shiny for Python app that hosts the three STAF tools, each as a Shiny module
 `STAF | Screening › Rapid › Detailed` on the left (the shown tool's tier lit), the
 `EASI | SFARI | DEEP` switch in the middle (EASI's Nationwide screening switch beside it while EASI
 is shown), and the shown tool's own actions on the right. Each tool stays its own app under
-`apps/<tool>` and still runs on its own for development and its tests; STAF is the one web
+`apps/<tool>` and still runs on its own for development and its tests; STAF was the one web
 deployment (`staf` on Connect Cloud, https://gtmenichino-staf.share.connect.posit.cloud/). The standalone EASI, SFARI and DEEP items
-were retired on 2026-10-08.
+were retired on 2026-10-08. Since 2026-10-18 the website opens the STAF web app on GitHub Pages
+instead (`apps/staf-web`); this item stays up, unlinked, until it is retired.
 
 ## How it works
 
@@ -56,7 +57,9 @@ of the tools (the deploy uses `_tools/`); `STAF_RUNTIME_DIR` moves the shared ca
 
 Cut over on 2026-10-08: `docs/_data/apps.yml` and every `STAF_LINKS` open the tools here
 (`?tool=`), the site's `/easi/`, `/sfari/` and `/deep/` addresses forward here, and StreamCurves'
-Open in DEEP links `?tool=deep&assessment=<id>@<N>`.
+Open in DEEP links `?tool=deep&assessment=<id>@<N>`. On 2026-10-18 all of them moved to the STAF web
+app (https://usace-wrises.github.io/staf/app/, the same `?tool=` and `assessment=`). Installed
+StreamCurves Desktop copies follow with its next payload release.
 
 ## Writing tool code that works in both places
 

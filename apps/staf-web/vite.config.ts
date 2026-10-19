@@ -5,7 +5,7 @@
 // it into docs/app/, served at https://usace-wrises.github.io/staf/app/. That folder is generated and
 // self-contained: Jekyll copies it as is, so no built name may start with "_" or "." (Jekyll skips
 // those) and no Markdown may land there (GitHub Pages would render it). scripts/after-build.mjs
-// checks both. Removing the app from the website is deleting docs/app/ (see README).
+// checks both. The site's app links (docs/_data/apps.yml) open it since 2026-10-18 (see README).
 //
 // The page (index.html) gets its stylesheets, shared page scripts and markup from site.ts; page/ is
 // the public folder, the files the page serves as is (the app's own copies, see site.ts).

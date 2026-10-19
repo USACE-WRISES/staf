@@ -1,7 +1,7 @@
 """The STAF site's Apply STAF page offers DEEP's calculators, one per Level III ecoregion, from
 docs/_data/deep_calculators.json, which scripts/build_site_calculators.py writes and every bake of
 DEEP's own folders refreshes (owner, 2026-10-08), and which must say what the library says. The
-site opens DEEP inside the STAF app, and the app's STAF_LINKS mirror the site's."""
+site opens DEEP in the STAF web app on GitHub Pages (owner, 2026-10-18), and the app's STAF_LINKS mirror the site's."""
 from __future__ import annotations
 
 import importlib.util
@@ -81,7 +81,7 @@ def test_only_a_bake_of_deeps_own_folders_rewrites_the_list(tmp_path):
 def test_the_site_names_this_list_and_opens_deep_in_staf(site):
     entry = _entry("deep")
     assert entry.get("calculator_list") == site.OUT.stem
-    assert entry.get("url", "").startswith("https://gtmenichino-staf.") and entry["url"].endswith("/?tool=deep")
+    assert entry.get("url", "").startswith("https://usace-wrises.github.io/staf/app/") and entry["url"].endswith("/?tool=deep")
     block = SRC.split("STAF_LINKS = {", 1)[1].split("}", 1)[0]
     for tool in ("easi", "sfari", "deep"):
         assert re.search(rf'"{tool}":\s*"([^"]+)"', block).group(1) == _entry(tool)["url"]
