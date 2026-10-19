@@ -49,7 +49,8 @@ def main() -> int:
     from shiny._namespaces import namespace_context
 
     from deep import session
-    helpers = _module_functions({"_BADGE_CLASS", "_badge_class", "_TIER_LABELS", "_tier_label"}, {"session": session})
+    helpers = _module_functions({"_BADGE_CLASS", "_badge_class", "_status_pill", "_TIER_LABELS", "_tier_label"},
+                                {"session": session, "ui": ui})
     ns = dict(helpers, ui=ui, session=session, _MAX_ASSESS_CARDS=16)
     exec(_cards_function(), ns)
     cards = ns["_assess_cards_ui"]

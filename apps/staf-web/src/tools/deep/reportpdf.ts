@@ -175,7 +175,7 @@ export async function buildPdf(delin: Rec, la: Bundle | null, measured: Record<s
     }
   }
   if (gallery.length) story.push(new Spacer(1, 10), new Paragraph('Site photos', styles.Heading3), ...gallery)
-  return doc.build(story)
+  return doc.build(story, mark, mark)
 }
 
 /** build_metrics_pdf: Get Forms' metrics list ("DEEP Metrics"), built in invariant mode as DEEP builds it. */
