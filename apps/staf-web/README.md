@@ -309,11 +309,18 @@ working, it can be installed with an icon, and a pushed build still reaches ever
   (`staf-index-1`). A visit without the network starts from the index the last visit read
   (`DataSource.offline`), and every read made before comes from the cache. Place search, the basemaps,
   3DEP pulls and anything not read before need the network.
-- **Updates:** each launch online asks for `app-sw.js` past the HTTP cache (`updateViaCache: 'none'`;
-  GitHub Pages lets a copy be up to 10 minutes old). A pushed build installs beside the running one, and
-  the page shows "A new version of STAF is ready." with **Reload to update**. Every STAF page reloads
-  when the new build takes over (the unsaved-work guard asks first). A launch after every STAF window
-  has closed runs the new build anyway, and a page left open looks for one hourly.
+- **Updates** (owner, 2026-10-19: "when the web app opens and a newer version is on the site, switch
+  to it right away"): a page the copy opened asks for `app-sw.js` at once, past the HTTP cache
+  (`updateViaCache: 'none'`; GitHub Pages lets a copy be up to 10 minutes old), and a page left open
+  asks hourly. A pushed build takes over as soon as its copy is in (`skipWaiting`). A page with nothing
+  unsaved then reloads into it straight away; a page with unsaved work (the unsaved-work guard's
+  `beforeunload` says so) keeps running and shows "A new version of STAF is ready." with **Reload to
+  update**. Such a page still reads its own files from the build before: the worker keeps the copy
+  of the build it replaced (`staf-meta-1` records which) and drops older ones. Pages from builds
+  before 2026-10-19 reload when the new build takes over, the guard asking first.
+  **Checked 2026-10-19** with `vite preview`: the old live build switched itself to the new one on
+  opening; a fresh page took a newer build without a notice; a page with a delineated basin kept it
+  and showed the notice.
 - **Installing:** `page/manifest.webmanifest` and the icons in `page/icons/` (drawn by
   `scripts/make_icons.py` from `favicon.svg`'s design) let Edge and Chrome install it as an app with its
   own window and icon. Offline and updates work the same there as in a tab.
