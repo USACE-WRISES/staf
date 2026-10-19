@@ -1,2 +1,2 @@
 The STAF static web app, built from apps/staf-web by "npm run build". Do not edit.
-Deleting this folder removes the app from the STAF website (see apps/staf-web/README.md).
+The site's app links open it (docs/_data/apps.yml); app-sw.js is its offline copy (apps/staf-web/README.md).
