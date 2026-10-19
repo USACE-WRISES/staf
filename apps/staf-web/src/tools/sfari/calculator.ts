@@ -1,14 +1,14 @@
-// SFARI's Excel calculator (sfari/calculator.py): the certified draft (page/forms/sfari, the app's copy)
-// with an assessment typed into the cells an assessor would type into, and every other part copied
+// SFARI's Excel calculator (sfari/calculator.py): the 2026-10-15 template (page/forms/sfari, the app's
+// copy) with an assessment typed into the cells an assessor would type into, and every other part copied
 // through untouched:
 //   B2 reach id, B3 lat/long, B4 date, G2 reach length (ft)
 //   H8, H12 ... H84: the 20 function scores, 0-15 (each a 4-row merge, so only the anchor row)
 //   J8 .. J87: the 80 metric Likert values
-// The blank ships with cached error values, so fullCalcOnLoad makes Excel recalculate on open.
+// The template caches the empty calculator's error values, so fullCalcOnLoad makes Excel recalculate on open.
 import { pageFile } from '../../files/download'
 import { excelSerial, forceRecalc, sheetPart, xmlText } from '../../files/xlsx/calcfill'
 import { readZip, repack } from '../../files/zip'
-import { BLANK_URL, coordsStr, reachIdStr } from './forms'
+import { BLANK_FILENAME, coordsStr, reachIdStr, TEMPLATE_URL } from './forms'
 import type { FunctionRecord, MetricRecord } from './markup'
 import { LIKERT_NA, roundHalfEven } from './method'
 
@@ -75,8 +75,8 @@ export const METRIC_ROWS: [string, number][] = [
 
 export const FUNCTION_ROW = new Map(FUNCTION_ROWS)
 
-/** blank_bytes: the shipped template, byte for byte. */
-export const blankBytes = (): Promise<Uint8Array> => pageFile(BLANK_URL)
+/** template_bytes: the shipped template, byte for byte. */
+export const templateBytes = (): Promise<Uint8Array> => pageFile(TEMPLATE_URL)
 
 export type CellValue = string | number
 
@@ -128,7 +128,7 @@ export function inputValues(delin: Record<string, any> | null, metricScores: Rec
 export async function buildCalculator(delin: Record<string, any> | null, metricScores: Record<string, MetricRecord>,
   functionScores: Record<string, FunctionRecord>, today: string): Promise<Uint8Array> {
   const values = inputValues(delin, metricScores, functionScores, today)
-  const source = await blankBytes()
+  const source = await templateBytes()
   const zin = readZip(source)
   const part = await sheetPart(zin, SHEET_NAME, WHO)
   const sheetXml = new TextDecoder().decode(await zin.read(part))
@@ -139,5 +139,5 @@ export async function buildCalculator(delin: Record<string, any> | null, metricS
   ]))
 }
 
-/** calculator_filename: the completed workbook's download name. */
-export const calculatorFilename = (): string => 'sfari-calculator.xlsx'
+/** calculator_filename: the completed workbook's download name, the calculator's version. */
+export const calculatorFilename = (): string => BLANK_FILENAME

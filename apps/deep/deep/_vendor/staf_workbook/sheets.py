@@ -263,7 +263,8 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     date = (generated_on or _dt.date.today()).isoformat()
     w.text("A1", f"{spec.app_title} assessment summary", st.title)
     w.height(1, TITLE_H)
-    w.text("A2", f"Generated {date} by the {spec.app_title} web application.", st.sub)
+    if not info.blank:                                     # a blank workbook names no day
+        w.text("A2", f"Generated {date} by the {spec.app_title} web application.", st.sub)
     w.height(2, ROW_H)
     if banner is None:
         w.height(3, GAP_H)

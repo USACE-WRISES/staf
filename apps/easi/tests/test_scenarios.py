@@ -117,13 +117,14 @@ def _sheet_xml(z, name):
     return z.read("xl/" + target.lstrip("/").replace("xl/", "", 1)).decode("utf-8")
 
 
-def test_workbook_has_a_calculator_per_scenario_behind_a_summary(report):
+def test_workbook_has_a_calculator_per_scenario_behind_the_instructions_and_a_summary(report):
     _sset, rows = _two(report)
     data = workbook.build({"delineation": BASE_DELIN, "report": report}, rows, {}, today=dt.date(2026, 10, 3))
     z = zipfile.ZipFile(io.BytesIO(data))
     tags = re.findall(r"<sheet\b[^>]*/>", z.read("xl/workbook.xml").decode("utf-8"))
     names = [re.search(r'name="([^"]+)"', t).group(1) for t in tags]
-    assert names[:4] == ["Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    # the template's Instructions first, and the tab it opens on (owner, 2026-10-19)
+    assert names[:5] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
     hidden = set(re.search(r'name="([^"]+)"', t).group(1) for t in tags if 'state="hidden"' in t)
     assert {"S2 Metrics", "S2 Results", "S2 ChartData"} <= hidden
     assert calculator.blank_bytes() == calculator.template_path().read_bytes()    # never changed
@@ -188,7 +189,7 @@ def test_the_summary_is_the_compare_table_on_its_side(report, n_alt):
         rows.append((alt, scenario_state.scored_for(report, alt.state)))
     data = workbook.build({"delineation": BASE_DELIN, "report": report}, rows, {}, today=dt.date(2026, 10, 3))
     wb = openpyxl.load_workbook(io.BytesIO(data))
-    assert wb.sheetnames[0] == "Summary"
+    assert wb.sheetnames[:2] == ["Instructions", "Summary"] and wb.active.title == "Instructions"
     ws = wb["Summary"]
     head = next(c.row for c in ws["A"] if c.value == "Index") - 1
     expect = [None, "Existing Conditions"]

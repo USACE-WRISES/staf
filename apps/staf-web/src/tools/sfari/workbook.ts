@@ -1,19 +1,22 @@
-// SFARI's workbook (sfari/workbook.py): the calculator once per scenario, then the Summary and
-// ReferenceCurves tabs (files/xlsx, the port of libs/staf_workbook). Each scenario's tab is a copy of the
-// score sheet with that scenario's entries. SFARI rates metrics on a Likert scale and has no numeric
-// curves, so its ReferenceCurves tab holds the Likert criteria, the suggestion breakpoints and the
-// Likert scores.
+// SFARI's workbook (sfari/workbook.py): the calculator's Instructions, the Summary, the calculator once
+// per scenario, then the ReferenceCurves tab (files/xlsx, the port of libs/staf_workbook). It opens on
+// Instructions (owner, 2026-10-19). Each scenario's tab is a copy of the score sheet with that
+// scenario's entries. SFARI rates metrics on a Likert scale and has no numeric curves, so its
+// ReferenceCurves tab holds the Likert criteria, the suggestion breakpoints and the Likert scores. The
+// blank workbook is a file (forms.ts BLANK_URL), made once by the Shiny app's build_blank.
 import { pyG } from '../../app/pyfmt'
 import { assemble, type AssemblySpec, type ScenarioInput } from '../../files/xlsx/assemble'
 import { type RefCurves, type SummaryCells, summaryCells, tableBlock } from '../../files/xlsx/sheets'
 import type { Scenario } from '../../shared/scenarios'
 import type { SummaryInfo } from '../../shared/summary'
-import { blankBytes, FUNCTION_ROW, fillSheet, inputValues, SHEET_NAME } from './calculator'
+import { FUNCTION_ROW, fillSheet, inputValues, SHEET_NAME, templateBytes } from './calculator'
 import { scenarioScores } from './compare'
 import type { FunctionRecord, MetricRecord } from './markup'
 import { BREAKS, FN_LIST, LIKERT_NA, LIKERT_NUMERIC, LIKERT_ORDER, METRICS_BY_FN, METRICS_BY_ID } from './method'
 
-export const SPEC: AssemblySpec = { appTitle: 'SFARI', scoreSheet: SHEET_NAME, blocks: { Instructions: 'L4:P27' }, forceRecalc: true }
+/** the workbook opens on the template's Instructions, ahead of Summary (owner, 2026-10-19) */
+export const SPEC: AssemblySpec = { appTitle: 'SFARI', scoreSheet: SHEET_NAME, blocks: { Instructions: 'L4:P27' }, forceRecalc: true,
+  lead: ['Instructions'] }
 const SUB_CELLS: Record<string, string> = { physical: 'C8', chemical: 'C56', biological: 'C72' }
 
 /** functions: [(id, name, category)] in the worksheet's order. */
@@ -73,5 +76,5 @@ export async function buildWorkbook(delin: Record<string, any>, scenarios: [Scen
     inputs.push({ id: s.id, name: s.name, description: s.description, fill: (xml) => fillSheet(xml, values) })
     scores.push(scenarioScores(st.function_scores ?? {}))
   }
-  return assemble(template ?? await blankBytes(), SPEC, inputs, { summary: info, cells: sfariSummaryCells(), scores, curves: referenceCurves(), generatedOn: today })
+  return assemble(template ?? await templateBytes(), SPEC, inputs, { summary: info, cells: sfariSummaryCells(), scores, curves: referenceCurves(), generatedOn: today })
 }

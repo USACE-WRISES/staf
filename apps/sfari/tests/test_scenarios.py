@@ -1,6 +1,7 @@
 """Scenarios in SFARI (owner, 2026-10-03): the assessment file keeps every scenario with its own
 entries (the STAF assessment file, 2026-10-05); the workbook carries one calculator per scenario
-behind a Summary tab; the assessment page wires the shared scenario chip."""
+behind the Instructions and a Summary tab (owner, 2026-10-19); the assessment page wires the shared
+scenario chip."""
 from __future__ import annotations
 
 import datetime as dt
@@ -50,18 +51,19 @@ def test_a_file_without_alternatives_opens_as_existing_conditions_alone():
     assert [s.id for s in assessment_file.scenario_set(session.load(text)["scenarios"]).items] == [BASELINE_ID]
 
 
-def test_workbook_has_a_calculator_per_scenario_behind_a_summary():
+def test_workbook_has_a_calculator_per_scenario_behind_the_instructions_and_a_summary():
     sset = _two()
     data = workbook.build(DELIN, [(s, s.state) for s in sset.items], today=dt.date(2026, 10, 3))
     z = zipfile.ZipFile(io.BytesIO(data))
     book = z.read("xl/workbook.xml").decode("utf-8")
     names = re.findall(r'<sheet\b[^>]*name="([^"]+)"', book)
-    assert names[:4] == ["Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    assert names[:5] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    assert 'activeTab="0"' in book                             # it opens on Instructions
     assert "fullCalcOnLoad=\"1\"" in book
     sheets = dict((n, None) for n in names)
     assert "S2 Instructions Block" in sheets                    # the alternative's chart data
     # the template itself is never changed
-    assert calculator.blank_bytes() == calculator.TEMPLATE_PATH.read_bytes()
+    assert calculator.template_bytes() == calculator.TEMPLATE_PATH.read_bytes()
 
 
 GROUPS = ["Index", "Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
@@ -80,7 +82,7 @@ def test_the_summary_is_the_compare_table_on_its_side(n_alt):
         alt.state = {"metric_scores": {}, "function_scores": dict((f, {"score": 9 + k}) for f in FIDS[:4])}
     data = workbook.build(DELIN, [(s, s.state) for s in sset.items], today=dt.date(2026, 10, 3))
     wb = openpyxl.load_workbook(io.BytesIO(data))
-    assert wb.sheetnames[0] == "Summary"
+    assert wb.sheetnames[:2] == ["Instructions", "Summary"] and wb.active.title == "Instructions"
     ws = wb["Summary"]
     head = next(c.row for c in ws["A"] if c.value == "Index") - 1
     expect = [None, "Existing Conditions"]

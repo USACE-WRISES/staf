@@ -32,7 +32,7 @@ def _names(data: bytes) -> dict:
     return out
 
 
-def _deep(scenarios, scores, *, n_fns=3, statements=None, note="", banner=None):
+def _deep(scenarios, scores, *, n_fns=3, statements=None, note="", banner=None, lead=(), blank=False):
     if not DEEP.is_file():
         pytest.skip("DEEP template not present")
     data = DEEP.read_bytes()
@@ -42,9 +42,9 @@ def _deep(scenarios, scores, *, n_fns=3, statements=None, note="", banner=None):
                          functions=[(f, f, CATEGORIES[k % len(CATEGORIES)], names["fs_" + f]) for k, f in enumerate(fns)],
                          statements=statements or [], note=note)
     curves = RefCurves("", [CurveBlock("Embeddedness", "", "Percent", "Index", [("All", [(0, 1), (100, 0)])])])
-    out = assemble(data, AssemblySpec("DEEP", "DEEP Score"), scenarios, summary=SummaryInfo("DEEP", "Mink Brook", 1000, 5,
-                   2, regions_for_l3("59")), cells=cells, scores=scores, curves=curves,
-                   generated_on=__import__("datetime").date(2026, 10, 14), banner=banner)
+    out = assemble(data, AssemblySpec("DEEP", "DEEP Score", lead=lead), scenarios,
+                   summary=SummaryInfo("DEEP", "Mink Brook", 1000, 5, 2, regions_for_l3("59"), blank=blank), cells=cells,
+                   scores=scores, curves=curves, generated_on=__import__("datetime").date(2026, 10, 14), banner=banner)
     return out, fns
 
 
@@ -74,6 +74,31 @@ def test_tab_order_formulas_and_stored_results():
     assert "<conditionalFormatting" in summary                   # the change is coloured up or down
     curves = pkg.text(wb.sheet("ReferenceCurves").part)
     assert "<drawing " in curves
+
+
+def test_a_lead_sheet_comes_first_and_opens():
+    """The template's Instructions ahead of Summary, and the tab the workbook opens on (owner, 2026-10-19)."""
+    sc = [ScenarioInput("existing", "Existing Conditions"), ScenarioInput("s2", "Restore riparian")]
+    data, _fns = _deep(sc, [ScenarioScores(Measure(0.52)), ScenarioScores(Measure(0.61))], lead=("instructions",))
+    pkg = Package(data)
+    wb = WorkbookModel(pkg)
+    visible = [s.name for s in wb.sheets if s.state == "visible"]
+    assert visible[:5] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    assert [s.name for s in wb.sheets if re.search(r'tabSelected="1"', pkg.text(s.part))] == ["Instructions"]
+    assert re.search(r'<workbookView\b[^>]*\bactiveTab="0"', wb.xml)
+    plain, _fns = _deep(sc, [ScenarioScores(Measure(0.52)), ScenarioScores(Measure(0.61))])
+    rest = [s.name for s in WorkbookModel(Package(plain)).sheets if s.name != "Instructions"]
+    assert [s.name for s in wb.sheets if s.name != "Instructions"] == rest      # nothing else moves
+
+
+def test_a_blank_summary_leaves_the_site_and_the_day_out():
+    data, _fns = _deep([ScenarioInput("existing", "Existing Conditions")], [ScenarioScores()], blank=True)
+    _wb, ws = _summary(data)
+    assert ws["A1"].value == "DEEP assessment summary" and ws["A2"].value is None
+    site = [(ws.cell(r, 1).value, ws.cell(r, 2).value) for r in range(4, _row_of(ws, "Scores"))]
+    assert site[0] == ("Reach name", None) and [kv for kv in site if kv[1]] == [("Assessment tier", "Detailed")]
+    eci = _row_of(ws, "ECI")
+    assert ws[f"B{eci}"].value.startswith("=IF(ISNUMBER(")                  # still live
 
 
 def test_one_scenario_shows_existing_conditions_alone():

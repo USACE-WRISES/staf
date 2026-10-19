@@ -111,6 +111,12 @@ def test_summary_rows_and_regions():
     assert empty["Reach name"] == "Unnamed" and empty["NARS-9 region"] == "Not available"
 
 
+def test_a_blank_summary_names_only_the_tier():
+    rows = SummaryInfo("SFARI", blank=True).rows()
+    assert [k for k, _v in rows] == [k for k, _v in SummaryInfo("SFARI").rows()]
+    assert [(k, v) for k, v in rows if v] == [("Assessment tier", "Rapid")]
+
+
 def test_ecoregion_table_covers_every_level_iii_code():
     doc = json.loads((DATA / "ecoregions.json").read_text(encoding="utf-8"))
     assert len(doc["l3"]) == 85 and len(doc["sources"]) == 3

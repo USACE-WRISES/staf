@@ -1,8 +1,10 @@
 // One workbook for an assessment and its scenarios, built from a tool's calculator template
-// (libs/staf_workbook assemble.py). The template is never changed. The result opens on the Summary tab;
-// Existing Conditions (the template's score sheet, renamed) comes next, then one tab per alternative
-// (each a working copy of the calculator), then ReferenceCurves, then the template's other sheets as
-// they were. Each alternative's helper sheets are hidden. Excel recalculates on open.
+// (libs/staf_workbook assemble.py). The template is never changed. The result opens on its first tab:
+// the template's lead sheets when the tool names them (Instructions in all three tools, owner
+// 2026-10-19), else Summary. Then come Summary, Existing Conditions (the template's score sheet,
+// renamed), one tab per alternative (each a working copy of the calculator), ReferenceCurves, and the
+// template's other sheets as they were. Each alternative's helper sheets are hidden. Excel recalculates
+// on open.
 import type { ScenarioScores } from '../../shared/scenarios'
 import type { SummaryInfo } from '../../shared/summary'
 import { clearTabSelected, ScenarioCloner, setTabSelected } from './clone'
@@ -25,6 +27,8 @@ export interface AssemblySpec {
   blocks?: Record<string, string>
   hideHelpers?: boolean
   forceRecalc?: boolean
+  /** template sheets before Summary, the first one open */
+  lead?: string[]
 }
 
 export interface ScenarioInput { id: string, name: string, description: string, fill: (xml: string) => string }
@@ -94,11 +98,12 @@ export async function assemble(template: Uint8Array, spec: AssemblySpec, scenari
   return finish(built, spec, first, after)
 }
 
-/** finish: the tabs ordered (``first`` before the scenarios, ``after`` right after them), the first
- * selected, the calculation chain dropped, and the result checked. */
+/** finish: the tabs ordered (the template's lead sheets, then ``first`` before the scenarios, ``after``
+ * right after them), the first selected, the calculation chain dropped, and the result checked. */
 export async function finish(built: Built, spec: AssemblySpec, first: string[], after: string[]): Promise<Uint8Array> {
   const { pkg, wb } = built
-  const head = [...first, built.ecSheet, ...built.altSheets, ...after]
+  const lead = (spec.lead ?? []).flatMap((n) => wb.sheets.filter((s) => s.name.toLowerCase() === n.toLowerCase() && s.state === 'visible').map((s) => s.name))
+  const head = [...lead, ...first, built.ecSheet, ...built.altSheets, ...after]
   const headLow = new Set(head.map((h) => h.toLowerCase()))
   const rest = wb.sheets.filter((s) => !headLow.has(s.name.toLowerCase()))
   wb.reorder([...head, ...rest.filter((s) => s.state === 'visible').map((s) => s.name), ...rest.filter((s) => s.state !== 'visible').map((s) => s.name)])

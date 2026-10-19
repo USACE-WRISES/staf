@@ -1,24 +1,28 @@
-"""SFARI's workbook and summary: the calculator once per scenario, then the Summary and
-ReferenceCurves tabs (the shared ``libs/staf_workbook``, vendored in ``_vendor``).
+"""SFARI's workbook and summary: the calculator's Instructions, the Summary, the calculator once
+per scenario, then the ReferenceCurves tab (the shared ``libs/staf_workbook``, vendored in
+``_vendor``). It opens on Instructions (owner, 2026-10-19).
 
-The calculator template stays the certified draft; each scenario's tab is a copy of its score
+The calculator template stays the developers' issue; each scenario's tab is a copy of its score
 sheet with that scenario's entries, identical apart from sheet names. SFARI rates metrics on a
 Likert scale and has no numeric curves, so its ReferenceCurves tab holds the Likert criteria, the
-suggestion breakpoints and the Likert scores.
+suggestion breakpoints and the Likert scores. The blank workbook is the same with one empty
+Existing Conditions (``build_blank``).
 """
 from __future__ import annotations
 
 import datetime as _dt
 
 from . import calculator, config, likert, scoring
-from ._vendor.staf_workbook.assemble import AssemblySpec, ScenarioInput, assemble
+from ._vendor.staf_workbook.assemble import EC_NAME, AssemblySpec, ScenarioInput, assemble
 from ._vendor.staf_workbook.model import compare as cmp_model
 from ._vendor.staf_workbook.model.compare import Measure, ScenarioScores
 from ._vendor.staf_workbook.model.refcurves import RefCurves, TableBlock
 from ._vendor.staf_workbook.model.summary import SummaryInfo, regions_for_l3
 from ._vendor.staf_workbook.sheets import SummaryCells
 
-SPEC = AssemblySpec("SFARI", calculator.SHEET_NAME, blocks={"Instructions": "L4:P27"}, force_recalc=True)
+#: the workbook opens on the template's Instructions, ahead of Summary (owner, 2026-10-19)
+SPEC = AssemblySpec("SFARI", calculator.SHEET_NAME, blocks={"Instructions": "L4:P27"}, force_recalc=True,
+                    lead=("Instructions",))
 _SUB_CELLS = {"physical": "C8", "chemical": "C56", "biological": "C72"}
 
 
@@ -106,5 +110,14 @@ def build(delin: dict, scenarios: list, *, today: _dt.date | None = None) -> byt
         inputs.append(ScenarioInput(s.id, s.name, s.description,
                                     fill=lambda xml, v=values: calculator.fill_sheet(xml, v)))
         scores.append(scenario_scores(st.get("function_scores") or {}))
-    return assemble(calculator.blank_bytes(), SPEC, inputs, summary=summary_info(delin), cells=summary_cells(),
+    return assemble(calculator.template_bytes(), SPEC, inputs, summary=summary_info(delin), cells=summary_cells(),
                     scores=scores, curves=reference_curves(), generated_on=today)
+
+
+def build_blank() -> bytes:
+    """The blank workbook (``calculator.BLANK_PATH``): the completed workbook's tabs with one empty
+    Existing Conditions, the Summary's site rows and date left out (owner, 2026-10-19). Nothing in it
+    depends on the day or a site, so ``scripts/build_blank_calculator.py`` writes it once."""
+    return assemble(calculator.template_bytes(), SPEC, [ScenarioInput("existing", EC_NAME)],
+                    summary=SummaryInfo("SFARI", blank=True), cells=summary_cells(), scores=[ScenarioScores()],
+                    curves=reference_curves())

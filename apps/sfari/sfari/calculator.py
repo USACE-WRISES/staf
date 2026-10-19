@@ -4,13 +4,13 @@ The calculator is the worksheet an assessment is handed over in. This module
 serves the blank copy and writes a filled one from an assessment, so nobody has
 to retype 20 function scores and 80 Likert selections.
 
-The template (``data/calculator/``, draft 2026-06-29) is out for certification by
-the Eco-PCX, so it must come back unaltered except for the cells an assessor
-would type into. That rules out a spreadsheet library: openpyxl cannot round-trip
-this workbook. Measured on 2026-09-08, a load-and-save drops 38 of its 64 parts,
-including every embedded image, both chart style/color pairs, the VML drawing,
-the printer settings, the threaded comments and the sensitivity label, and shrinks
-the package by 31 percent.
+The template (``data/calculator/SFARI_Calculator_Template_2026-10-15.xlsx``) is the
+developers' 2026-10-15 revision after the Eco-PCX review, so it must come back
+unaltered except for the cells an assessor would type into. That rules out a
+spreadsheet library: openpyxl cannot round-trip this workbook. Measured on
+2026-09-08 (on the 2026-06-29 draft), a load-and-save drops 38 of its 64 parts,
+including every embedded image, both chart style/color pairs, the printer settings
+and the sensitivity label, and shrinks the package by 31 percent.
 
 So this edits the sheet XML inside the zip and copies every other part through
 untouched. That also means no runtime dependency: zipfile and re are enough.
@@ -21,17 +21,30 @@ What gets written, all of them cells the workbook itself marks unlocked:
                           only the anchor row is written)
   J8 .. J87               the 80 metric Likert values
 
-Everything else in the worksheet is a formula. The blank ships with cached error
-values (321 formulas, 110 cells caching an error), so ``fullCalcOnLoad`` is set to
-make Excel recalculate on open.
+Everything else in the worksheet is a formula. The template caches the empty
+calculator's values (322 formulas, 111 cells caching an error), so ``fullCalcOnLoad``
+is set to make Excel recalculate on open.
 
-One correction to the shipped template (2026-09-08, owner decision). Cell E72, the
-Biology functional-category label, tested Biology's own range for its first
-threshold but Physicochemistry's (``H56:H71``) for its second, so a Biology average
-of 0.5 was labelled Functioning whenever Physicochemistry happened to reach 0.7.
-Its second ``AVERAGE`` now reads ``H72:H87`` like the other four categories. That
-one formula is the only difference from the owner's master copy under ``notes/``,
-which still carries the bug; the same fix has to reach whoever re-issues the draft.
+The template is the owner's master copy (``notes/2026-10-15_SFARI_Calculator/``)
+prepared by ``scripts/prepare_calculator_template.py``, and differs from it in:
+- the 104 input cells, cleared (the master carries an example assessment) and the
+  workbook recalculated in Excel for the empty calculator;
+- cell E72, the Biology functional-category label (2026-09-08, owner decision). It
+  tested Biology's own range for its first threshold but Physicochemistry's
+  (``H56:H71``) for its second, so a Biology average of 0.5 was labelled Functioning
+  whenever Physicochemistry happened to reach 0.7. Its second ``AVERAGE`` reads
+  ``H72:H87`` like the other four categories. The master still carries the bug; the
+  same fix has to reach whoever re-issues the calculator;
+- Instructions step 1, which names the "Existing Conditions worksheet": every workbook
+  the apps serve names the score sheet so (``workbook.py``).
+Both sheets keep the master's protection; the password is ``sfari``, as the
+Instructions say.
+
+Nothing serves the template as it is. The blank download is ``BLANK_PATH``, the
+workbook ``workbook.build_blank()`` makes from it (``scripts/build_blank_calculator.py``
+writes it; ``tests/test_calculator_blank.py`` holds the two together); a completed one
+is assembled per assessment (``workbook.build``); ``build_calculator`` below is the
+single-calculator fallback when that fails.
 """
 from __future__ import annotations
 
@@ -45,12 +58,16 @@ from pathlib import Path
 
 from . import config
 
-#: The draft this app ships. Part of the download filename so a returned
-#: worksheet can be traced to the template it came from.
-TEMPLATE_VERSION = "2026-06-29"
+#: The calculator this app ships. It names every download, so a returned
+#: worksheet can be traced to the calculator it came from (owner, 2026-10-19).
+TEMPLATE_VERSION = "2026-10-15"
 
-TEMPLATE_PATH = (Path(__file__).resolve().parent.parent
-                 / "data" / "calculator" / f"SFARI_Calculator_Draft_{TEMPLATE_VERSION}.xlsx")
+_DATA = Path(__file__).resolve().parent.parent / "data" / "calculator"
+TEMPLATE_PATH = _DATA / f"SFARI_Calculator_Template_{TEMPLATE_VERSION}.xlsx"
+#: The blank and the completed workbook both download under this name (owner, 2026-10-19).
+FILENAME = f"{TEMPLATE_VERSION}_SFARI Calculator.xlsx"
+#: The blank workbook, generated from the template; the Apply STAF page links it too.
+BLANK_PATH = _DATA / FILENAME
 
 SHEET_NAME = "SFARI Score"
 
@@ -180,7 +197,7 @@ METRIC_ROWS = (
 
 # --- Reading the template -----------------------------------------------------
 @lru_cache(maxsize=1)
-def blank_bytes() -> bytes:
+def template_bytes() -> bytes:
     """The shipped template, byte for byte.
 
     Bytes, not an open ``ZipFile``: handing a live archive's ``ZipInfo`` to
@@ -188,6 +205,13 @@ def blank_bytes() -> bytes:
     download and raise ``BadZipFile`` on every one after it.
     """
     return TEMPLATE_PATH.read_bytes()
+
+
+@lru_cache(maxsize=1)
+def blank_bytes() -> bytes:
+    """The blank workbook (Instructions, Summary, Existing Conditions, ReferenceCurves), byte
+    for byte: what Get Forms' blank download serves."""
+    return BLANK_PATH.read_bytes()
 
 
 # --- Cell writing -------------------------------------------------------------
@@ -317,7 +341,7 @@ def build_calculator(delin, metric_scores, function_scores, *, today=None) -> by
     in yet.
     """
     values = input_values(delin, metric_scores, function_scores, today=today)
-    source = blank_bytes()
+    source = template_bytes()
     with zipfile.ZipFile(io.BytesIO(source)) as zin:
         sheet_part = _sheet_part(zin, SHEET_NAME)
         sheet_xml = zin.read(sheet_part).decode("utf-8")
@@ -363,9 +387,10 @@ def input_values(delin, metric_scores, function_scores, *, today=None) -> dict:
 
 def blank_filename() -> str:
     """The blank does not depend on the site."""
-    return f"SFARI_Calculator_Draft_{TEMPLATE_VERSION}.xlsx"
+    return FILENAME
 
 
 def calculator_filename() -> str:
-    """The completed workbook's download name: plain, with no site id (owner, 2026-10-08)."""
-    return "sfari-calculator.xlsx"
+    """The completed workbook's download name: the calculator's version, with no site id
+    (owner, 2026-10-08 and 2026-10-19)."""
+    return FILENAME

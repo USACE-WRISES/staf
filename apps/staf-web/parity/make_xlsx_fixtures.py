@@ -53,7 +53,7 @@ def formula_corpus(template: bytes) -> list[str]:
 
 
 def main() -> None:
-    template = calculator.blank_bytes()
+    template = calculator.template_bytes()
     ref: dict = {}
     ref["repack"] = {"repack": sha(calculator._repack(template, {})), "package": sha(Package(template).write())}
 

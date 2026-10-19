@@ -1,9 +1,11 @@
 """One workbook for an assessment and its scenarios, built from an app's calculator template.
 
-The template file is never changed. The result opens on the Summary tab; Existing Conditions (the
-template's score sheet, renamed) comes next, then one tab per alternative (each a working copy of
-the calculator), then ReferenceCurves, then the template's other sheets as they were. Each
-alternative's helper sheets are hidden. Excel recalculates on open, as the template already asks.
+The template file is never changed. The result opens on its first tab: the template's lead sheets
+when the app names them (Instructions in all three tools, owner 2026-10-19), else Summary. Then
+come Summary, Existing Conditions (the template's score sheet, renamed), one tab per alternative
+(each a working copy of the calculator), ReferenceCurves, and the template's other sheets as they
+were. Each alternative's helper sheets are hidden. Excel recalculates on open, as the template
+already asks.
 """
 from __future__ import annotations
 
@@ -31,6 +33,7 @@ class AssemblySpec:
     blocks: dict = field(default_factory=dict)
     hide_helpers: bool = True
     force_recalc: bool = False
+    lead: tuple = ()                       # template sheets before Summary, the first one open
 
 
 @dataclass
@@ -90,9 +93,10 @@ def sheet_for(built: Built, index: int, template_sheet: str) -> str:
 
 def assemble(template: bytes, spec: AssemblySpec, scenarios: list, *, summary, cells, scores: list,
              curves=None, generated_on=None, banner=None) -> bytes:
-    """The whole workbook: Summary, Existing Conditions, the alternatives, ReferenceCurves, then
-    the template's other sheets. ``banner`` (:class:`sheets.Banner`) puts a line across the top
-    of the two authored tabs (DEEP's assessment status); the template's own sheets carry theirs."""
+    """The whole workbook: the lead sheets (``spec.lead``), Summary, Existing Conditions, the
+    alternatives, ReferenceCurves, then the template's other sheets. ``banner``
+    (:class:`sheets.Banner`) puts a line across the top of the two authored tabs (DEEP's assessment
+    status); the template's own sheets carry theirs."""
     from .sheets import add_curves_sheet, add_summary_sheet
     from .xlsx.styles import StyleBook
     built = build(template, spec, scenarios)
@@ -106,10 +110,11 @@ def assemble(template: bytes, spec: AssemblySpec, scenarios: list, *, summary, c
 
 
 def finish(built: Built, spec: AssemblySpec, *, first: list, after: list) -> bytes:
-    """Order the tabs (``first`` before the scenarios, ``after`` right after them), select the
-    first, drop the calculation chain, and check the result."""
+    """Order the tabs (the template's lead sheets, then ``first`` before the scenarios, ``after``
+    right after them), select the first, drop the calculation chain, and check the result."""
     pkg, wb = built.pkg, built.wb
-    head = list(first) + [built.ec_sheet] + built.alt_sheets + list(after)
+    lead = [s.name for n in spec.lead for s in wb.sheets if s.name.lower() == n.lower() and s.state == "visible"]
+    head = lead + list(first) + [built.ec_sheet] + built.alt_sheets + list(after)
     head_low = set(h.lower() for h in head)
     rest = [s for s in wb.sheets if s.name.lower() not in head_low]
     wb.reorder(head + [s.name for s in rest if s.state == "visible"] + [s.name for s in rest if s.state != "visible"])

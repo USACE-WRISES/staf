@@ -383,9 +383,10 @@ complete availability, not 20 independent field observations.
   ratings, and the page warns before it is closed with work that differs from the last Save or Open.
 - **Compare** shows the ECI, the three sub-indices and every function with the change from
   Existing Conditions; the report opens with the summary block (`easi/workbook.py`).
-- **The completed workbook** (Get Forms and the report) is one file: Summary, Existing
-  Conditions, a live calculator per alternative, ReferenceCurves (the six curves this site
-  was scored against and the rating bands), then the calculator's own sheets
+- **The completed workbook** (Get Forms and the report) is one file: the calculator's
+  Instructions (the tab it opens on, owner 2026-10-19), Summary, Existing Conditions, a live
+  calculator per alternative, ReferenceCurves (the six curves this site was scored against and
+  the rating bands), then the calculator's other sheets
   (`libs/staf_workbook`). Every download opens its own tab, which the browser closes once the
   file starts, so the page never navigates; names are plain (`easi-calculator.xlsx`,
   `easi-report.pdf`), with no site id. `workbook.py`, `scenario_state.py`,

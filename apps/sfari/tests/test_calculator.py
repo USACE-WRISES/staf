@@ -1,8 +1,10 @@
-"""The SFARI Excel calculator: the blank, the filled copy, and the drift gates.
+"""The SFARI Excel calculator: the template, the filled copy, and the drift gates.
 
-The template is out for Eco-PCX certification, so the tests that matter most are
-the ones asserting the app does not alter it: the package comes back with the same
-parts, the same order, the same compression, and only the input cells changed.
+The template is the developers' 2026-10-15 issue after the Eco-PCX review, so the
+tests that matter most are the ones asserting the app does not alter it: the package
+comes back with the same parts, the same order, the same compression, and only the
+input cells changed. The blank workbook built from it has its own tests
+(test_calculator_blank.py).
 
 openpyxl reads the result here; the app itself never imports it (see the module
 docstring in sfari/calculator.py for why a spreadsheet library cannot be used to
@@ -27,10 +29,14 @@ from sfari import calculator, config      # noqa: E402
 SHEET_PART = "xl/worksheets/sheet2.xml"
 TOUCHED = {SHEET_PART, "xl/workbook.xml"}
 
-# The draft as shipped. If this changes, the review board sent a new workbook and
+# The template as shipped. If this changes, the developers issued a new workbook and
 # every mapping test below has to be re-read before the digest is updated.
-# 2026-09-08: the E72 correction below moved this from 6d28f1f4...
-TEMPLATE_SHA256 = "c5795f9e6e12160ae8a3377fbc96eebaa33a445006b835dbae1baaad17aa3b70"
+# 2026-10-19: the 2026-10-15 calculator, prepared from the owner's master by
+# scripts/prepare_calculator_template.py (inputs cleared, E72 corrected again, step 1
+# names Existing Conditions); the 2026-06-29 draft was c5795f9e...
+TEMPLATE_SHA256 = "808cba75cdfed2c706ff42316fd9aac34f57212cedfe360081449a3b29cbeff5"
+#: The password the Instructions give for both protected sheets
+PASSWORD = "sfari"
 
 #: The owner's worked example, test-only (tests/ is not in the deploy bundle).
 EXAMPLE_PATH = pathlib.Path(__file__).with_name("fixtures") / \
@@ -41,9 +47,8 @@ DELIN = {"delineation": {"network": "nhdplus-hr", "nhdplus_id": 24000800011817,
                          "reach_length_ft": 1000}}
 
 
-def _template_sheet():
-    with zipfile.ZipFile(io.BytesIO(calculator.blank_bytes())) as z:
-        return openpyxl.load_workbook(io.BytesIO(calculator.blank_bytes()))["SFARI Score"]
+def _template_sheet(name="SFARI Score"):
+    return openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))[name]
 
 
 def _build(**kw) -> bytes:
@@ -71,14 +76,44 @@ def _cells(sheet_xml: str) -> dict:
 # --------------------------------------------------------------------------- #
 # the template itself
 # --------------------------------------------------------------------------- #
-def test_the_shipped_template_is_the_draft_we_mapped():
-    assert hashlib.sha256(calculator.blank_bytes()).hexdigest() == TEMPLATE_SHA256
+def test_the_shipped_template_is_the_calculator_we_mapped():
+    assert hashlib.sha256(calculator.template_bytes()).hexdigest() == TEMPLATE_SHA256
+    assert calculator.template_bytes() == calculator.TEMPLATE_PATH.read_bytes()
+    assert calculator.TEMPLATE_VERSION in calculator.TEMPLATE_PATH.name
 
 
-def test_the_blank_download_is_the_template_byte_for_byte():
-    assert calculator.blank_bytes() == calculator.TEMPLATE_PATH.read_bytes()
-    assert calculator.blank_filename().endswith(".xlsx")
-    assert calculator.TEMPLATE_VERSION in calculator.blank_filename()
+def test_the_template_is_an_empty_calculator():
+    """The owner's master carries a worked example; the template must not, or the
+    writer below has nowhere to write and every download carries the example."""
+    ws = _template_sheet()
+    refs = (["B2", "B3", "B4", "G2"] + [f"H{r}" for _f, r, _l in calculator.FUNCTION_ROWS]
+            + [f"J{r}" for _m, r, _l in calculator.METRIC_ROWS])
+    for ref in refs:
+        assert ws[ref].value is None, ref
+
+
+def test_both_sheets_open_with_the_password_the_instructions_give():
+    """Instructions I6:I7 read "Protect/unprotect password: sfari"; the stored hashes must agree."""
+    import base64
+    import struct
+
+    ws = _template_sheet("Instructions")
+    assert (ws["I6"].value, ws["I7"].value) == ("Protect/unprotect password:", PASSWORD)
+    book = openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))
+    assert book.security is None                    # no structure lock since 2026-10-15
+    for name in ("Instructions", "SFARI Score"):
+        prot = book[name].protection
+        assert prot.sheet and prot.algorithmName == "SHA-512", name
+        h = hashlib.sha512(base64.b64decode(prot.saltValue) + PASSWORD.encode("utf-16-le")).digest()
+        for i in range(int(prot.spinCount)):
+            h = hashlib.sha512(h + struct.pack("<I", i)).digest()
+        assert base64.b64encode(h).decode() == prot.hashValue, name
+
+
+def test_instructions_step_one_names_the_tab_every_workbook_shows():
+    assert _template_sheet("Instructions")["B16"].value == (
+        "Add the field site information into the orange cells at the top of the "
+        "Existing Conditions worksheet.")
 
 
 # --------------------------------------------------------------------------- #
@@ -119,7 +154,8 @@ def test_each_category_label_tests_its_own_range():
     """The E72 correction (2026-09-08). Biology's label tested Physicochemistry's
     range for its second threshold, so a Biology average of 0.5 read as
     Functioning whenever Physicochemistry reached 0.7. Both thresholds in all
-    five labels must reference that category's own four functions."""
+    five labels must reference that category's own four functions. The
+    2026-10-15 master carries the bug again; the template corrects it."""
     ws = _template_sheet()
     for row, category, expected in ((8, "Hydrology", "H8:H23"),
                                     (24, "Hydraulics", "H24:H39"),
@@ -150,7 +186,7 @@ def test_the_writer_fills_the_cells_a_human_fills():
                 and (c.find(ns + "v") is not None or c.find(ns + "is") is not None)}
 
     example = EXAMPLE_PATH.read_bytes()
-    typed_by_hand = valued(example) - valued(calculator.blank_bytes())
+    typed_by_hand = valued(example) - valued(calculator.template_bytes())
     ours = ({"B2", "B3", "B4", "G2"}
             | {f"H{r}" for _f, r, _l in calculator.FUNCTION_ROWS}
             | {f"J{r}" for _m, r, _l in calculator.METRIC_ROWS})
@@ -164,7 +200,7 @@ def test_the_writer_fills_the_cells_a_human_fills():
 # --------------------------------------------------------------------------- #
 def test_only_the_two_expected_parts_change():
     out = _build()
-    with zipfile.ZipFile(io.BytesIO(calculator.blank_bytes())) as src, \
+    with zipfile.ZipFile(io.BytesIO(calculator.template_bytes())) as src, \
             zipfile.ZipFile(io.BytesIO(out)) as got:
         assert got.testzip() is None
         assert got.namelist() == src.namelist()
@@ -182,18 +218,18 @@ def test_the_parts_openpyxl_would_have_destroyed_are_all_present():
     with zipfile.ZipFile(io.BytesIO(_build())) as got:
         names = set(got.namelist())
     for part in ("xl/charts/chart1.xml", "xl/charts/style1.xml", "xl/charts/colors1.xml",
-                 "xl/media/image1.emf", "xl/drawings/vmlDrawing1.vml",
-                 "xl/comments1.xml", "xl/persons/person.xml", "xl/calcChain.xml",
+                 "xl/media/image1.emf", "xl/media/image10.png", "xl/calcChain.xml",
                  "xl/printerSettings/printerSettings1.bin", "customXml/item1.xml",
                  "docMetadata/LabelInfo.xml"):
         assert part in names, part
 
 
 def test_the_workbook_stays_protected_and_validated():
-    src = openpyxl.load_workbook(io.BytesIO(calculator.blank_bytes()))
+    src = openpyxl.load_workbook(io.BytesIO(calculator.template_bytes()))
     got = openpyxl.load_workbook(io.BytesIO(_build()))
-    assert got.security.workbookHashValue == src.security.workbookHashValue
-    assert got["SFARI Score"].protection.sheet == src["SFARI Score"].protection.sheet
+    assert got.security is None and src.security is None
+    for name in ("Instructions", "SFARI Score"):
+        assert got[name].protection.sheet and got[name].protection.hashValue == src[name].protection.hashValue
     got_dv = {(dv.type, str(dv.sqref)): str(dv.formula1)
               for dv in got["SFARI Score"].data_validations.dataValidation}
     src_dv = {(dv.type, str(dv.sqref)): str(dv.formula1)
@@ -209,9 +245,18 @@ def test_formulas_and_array_formulas_survive():
     assert getattr(ws["P8"].value, "text", None) == "=VLOOKUP($J8:$J8,$R$1:$S$5,2,FALSE)"
 
 
+def test_every_metric_row_has_its_indicator():
+    """P86 had none in the 2026-06-29 draft, so Watershed connectivity's check (G84) averaged
+    three of its four metrics; the 2026-10-15 calculator counts all four, as the app does."""
+    ws = _template_sheet()
+    for row in range(8, 88):
+        want = f"=VLOOKUP($J{row}:$J{row},$R$1:$S$5,2,FALSE)"
+        assert getattr(ws[f"P{row}"].value, "text", None) == want, row
+
+
 def test_only_the_input_cells_differ_in_the_sheet_xml():
     """The surgical-edit guarantee: nothing but <c> elements we meant to fill."""
-    with zipfile.ZipFile(io.BytesIO(calculator.blank_bytes())) as src:
+    with zipfile.ZipFile(io.BytesIO(calculator.template_bytes())) as src:
         before = src.read(SHEET_PART).decode("utf-8")
     fs = {fid: {"score": 7} for fid, _r, _l in calculator.FUNCTION_ROWS}
     ms = {mid: {"likert": "Agree"} for mid, _r, _l in calculator.METRIC_ROWS}
@@ -237,7 +282,7 @@ def test_the_build_is_deterministic_and_does_not_poison_the_template():
     first, second = _build(), _build()
     assert first == second
     # the ZipInfo-mutation trap: the source must still be readable afterwards
-    with zipfile.ZipFile(io.BytesIO(calculator.blank_bytes())) as src:
+    with zipfile.ZipFile(io.BytesIO(calculator.template_bytes())) as src:
         assert src.testzip() is None
 
 
@@ -248,7 +293,7 @@ def test_no_new_openpyxl_warning_appears():
             warnings.simplefilter("always")
             openpyxl.load_workbook(io.BytesIO(data))
         return {str(w.message) for w in caught}
-    assert warns(_build()) == warns(calculator.blank_bytes())
+    assert warns(_build()) == warns(calculator.template_bytes())
 
 
 # --------------------------------------------------------------------------- #
@@ -324,8 +369,8 @@ def test_a_template_without_the_expected_cells_raises(monkeypatch):
 # filenames
 # --------------------------------------------------------------------------- #
 def test_filenames():
-    assert calculator.calculator_filename() == "sfari-calculator.xlsx"      # plain (owner, 2026-10-08)
-    assert calculator.blank_filename() == "SFARI_Calculator_Draft_2026-06-29.xlsx"
+    # both carry the calculator's version, no site id (owner, 2026-10-08 and 2026-10-19)
+    assert calculator.calculator_filename() == calculator.blank_filename() == "2026-10-15_SFARI Calculator.xlsx"
 
 
 # --------------------------------------------------------------------------- #

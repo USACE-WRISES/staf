@@ -33,11 +33,13 @@ def _staf_link(tool: str) -> str:
 
 
 def test_the_site_offers_the_calculator_the_app_serves():
+    """The same blank workbook Get Forms serves (owner, 2026-10-19), so it downloads under the
+    calculator's version name from either place."""
     entry = _entry("sfari")
-    assert (REPO / entry["calculator"]).resolve() == calculator.TEMPLATE_PATH.resolve(), \
+    assert (REPO / entry["calculator"]).resolve() == calculator.BLANK_PATH.resolve(), \
         "the calculator was renamed: update calculator and calculator_label in docs/_data/apps.yml"
-    if "Draft" in calculator.TEMPLATE_PATH.name:
-        assert "draft" in entry["calculator_label"].lower()        # pending Eco-PCX certification
+    assert ("draft" in entry["calculator_label"].lower()) == ("Draft" in calculator.BLANK_PATH.name)
+    assert calculator.TEMPLATE_VERSION in entry["calculator_label"]
 
 
 def test_the_site_opens_sfari_inside_staf():

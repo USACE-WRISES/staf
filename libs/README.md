@@ -95,8 +95,9 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   rules in `assets/staf.css`; owner, 2026-10-08): Get Forms offers the field forms (SFARI, DEEP),
   the metrics PDF, then the completed and blank workbooks; the report's pinned footer offers PDF,
   CSV, GeoJSON and the completed workbook, then Close. Download names are plain, with no site id
-  (`easi-calculator.xlsx`, `sfari-calculator.xlsx`, `deep-calculator-<id>-v<N>-<status>.xlsx`;
-  DEEP's names carry the version and the status, owner 2026-10-14). `assemble(..., banner=)` puts
+  (`easi-calculator.xlsx`, `2026-10-15_SFARI Calculator.xlsx`, `deep-calculator-<id>-v<N>-<status>.xlsx`;
+  SFARI's name is its calculator's version, blank or completed, owner 2026-10-19; DEEP's names
+  carry the version and the status, owner 2026-10-14). `assemble(..., banner=)` puts
   a status band across the top of the Summary and ReferenceCurves tabs, with a print header and a
   tab color (DEEP passes its assessment's status; EASI and SFARI pass nothing).
 - **The header's actions** (`web.nav_actions`, `web.new_dialog`, `web.info_dialog`, the nav rules
@@ -126,9 +127,11 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   count current (`window.STAFMetricRows.sync(row)` after an app adds or removes a photo). The
   apps keep only their own parts (DEEP's value box and curve, SFARI's photo strip, EASI's
   method tables).
-- **One workbook per assessment** (`assemble.py`, `xlsx/`, `sheets.py`): Summary, Existing
-  Conditions, one live calculator per alternative, ReferenceCurves, then the template's other
-  sheets. The app's calculator template is never changed; the toolkit edits the zip parts
+- **One workbook per assessment** (`assemble.py`, `xlsx/`, `sheets.py`): the template's lead
+  sheets (`AssemblySpec.lead`: Instructions in all three tools, and the workbook opens on it;
+  owner, 2026-10-19), Summary, Existing Conditions, one live calculator per alternative,
+  ReferenceCurves, then the template's other sheets. `SummaryInfo(blank=True)` leaves the
+  Summary's site rows and its date empty (SFARI's blank workbook). The app's calculator template is never changed; the toolkit edits the zip parts
   directly (never openpyxl load and save, which drops charts). The Summary is the Compare table
   on its side (owner, 2026-10-08): a row per measure (the index, then each function under its
   category), a column per scenario, each alternative followed by its change (conditional formats

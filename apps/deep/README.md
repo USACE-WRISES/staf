@@ -326,9 +326,9 @@ file, the structure EASI and SFARI write too (owner, 2026-10-05;
 with its provenance, and every scenario with its values. Files saved before (schema 2, and v1 or
 version-less ones through their migration) still open, and a file from another tool is refused.
 Compare and the report compare condition claims, so an unassessed function shows as an
-interval. The completed workbook holds Summary (the calculator's own numbers, with each
-scenario's condition claim listed under them), Existing Conditions, one calculator per
-alternative, then ReferenceCurves (every metric's curve layers, with the curve set each
+interval. The completed workbook holds the calculator's Instructions (the tab it opens on,
+owner 2026-10-19), Summary (the calculator's own numbers, with each scenario's condition claim
+listed under them), Existing Conditions, one calculator per alternative, then ReferenceCurves (every metric's curve layers, with the curve set each
 scenario used) (`deep/workbook.py`, `libs/staf_workbook`).
 
 ## Report preparation

@@ -103,7 +103,7 @@ def test_the_page_compares_claims_and_an_unassessed_function_is_an_interval():
     assert workbook.claim_scores({"functionScores": {}}).eci.empty
 
 
-def test_workbook_has_a_calculator_per_scenario_behind_a_summary(la, template):
+def test_workbook_has_a_calculator_per_scenario_behind_the_instructions_and_a_summary(la, template):
     sset = _set(la)
     rows = [(s, s.state["measured_values"]) for s in sset.items]
     data = workbook.build(template, la, DELIN, rows, today=TODAY)
@@ -111,7 +111,8 @@ def test_workbook_has_a_calculator_per_scenario_behind_a_summary(la, template):
     book = z.read("xl/workbook.xml").decode("utf-8")
     tags = re.findall(r"<sheet\b[^>]*/>", book)
     names = [re.search(r'name="([^"]+)"', t).group(1) for t in tags]
-    assert names[:4] == ["Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    # the template's Instructions first, and the tab it opens on (owner, 2026-10-19)
+    assert names[:5] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
     hidden = set(re.search(r'name="([^"]+)"', t).group(1) for t in tags if 'state="hidden"' in t)
     assert {"S2 Metrics", "S2 Results", "S2 ChartData", "Results", "ChartData"} <= hidden
     assert "Metrics" not in hidden                     # Existing Conditions keeps the template's tabs
@@ -129,7 +130,7 @@ def test_the_summary_lists_each_scenarios_claim_under_the_scores(la, template):
     rows = [(s, s.state["measured_values"]) for s in sset.items]
     data = workbook.build(template, la, DELIN, rows, today=TODAY)
     wb = openpyxl.load_workbook(io.BytesIO(data))
-    assert wb.sheetnames[0] == "Summary"
+    assert wb.sheetnames[:2] == ["Instructions", "Summary"] and wb.active.title == "Instructions"
     ws = wb["Summary"]
     head = next(c.row for c in ws["A"] if c.value == "Index") - 1
     assert [ws.cell(head, c).value for c in range(1, 6)] == [None, "Existing Conditions", "Restore riparian",

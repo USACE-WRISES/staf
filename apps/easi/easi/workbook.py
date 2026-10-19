@@ -23,7 +23,8 @@ from ._vendor.staf_workbook.model.refcurves import CurveBlock, RefCurves, TableB
 from ._vendor.staf_workbook.model.summary import L1_NAMES, NARS9_NAMES, SummaryInfo, regions_for_l3
 from ._vendor.staf_workbook.sheets import SummaryCells
 
-SPEC = AssemblySpec("EASI", calculator.SHEET_NAME, force_recalc=True)
+#: the workbook opens on the template's Instructions, ahead of Summary (owner, 2026-10-19)
+SPEC = AssemblySpec("EASI", calculator.SHEET_NAME, force_recalc=True, lead=("Instructions",))
 SUB_NAMES = {"physical": "sub_index_physical", "chemical": "sub_index_chemical",
              "biological": "sub_index_biological"}
 INDEX_DIGITS, FUNCTION_DIGITS = 2, 0

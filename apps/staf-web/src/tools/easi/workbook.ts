@@ -20,7 +20,8 @@ import { scenarioScores } from './state'
 
 type Obj = Record<string, any>
 
-export const SPEC: AssemblySpec = { appTitle: 'EASI', scoreSheet: SHEET_NAME, forceRecalc: true }
+/** the workbook opens on the template's Instructions, ahead of Summary (owner, 2026-10-19) */
+export const SPEC: AssemblySpec = { appTitle: 'EASI', scoreSheet: SHEET_NAME, forceRecalc: true, lead: ['Instructions'] }
 const SUB_NAMES: Record<string, string> = { physical: 'sub_index_physical', chemical: 'sub_index_chemical', biological: 'sub_index_biological' }
 const INDEX_DIGITS = 2
 const FUNCTION_DIGITS = 0

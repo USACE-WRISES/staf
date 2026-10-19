@@ -1,7 +1,7 @@
 {
  "repack": {
-  "repack": "c5795f9e6e12160ae8a3377fbc96eebaa33a445006b835dbae1baaad17aa3b70",
-  "package": "c5795f9e6e12160ae8a3377fbc96eebaa33a445006b835dbae1baaad17aa3b70"
+  "repack": "808cba75cdfed2c706ff42316fd9aac34f57212cedfe360081449a3b29cbeff5",
+  "package": "808cba75cdfed2c706ff42316fd9aac34f57212cedfe360081449a3b29cbeff5"
  },
  "formulas": [
   {
@@ -4333,73 +4333,73 @@
    ]
   },
   {
-   "formula": "IF(M25<=0.39, M25, IF(M25<=0.69, NA(), NA()))",
+   "formula": "IF(M25<=0.395, M25, IF(M25<=0.695, NA(), NA()))",
    "spans": [],
-   "rewrite": "IF(M25<=0.39, M25, IF(M25<=0.69, NA(), NA()))",
+   "rewrite": "IF(M25<=0.395, M25, IF(M25<=0.695, NA(), NA()))",
    "identifiers": [
     "m25"
    ]
   },
   {
-   "formula": "IF(M25<=0.39, NA(), IF(M25<=0.69, M25,NA()))",
+   "formula": "IF(M25<=0.395, NA(), IF(M25<=0.695, M25,NA()))",
    "spans": [],
-   "rewrite": "IF(M25<=0.39, NA(), IF(M25<=0.69, M25,NA()))",
+   "rewrite": "IF(M25<=0.395, NA(), IF(M25<=0.695, M25,NA()))",
    "identifiers": [
     "m25"
    ]
   },
   {
-   "formula": "IF(M25<=0.39, NA(), IF(M25<=0.69, NA(), M25))",
+   "formula": "IF(M25<=0.395, NA(), IF(M25<=0.695, NA(), M25))",
    "spans": [],
-   "rewrite": "IF(M25<=0.39, NA(), IF(M25<=0.69, NA(), M25))",
+   "rewrite": "IF(M25<=0.395, NA(), IF(M25<=0.695, NA(), M25))",
    "identifiers": [
     "m25"
    ]
   },
   {
-   "formula": "IF(M26<=0.39, M26, IF(M26<=0.69, NA(), NA()))",
+   "formula": "IF(M26<=0.395, M26, IF(M26<=0.695, NA(), NA()))",
    "spans": [],
-   "rewrite": "IF(M26<=0.39, M26, IF(M26<=0.69, NA(), NA()))",
+   "rewrite": "IF(M26<=0.395, M26, IF(M26<=0.695, NA(), NA()))",
    "identifiers": [
     "m26"
    ]
   },
   {
-   "formula": "IF(M26<=0.39, NA(), IF(M26<=0.69, M26,NA()))",
+   "formula": "IF(M26<=0.395, NA(), IF(M26<=0.695, M26,NA()))",
    "spans": [],
-   "rewrite": "IF(M26<=0.39, NA(), IF(M26<=0.69, M26,NA()))",
+   "rewrite": "IF(M26<=0.395, NA(), IF(M26<=0.695, M26,NA()))",
    "identifiers": [
     "m26"
    ]
   },
   {
-   "formula": "IF(M26<=0.39, NA(), IF(M26<=0.69, NA(), M26))",
+   "formula": "IF(M26<=0.395, NA(), IF(M26<=0.695, NA(), M26))",
    "spans": [],
-   "rewrite": "IF(M26<=0.39, NA(), IF(M26<=0.69, NA(), M26))",
+   "rewrite": "IF(M26<=0.395, NA(), IF(M26<=0.695, NA(), M26))",
    "identifiers": [
     "m26"
    ]
   },
   {
-   "formula": "IF(M27<=0.39, M27, IF(M27<=0.69, NA(), NA()))",
+   "formula": "IF(M27<=0.395, M27, IF(M27<=0.695, NA(), NA()))",
    "spans": [],
-   "rewrite": "IF(M27<=0.39, M27, IF(M27<=0.69, NA(), NA()))",
+   "rewrite": "IF(M27<=0.395, M27, IF(M27<=0.695, NA(), NA()))",
    "identifiers": [
     "m27"
    ]
   },
   {
-   "formula": "IF(M27<=0.39, NA(), IF(M27<=0.69, M27,NA()))",
+   "formula": "IF(M27<=0.395, NA(), IF(M27<=0.695, M27,NA()))",
    "spans": [],
-   "rewrite": "IF(M27<=0.39, NA(), IF(M27<=0.69, M27,NA()))",
+   "rewrite": "IF(M27<=0.395, NA(), IF(M27<=0.695, M27,NA()))",
    "identifiers": [
     "m27"
    ]
   },
   {
-   "formula": "IF(M27<=0.39, NA(), IF(M27<=0.69, NA(), M27))",
+   "formula": "IF(M27<=0.395, NA(), IF(M27<=0.695, NA(), M27))",
    "spans": [],
-   "rewrite": "IF(M27<=0.39, NA(), IF(M27<=0.69, NA(), M27))",
+   "rewrite": "IF(M27<=0.395, NA(), IF(M27<=0.695, NA(), M27))",
    "identifiers": [
     "m27"
    ]
@@ -7625,6 +7625,17 @@
    ]
   },
   {
+   "formula": "VLOOKUP($J86:$J86,$R$1:$S$5,2,FALSE)",
+   "spans": [],
+   "rewrite": "VLOOKUP($J86:$J86,$R$1:$S$5,2,FALSE)",
+   "identifiers": [
+    "false",
+    "j86",
+    "r",
+    "s"
+   ]
+  },
+  {
    "formula": "VLOOKUP($J87:$J87,$R$1:$S$5,2,FALSE)",
    "spans": [],
    "rewrite": "VLOOKUP($J87:$J87,$R$1:$S$5,2,FALSE)",
@@ -8153,24 +8164,22 @@
    }
   ],
   "today": "2026-10-12",
-  "sha256": "01512062304a73f6447568fefad0cac23b0a29f3e1c35de82902c5e18c3360e1",
-  "size": 207127,
+  "sha256": "efe65508c70c880a7423b0588114b90d8780501a166f3f282f39d5d6a74b0406",
+  "size": 204321,
   "parts": {
-   "[Content_Types].xml": "48eddf4ddc7674a4836bd5f1b522b82484c16224a50b16533a9a5f76e3e3c970",
+   "[Content_Types].xml": "a35da6b2fef17f4b9c3e6cd06b286f14755f014a160dfac4ceb525b040255674",
    "_rels/.rels": "0232528331d562bf624eefe3a130075aaeeb8061f35ba77f5fd3e659ae5a61fa",
-   "xl/workbook.xml": "ae89f91e09b409b1804c0e6ae0ad91ec1ef2390cbb828541771ed016a4704246",
-   "xl/_rels/workbook.xml.rels": "59c0c70464d3fa3972d8f1f7a057a7d4d808c882dce1adf7734a460df8c2bf34",
-   "xl/worksheets/sheet1.xml": "266fc73a442094be61b1635dd7ca5dd5c05c0da033c4a789deadb9844ff2ec84",
-   "xl/worksheets/sheet2.xml": "4ba33f90fd949d4552116eea286cc2ece847633993d2b4b6eb30e88e464625c6",
-   "xl/worksheets/sheet3.xml": "57e7e30eed9782387d7f02306b8ecc3118e5db768848fa9bd9f8f45d918a5f4c",
-   "xl/worksheets/sheet4.xml": "ce9fe98211c86d5cf8c9a2f02c045624d5443364bbf688133b02d2bbebbc8fbd",
+   "xl/workbook.xml": "451c0e82a8959ec115d0344934c783dea3242cd7f3c169c8614e82f4283847be",
+   "xl/_rels/workbook.xml.rels": "8c6c60b5b41ed0c92f2186346d110cefcd8275122b02e17012c673ee6d72b6af",
+   "xl/worksheets/sheet1.xml": "78767dae1b9c796347a7ded472bf161622c09edc2d9d2b77bea1e56659ee56ea",
+   "xl/worksheets/sheet2.xml": "04a6ed7f85cb6f1c2965ed3a11dac691e2bd6e4101d2cb04061e986036735b55",
+   "xl/worksheets/sheet3.xml": "872809cb88bd1b01cf6d8b64c556eca6d77817bbdf003ed1d4deb83e888cd2be",
+   "xl/worksheets/sheet4.xml": "56f3b700417c5dd425de8b78152b6de85f152701e65ed9c3ce11896b16ed17ac",
    "xl/worksheets/sheet5.xml": "81bf9460d8ca6253df2f6f7b5a496838243725ae61503312a09e360ff50a9b6b",
    "xl/theme/theme1.xml": "00a4766f72029efd3de46e1ab5bf8b3bc44dc515f5b11c61059034516ebff8b3",
-   "xl/styles.xml": "b63d6fb9bbdc01dcc4c9d557bedf1dc73b9d8081bba2c724c33ebf6c3a9b299a",
-   "xl/sharedStrings.xml": "528f67cbf76ef692172625220e1704e16ffe8f71726622937253b6c13750df8d",
-   "xl/drawings/_rels/drawing4.xml.rels": "41e8ab6e22d4184d89249b26ff780b97c88c37b6ab65773b75b86cb9e4602959",
+   "xl/sharedStrings.xml": "aef712a4cefa1ac616f001e3b0c28e2b899e1449d286a1983b38b720663d22d3",
+   "xl/charts/_rels/chart1.xml.rels": "1509ddaf2f7bc5d13e7a44c19ba59d526c7baf3549f284ddd3753758fbe3de6c",
    "xl/drawings/drawing1.xml": "596f9ab41ebafd83f3a0ce6676eb5450b50bc1cde65b896fbccdbd4739b73d99",
-   "xl/drawings/vmlDrawing1.vml": "04b134d5c2e44bdb2cb1c44687b855e133da67014e5797504256c6769639c949",
    "xl/media/image1.emf": "9540f037277ca4932a17e2124d99bcd58c370ed35ddec288cda3c31505963e15",
    "xl/media/image2.emf": "5b51bd0576fcdb3ed28958959d4700f6584ffaaa7120f6da9bc286e8748ea3d6",
    "xl/media/image3.emf": "fba6fd98a4f96ce382c5e7d910278ab6ca00e215e098cf1c66d96a67541894e5",
@@ -8187,39 +8196,37 @@
    "xl/media/image6.png": "78a7c60490c4f28c56a62325dc774b163d3019b8558d2f89363d73fc62ed9fe7",
    "xl/media/image7.png": "b70e44ef980b36c7586359cb0383ba8a1531bedb0163c95bc2e75d20566a33c0",
    "xl/media/image8.png": "27d3696bf88d3a100ac5eecb80167120a160b3a8516a67dd66819d213e952b4c",
-   "xl/media/image9.png": "fadc40c27c3ec4f4bf524d7edaa1c60a27ed425fb42db2b9aeca6e3a1c221787",
+   "xl/styles.xml": "4580271ba38cde57d79ad539e7f6ef2489c0e3cbe6b5927a1c316638c122a7d1",
    "xl/drawings/drawing4.xml": "e6ac32756a9f097dd5b1dc1d4b4f1d412971e4b6f4831fc03e3baab53cbf2079",
    "xl/media/image10.png": "ad9c21b32eda3e6dab9f7818a48d6fd4d27ca4b54aa699324dfda2c70afd2768",
-   "xl/worksheets/_rels/sheet1.xml.rels": "385ad99e57278084a997e64597e0979a72ab709b3a03425f3f04c73402c5087e",
+   "xl/worksheets/_rels/sheet1.xml.rels": "046f319d2b01bf9529da901ae33cb1cf8c7c7d06395167875fa0c4add6bf34c3",
    "xl/worksheets/_rels/sheet2.xml.rels": "b080444923aed7a5612898d96f615efb7a847fda5c099575e1681eb2e702c04a",
    "xl/worksheets/_rels/sheet3.xml.rels": "0da1aa08a01d65db9c1263a1f68d65f90733a64ce020af4f113388737df272b4",
    "xl/worksheets/_rels/sheet4.xml.rels": "0e4234a048389e815857e6948c0be3fbfbc311a3dc02cb05873eeab07ad14ee9",
    "xl/drawings/_rels/drawing1.xml.rels": "dd0731845c4284aa5c0205a5c289a48d67516a497db58f98ab801481f600ae29",
    "xl/drawings/_rels/drawing2.xml.rels": "5a188d11515fb48d4baeb53fc6f64ba2c168030e32629b09717b728215a18f1a",
-   "xl/charts/_rels/chart1.xml.rels": "1509ddaf2f7bc5d13e7a44c19ba59d526c7baf3549f284ddd3753758fbe3de6c",
+   "xl/media/image9.png": "fadc40c27c3ec4f4bf524d7edaa1c60a27ed425fb42db2b9aeca6e3a1c221787",
    "xl/charts/_rels/chart2.xml.rels": "36528e86cc5645d6ec154e8ce0b5b19b6dab3decc5d92b8b0ff2fd86d00cad53",
    "xl/drawings/_rels/drawing3.xml.rels": "c3e2a3df16d3b3bd376d58272a3a1f08bbb49929f269d74c10d3298002c06d2b",
+   "xl/drawings/_rels/drawing4.xml.rels": "41e8ab6e22d4184d89249b26ff780b97c88c37b6ab65773b75b86cb9e4602959",
    "xl/printerSettings/printerSettings1.bin": "bdf955d5ab58751095591b2cdda7f45432163b4bd92d595ab31fd93cd307f2a1",
-   "docProps/app.xml": "ee6881c071ffc97549d1bb5bf570fc5f5b477e838374c526e60d93ce1b37b1dd",
    "docProps/custom.xml": "da107836200524f0f1491f1609c5e4a75693bf23fa9d3ea4e252329a2488071c",
    "xl/printerSettings/printerSettings3.bin": "bdf955d5ab58751095591b2cdda7f45432163b4bd92d595ab31fd93cd307f2a1",
    "xl/printerSettings/printerSettings2.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
-   "xl/comments1.xml": "db6c4ef04f9a1d50e1024500d29cd269f95fd99ecea5ee669b005737dfaae569",
    "xl/printerSettings/printerSettings4.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
    "customXml/item1.xml": "63cf51e97579df739ec636b986718bdf10742787489dd22a917dc3eaf1ad8791",
-   "customXml/itemProps1.xml": "2cae628bf8e1762426df1b100d07ab894745b6729ca341435b299d91ce80cc95",
-   "customXml/item2.xml": "5efcaf9ad70d9c29f406ee438f8f428b021a881d2c5afff0e53b00b1f67ae51e",
-   "customXml/itemProps2.xml": "feb487beab71a706df1d583b1ca4e71068d622a0884aae32d93d0bcad766b5c0",
-   "customXml/item3.xml": "84c2d75556ab52ad28c9d419d65f2fb5c89b4da94547081fba00d7f534c4f0ad",
-   "customXml/itemProps3.xml": "c8564620a8b5988a69bf39d00d67f52ec9934c3eb2fa5cf0f0966e4fa917fb3f",
+   "customXml/itemProps1.xml": "7a0dbb156cc7eaf2eff2f0d3df6d5328f967d4339f019f88fc40a90d056b111c",
+   "customXml/item2.xml": "84c2d75556ab52ad28c9d419d65f2fb5c89b4da94547081fba00d7f534c4f0ad",
+   "customXml/itemProps2.xml": "c8564620a8b5988a69bf39d00d67f52ec9934c3eb2fa5cf0f0966e4fa917fb3f",
+   "customXml/item3.xml": "5efcaf9ad70d9c29f406ee438f8f428b021a881d2c5afff0e53b00b1f67ae51e",
+   "customXml/itemProps3.xml": "feb487beab71a706df1d583b1ca4e71068d622a0884aae32d93d0bcad766b5c0",
    "docMetadata/LabelInfo.xml": "df32ca7eba6c52dd65da24cb2f187402525a636e615b91cf96c75e2fd80d7b98",
-   "docProps/core.xml": "8de86ae811f68cf7d56fcf1eb1953f53b0f753be8dceeb9ab8ba68b909446b0a",
+   "docProps/core.xml": "17584958e8757cf6c614c6ee4d6cddf33ac194f0d0464fa7d4e562495b4febd4",
    "customXml/_rels/item1.xml.rels": "80482f86e196171d66001e0e74d1900408a3aaf2463e54005d251b5f2db9a0b0",
    "customXml/_rels/item2.xml.rels": "2a6aee4c8a9714223a3568077411a0c82d11b484b1c9ab93a19d50b99c57baa5",
    "customXml/_rels/item3.xml.rels": "3aa4054f7f463c6d441102c960783aa7f937d6945a0a885b624a66aafaeedb6c",
-   "xl/persons/person.xml": "795b6dea443e93ff6f40a4cea461709a44a73048d6fa9052c2feb901e41dc5a8",
-   "xl/threadedComments/threadedComment1.xml": "9f27494f7dfb51835ea736441788b19444ecb6fc832dd920dacd5f8ddb43baf5",
-   "xl/worksheets/sheet6.xml": "926de417d26af65a00cacf1e1f4fac8862b79ae984f2a8d255bcf0e86077be32",
+   "docProps/app.xml": "ee6881c071ffc97549d1bb5bf570fc5f5b477e838374c526e60d93ce1b37b1dd",
+   "xl/worksheets/sheet6.xml": "65b0945ed9320e6f891a480a907c80b8449a17a90c7c1b97563d5140e162414c",
    "xl/drawings/drawing5.xml": "c837b5d1c9f61043f671390d3e832b97cdef16304b07423af8a08c4714a0bec8",
    "xl/charts/chart3.xml": "251d2b4317c939d8296e35ba1d0ed23362fc6ff755996015c099d275864c804d",
    "xl/charts/colors3.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
@@ -8232,8 +8239,8 @@
    "xl/drawings/_rels/drawing5.xml.rels": "ebad501e8479882096d0644d4788a5dee2812e285892a79e3e6e1e6627b6513f",
    "xl/printerSettings/printerSettings5.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
    "xl/worksheets/_rels/sheet6.xml.rels": "287073c2a0dbf5cea8db186bac8fa087207e697c0b7df7893a56b2bf7b97cdb9",
-   "xl/worksheets/sheet7.xml": "f4416ad9a4801092d277ca8e315c331381404f95d0122e0a726a0d7943e163ac",
-   "xl/worksheets/sheet8.xml": "580228de35bf6d4a3c3574a796aac0cb45f80a13fcbca59bcccda70263c598ab",
+   "xl/worksheets/sheet7.xml": "a41730dfbbb50ba37d01869ba0b056e4aa1ecf98fce2e9dabc9e666e194ddb89",
+   "xl/worksheets/sheet8.xml": "17d259e4f5c6e5c41e1a5ef0c19e4c56b9614f2f8a85c6d04b66a8003790af71",
    "xl/drawings/drawing6.xml": "da815988cf6167fd08214c03ca1ccd534c570ba02965e16cc2bccc5f77fef3d1",
    "xl/charts/chart5.xml": "cb96ac4c19545fb03f49fe375b49d9fad913ceb40622c8f681b72e2cafb08c07",
    "xl/charts/colors5.xml": "04fefba7d31853fa0aa636e5c8b8e308fc3126a9b48a1f4490947fff91d5a92f",
@@ -8246,9 +8253,9 @@
    "xl/drawings/_rels/drawing6.xml.rels": "c2b7f9f54a2d4fad7bdf6630c4eded2379603e04d4367d9264cca108fb3cd219",
    "xl/printerSettings/printerSettings6.bin": "ca68e7778ba065e826c75099307d027c883ec6b2447ef57c43e94f25151f8695",
    "xl/worksheets/_rels/sheet8.xml.rels": "acdf2708c2a144c999b8219e65c7e9de7d1ab9d639fb53a1f8bb9c2a94e13162",
-   "xl/worksheets/sheet9.xml": "a8beb03ea1191275f6167960d3eca64bd27848bb21278c76ad0891f4ed152ff2",
-   "xl/worksheets/sheet10.xml": "cfebd216feeb4e88aac6689b23c05e818db8cf80b12f09a64ef58621a12e34ac",
-   "xl/worksheets/sheet11.xml": "38c1e1f8ba70608db617a08617a7241daf92974c3a1d0c5e0f8ec5d16d368277"
+   "xl/worksheets/sheet9.xml": "1e17b520af890450c91f79e19cee690af68641792278f41a2cf5da19e02b0202",
+   "xl/worksheets/sheet10.xml": "81542a9f935049a0add8faaae61ea73f196553390f7c74b1da167e3472e46376",
+   "xl/worksheets/sheet11.xml": "37dbd1ddb8218873577653a65c89117bc4222419657f094fc7c05c031e85c199"
   }
  }
 }

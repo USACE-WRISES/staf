@@ -99,7 +99,7 @@ it sits in its own closed list.
     <div class="apply-route">
       <h3>Spreadsheet calculator</h3>
       <div class="apply-route-action">
-        <a class="btn btn-primary" href="{{ downloads }}{{ app.calculator }}" title="{{ app.calculator_label }}">Download</a>
+        <a class="btn btn-primary" href="{{ downloads }}{{ app.calculator | uri_escape }}" title="{{ app.calculator_label }}">Download</a>
       </div>
       {{- guide }}
     </div>

@@ -89,7 +89,8 @@ FROM_REPO = {
     "js/easi/worksheet.js": "apps/easi/www/worksheet.js",
     "js/staf/unsaved-guard.js": "libs/staf_workbook/assets/unsaved-guard.js",
     "forms/sfari/SFARI_Field_Form_v1.0.pdf": "apps/sfari/data/FieldForm/SFARI_Field_Form_v1.0.pdf",
-    "forms/sfari/SFARI_Calculator_Draft_2026-06-29.xlsx": "apps/sfari/data/calculator/SFARI_Calculator_Draft_2026-06-29.xlsx",
+    "forms/sfari/SFARI_Calculator_Template_2026-10-15.xlsx": "apps/sfari/data/calculator/SFARI_Calculator_Template_2026-10-15.xlsx",
+    "forms/sfari/2026-10-15_SFARI Calculator.xlsx": "apps/sfari/data/calculator/2026-10-15_SFARI Calculator.xlsx",
     "data/us_states.geojson.gz": "apps/deep/data/us_states.geojson.gz",
 }
 #: EASI's tables that live in Python modules, kept as JSON (``content/easi/config.json``): the metric

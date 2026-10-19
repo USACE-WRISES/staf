@@ -71,6 +71,7 @@ class SummaryInfo:
     drainage_area_sqkm: Optional[float] = None
     stream_order: Optional[int] = None
     regions: dict = field(default_factory=dict)  # regions_for_l3() shape (EASI may override codes)
+    blank: bool = False                       # a blank workbook: no site yet, so only the tier is filled in
 
     @property
     def tier(self) -> str:
@@ -81,7 +82,7 @@ class SummaryInfo:
         length = f"{float(self.reach_length_ft):,.0f} ft" if _num(self.reach_length_ft) else NOT_AVAILABLE
         area = f"{float(self.drainage_area_sqkm):,.2f} km²" if _num(self.drainage_area_sqkm) else NOT_AVAILABLE
         order = str(int(self.stream_order)) if _num(self.stream_order) and float(self.stream_order) > 0 else NOT_AVAILABLE
-        return [("Reach name", (self.reach_name or "").strip() or "Unnamed"),
+        rows = [("Reach name", (self.reach_name or "").strip() or "Unnamed"),
                 ("Assessment tier", self.tier),
                 ("Reach length", length),
                 ("Drainage area", area),
@@ -90,6 +91,9 @@ class SummaryInfo:
                 ("EPA Level I ecoregion", _region(r.get("l1"), r.get("l1_name"))),
                 ("EPA Level II ecoregion", _region(r.get("l2"), r.get("l2_name"))),
                 ("EPA Level III ecoregion", _region(r.get("l3"), r.get("l3_name")))]
+        if self.blank:
+            return [(key, value if key == "Assessment tier" else "") for key, value in rows]
+        return rows
 
 
 def _num(v) -> bool:
