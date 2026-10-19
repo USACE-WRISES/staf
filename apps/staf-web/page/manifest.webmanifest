@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "STAF",
+  "short_name": "STAF",
+  "description": "EASI, SFARI and DEEP stream assessments from the Stream Tiered Assessment Framework.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#243a61",
+  "icons": [
+    { "src": "icons/staf-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/staf-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/staf-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

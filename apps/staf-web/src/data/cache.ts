@@ -15,6 +15,9 @@
 
 /** The cache's name: a new layout of the entries takes a new name (and drops the old cache). */
 export const NAME = 'staf-data-1'
+/** The data's index as the last visit read it, one per data address, for a visit without the network
+ * (`DataSource.load`). A cache of its own, so `prune` never drops it. */
+export const INDEX_NAME = 'staf-index-1'
 /** Keys are addresses nothing serves (only Cache Storage sees them). */
 const ORIGIN = 'https://staf-data.invalid/'
 /** The most kept, in bytes. */
@@ -83,6 +86,25 @@ export class DataCache {
 
   keepRange(path: string, start: number, end: number, buf: ArrayBuffer): void {
     this.put(this.key(path, start, end), buf)
+  }
+
+  /** The index's bytes as the last visit read them from ``base``, or undefined. */
+  async index(base: string): Promise<ArrayBuffer | undefined> {
+    if (!this.enabled || typeof caches === 'undefined') return undefined
+    try {
+      const res = await (await caches.open(INDEX_NAME)).match(ORIGIN + 'index?base=' + encodeURIComponent(base))
+      return res ? await res.arrayBuffer() : undefined
+    } catch {
+      return undefined
+    }
+  }
+
+  /** Keeps the index just read from ``base`` (its bytes as stored) for a later visit without the network. */
+  keepIndex(base: string, buf: ArrayBuffer): void {
+    if (!this.enabled || typeof caches === 'undefined') return
+    void caches.open(INDEX_NAME)
+      .then((cache) => cache.put(ORIGIN + 'index?base=' + encodeURIComponent(base), new Response(buf.slice(0))))
+      .catch(() => {})
   }
 
   /** Drops what `sizes` (stored path -> bytes: the current index) no longer names, then the oldest

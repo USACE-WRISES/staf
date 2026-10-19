@@ -121,6 +121,26 @@ function merging(raw: AsyncBuffer, store?: RangeStore): AsyncBuffer {
  * page's clock, ms), and whether it went through the host's look-up or straight to a signed address. */
 export interface TraceEntry { file: string, start: number, end: number, t0: number, t1: number, via: 'host' | 'cdn' }
 
+/** The manifest a gzipped `web-index.json.gz` holds (as read from the host, or as a past visit kept it). */
+async function indexManifest(gz: ArrayBuffer): Promise<WebManifest> {
+  if (typeof DecompressionStream === 'undefined') throw new Error('web-index.json.gz: no gzip decoder in this browser')
+  const text = await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
+  const raw = JSON.parse(text) as { format: number, built: string, regions: string[], files: Record<string, [string, number, string?]>,
+    gzip?: Record<string, number>, footers?: Record<string, number>, datasets?: Record<string, Record<string, any>>,
+    bundle_sources?: Record<string, any>, bundle?: { built: string | null, format: number | null, regions: number } }
+  const files: Record<string, ManifestFile> = {}
+  for (const [logical, [path, bytes, sha256]] of Object.entries(raw.files)) {
+    files[logical] = { path, bytes, sha256: sha256 ?? '' }
+    const unzipped = raw.gzip?.[logical]
+    if (unzipped !== undefined) Object.assign(files[logical], { encoding: 'gzip', raw_bytes: unzipped })
+    const footer = raw.footers?.[logical]
+    if (footer !== undefined) files[logical].footer = footer
+  }
+  return { format: raw.format, built: raw.built, sources: {}, regions: raw.regions, files, datasets: raw.datasets,
+    bundleSources: raw.bundle_sources && Object.keys(raw.bundle_sources).length ? raw.bundle_sources : undefined,
+    bundle: raw.bundle && Object.keys(raw.bundle).length ? raw.bundle : undefined }
+}
+
 export class DataSource {
   readonly base: string
   /** Every data request, when tracing (`?trace=1`): for finding the requests a step waits on in a row. */
@@ -158,27 +178,32 @@ export class DataSource {
   }
 
   /** The data's index: `web-index.json.gz` (the build's gzipped copy of what the app reads, a twelfth of
-   * the manifest's size; the host sends neither compressed), else `web-manifest.json`. */
+   * the manifest's size; the host sends neither compressed), else `web-manifest.json`. Without the
+   * network (offline, or the host out of reach), the index the last visit read: the places it opened
+   * then are read from the cache (`offline` says so). */
   async load(): Promise<WebManifest> {
+    try {
+      return await this.loadFromHost()
+    } catch (err) {
+      const kept = await this.cache.index(this.base)
+      if (!kept) throw err
+      this.manifest = await indexManifest(kept)
+      this.offline = true
+      return this.manifest
+    }
+  }
+
+  /** Whether this visit runs on the index a past visit kept (`load`). */
+  offline = false
+
+  private async loadFromHost(): Promise<WebManifest> {
     const t0 = performance.now()
     const idx = await fetchPolitely(this.base + 'web-index.json.gz', { cache: 'no-cache' }, this.polite())
     this.trace?.push({ file: 'web-index.json.gz', start: 0, end: 0, t0, t1: performance.now(), via: 'host' })
     if (idx.ok && idx.body && typeof DecompressionStream !== 'undefined') {
-      const text = await new Response(idx.body.pipeThrough(new DecompressionStream('gzip'))).text()
-      const raw = JSON.parse(text) as { format: number, built: string, regions: string[], files: Record<string, [string, number, string?]>,
-        gzip?: Record<string, number>, footers?: Record<string, number>, datasets?: Record<string, Record<string, any>>,
-        bundle_sources?: Record<string, any>, bundle?: { built: string | null, format: number | null, regions: number } }
-      const files: Record<string, ManifestFile> = {}
-      for (const [logical, [path, bytes, sha256]] of Object.entries(raw.files)) {
-        files[logical] = { path, bytes, sha256: sha256 ?? '' }
-        const unzipped = raw.gzip?.[logical]
-        if (unzipped !== undefined) Object.assign(files[logical], { encoding: 'gzip', raw_bytes: unzipped })
-        const footer = raw.footers?.[logical]
-        if (footer !== undefined) files[logical].footer = footer
-      }
-      this.manifest = { format: raw.format, built: raw.built, sources: {}, regions: raw.regions, files, datasets: raw.datasets,
-        bundleSources: raw.bundle_sources && Object.keys(raw.bundle_sources).length ? raw.bundle_sources : undefined,
-        bundle: raw.bundle && Object.keys(raw.bundle).length ? raw.bundle : undefined }
+      const gz = await idx.arrayBuffer()
+      this.manifest = await indexManifest(gz)
+      this.cache.keepIndex(this.base, gz)
       return this.manifest
     }
     try {

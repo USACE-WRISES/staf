@@ -166,6 +166,39 @@ describe('DataSource', () => {
     expect(await second.cache.prune(new Map([['xs/a.1234.parquet', FILE.length]]), 600)).toBe(2)
     expect([...cache.m.keys()].map((k) => k.replace('https://staf-data.invalid/', ''))).toEqual(['xs/a.1234.parquet?r=12000-12100', 'xs/a.1234.parquet?r=400000-400200'])
   })
+
+  it('starts a visit without the network from the index the last visit read, and reads what that visit kept', async () => {
+    const stores = new Map<string, FakeCache>()
+    vi.stubGlobal('caches', {
+      open: async (name: string) => stores.get(name) ?? stores.set(name, new FakeCache()).get(name),
+      keys: async () => [...stores.keys()],
+      delete: async (name: string) => stores.delete(name),
+    })
+    const index = { format: 1, built: 'y', regions: ['0101'], files: { 'xs/a.parquet': ['xs/a.1234.parquet', FILE.length] } }
+    const gz = new Uint8Array(await new Response(new Blob([JSON.stringify(index)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('web-index.json.gz')) return new Response(gz, { status: 200 })
+      const m = /bytes=(\d+)-(\d+)/.exec(new Headers(init?.headers).get('range') ?? '')!
+      return answer(FILE.slice(Number(m[1]), Number(m[2]) + 1), url, false)
+    })
+    const online = new DataSource(BASE)
+    await online.load()
+    expect(online.offline).toBe(false)
+    expect(new Uint8Array(await online.file('xs/a.parquet').slice(10_000, 10_500))).toEqual(FILE.slice(10_000, 10_500))
+    await new Promise((ok) => setTimeout(ok, 10))   // the cache's writes land
+    expect([...stores.keys()].sort()).toEqual(['staf-data-1', 'staf-index-1'])
+    // no network: the kept index, and the range the first visit read
+    vi.stubGlobal('fetch', async () => { throw new TypeError('Failed to fetch') })
+    const offline = new DataSource(BASE)
+    const m = await offline.load()
+    expect(offline.offline).toBe(true)
+    expect(m.regions).toEqual(['0101'])
+    expect(new Uint8Array(await offline.file('xs/a.parquet').slice(10_000, 10_500))).toEqual(FILE.slice(10_000, 10_500))
+    await expect(offline.file('xs/a.parquet').slice(200_000, 200_100)).rejects.toThrow()
+    // another data address kept no index
+    await expect(new DataSource('https://other.test/').load()).rejects.toThrow('Failed to fetch')
+  })
 })
 
 describe('SignedAddresses', () => {

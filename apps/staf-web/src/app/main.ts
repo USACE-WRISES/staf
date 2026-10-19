@@ -16,6 +16,7 @@ import { ValueTables } from '../engine/values'
 import { Network } from '../streams/network'
 import { showInfo } from './dialogs'
 import { ORDER, type ToolKey } from './markup'
+import { registerOffline } from './offline'
 import { shownTool, startShell } from './shell'
 import * as shim from './shim'
 import { Tool } from './tool'
@@ -24,6 +25,8 @@ shim.install()
 ;(window as unknown as { L: typeof L }).L = L
 
 const params = new URLSearchParams(location.search)
+// the app's offline copy, and its updates (the built site only)
+registerOffline(params)
 // what earlier visits read is kept in the browser (`?cache=0` reads everything from the host)
 const src = new DataSource(dataBase(params), { cache: params.get('cache') !== '0' })
 // every data request, with ?trace=1 (parity/perf.py --trace shows which a step waits on in a row)

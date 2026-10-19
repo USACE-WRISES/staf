@@ -295,6 +295,38 @@ then the CDN's first read of the file), takes the requests a page asks for toget
   Over HTTP/2 locally: set `STAF_WEB_CERT` and `STAF_WEB_KEY` to a localhost certificate and key (the
   launch entry `staf-web-built-h2`, port 5182), and `STAF_WEB_DELAY_MS` to hold each `/data` answer back.
 
+## Offline and updates
+
+The owner's choice (2026-10-18): the app opens without the network, the places already opened keep
+working, it can be installed with an icon, and a pushed build still reaches everyone.
+
+- **The worker** (`sw/app-sw.js`, registered by `src/app/offline.ts` as `app-sw.js`, scope the app's
+  folder; the download worker keeps `download/`). `scripts/after-build.mjs` writes it into `docs/app/`
+  with the build's id (a hash of the worker and of every built file's name and bytes, so the same build
+  gives the same worker) and its file list. It keeps a copy of the page and every file of the build, and
+  the fonts the stylesheets ask Google for, as first read. Everything else goes to the network.
+- **Data offline:** the page keeps what it reads (`src/data/cache.ts`) and the data's index too
+  (`staf-index-1`). A visit without the network starts from the index the last visit read
+  (`DataSource.offline`), and every read made before comes from the cache. Place search, the basemaps,
+  3DEP pulls and anything not read before need the network.
+- **Updates:** each launch online asks for `app-sw.js` past the HTTP cache (`updateViaCache: 'none'`;
+  GitHub Pages lets a copy be up to 10 minutes old). A pushed build installs beside the running one, and
+  the page shows "A new version of STAF is ready." with **Reload to update**. Every STAF page reloads
+  when the new build takes over (the unsaved-work guard asks first). A launch after every STAF window
+  has closed runs the new build anyway, and a page left open looks for one hourly.
+- **Installing:** `page/manifest.webmanifest` and the icons in `page/icons/` (drawn by
+  `scripts/make_icons.py` from `favicon.svg`'s design) let Edge and Chrome install it as an app with its
+  own window and icon. Offline and updates work the same there as in a tab.
+- **Off:** the dev server never registers it, and `?cache=0` or `?sw=0` leaves it out. Registration
+  waits 5 s after load, so the first reads have the network to themselves.
+- **Checked 2026-10-18** with `vite preview` over the local layout (`?data=http://localhost:5181/data/`):
+  after one Mink Brook screening the server was stopped, the page reloaded from the copy, and the same
+  screening ran from the kept reads; a rebuilt worker was offered and taken with Reload to update.
+- **Trap:** `vite preview` answers with `Vary: Origin`, and a module script's request carries an Origin
+  header the copy's request had not, so the worker matches its copies with `ignoreVary`.
+- **Taking it away:** push a build whose `app-sw.js` deletes the `staf-app-` caches and unregisters
+  itself. Installed copies pick it up on their next online launch.
+
 ## Cross-sections
 
 - `src/xs/grid.ts` reads a flowline's section numbers, details, stored median profile, and (release
