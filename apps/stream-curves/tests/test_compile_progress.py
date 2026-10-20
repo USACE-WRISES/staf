@@ -55,7 +55,7 @@ def test_detail_with_and_without_per_site_suffix():
 
 
 def test_labels_have_no_em_dash():
-    # user-visible copy must avoid em dashes (reads AI-generated)
+    # user-visible copy must avoid em dashes (house style)
     p = CompileProgress.for_run(3, streamstats=True, mmw=True)
     p.start("Model My Watershed (watershed + attributes)", site=1, n_sites=3)
     assert "—" not in p.title()

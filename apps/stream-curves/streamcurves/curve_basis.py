@@ -17,7 +17,7 @@ basis (REF-15), stands outside the ladder: nothing ranks it.
 
 Tokens are immutable. They ride in bundles, digests, manifests and the rule
 catalog, so they are never renamed; the display labels may change freely
-(guardrail 13, the same contract the engine tokens carry).
+(the same contract the engine tokens carry).
 """
 
 from __future__ import annotations

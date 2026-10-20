@@ -3,9 +3,9 @@
 Delineates + pulls desktop evidence for a set of diverse CONUS sites (including the
 SFARI document's case-study regions: New Hampshire, Colorado, Texas) and prints a
 sanity summary — a repeatable smoke test that the full pipeline works across
-physiographic regions, not just one reach. Live network; run manually::
+physiographic regions, not just one reach. Live network; run manually from apps/sfari::
 
-    D:/Code/Work/easi_claude/.venv/Scripts/python.exe scripts/acceptance.py
+    ../../.venv/Scripts/python.exe scripts/acceptance.py
 
 Coordinates are approximate on-network points; delineation snaps to the nearest
 NHD COMID. A site that fails to snap (off-network / out-of-CONUS) is reported, not

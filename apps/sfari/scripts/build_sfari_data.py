@@ -5,10 +5,10 @@ Emits into ``sfari/data/``:
   * ``sfari-functions.json``       — 20 functions (category, order, name, definition, statement)
   * ``sfari-metrics.json``         — 80 metrics (functionId, name, scale, likertCriteria[], desktop binding)
 
-This is a one-time DEV build step (not run at request time). Use the EASI venv
-python, which already has python-docx 1.2.0::
+This is a one-time DEV build step (not run at request time). Run it from apps/sfari
+with a Python that has python-docx 1.2.0::
 
-    D:/Code/Work/easi_claude/.venv/Scripts/python.exe sfari/scripts/build_sfari_data.py
+    ../../.venv/Scripts/python.exe scripts/build_sfari_data.py
 
 IMPORTANT — outcome mapping source:
 The SFARI document is internally inconsistent. Table 1 (docx table[3], the reference
@@ -31,7 +31,7 @@ from docx import Document
 ROOT = Path(__file__).resolve().parents[1]                 # sfari/
 DATA = ROOT / "data"
 DOCX = ROOT / "docs" / "SFARI_Clean.docx"
-EASI_FUNCTIONS = Path(r"D:/Code/Work/easi_claude/data/functions.json")
+EASI_FUNCTIONS = ROOT.parent / "easi" / "data" / "functions.json"
 
 # --- Canonical 20 functions, in document order (ids reused verbatim from EASI). ---
 FUNCTIONS = [

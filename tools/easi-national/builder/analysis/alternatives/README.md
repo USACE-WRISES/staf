@@ -11,12 +11,12 @@ review access. It reads completed summaries; requests never run analyses.
 
 ## Run and resume
 
-From `D:/Code/Work/staf_codex_2026-09-14/tools/easi-national`, PowerShell:
+From `tools/easi-national`, PowerShell:
 
 ```powershell
 $env:EASI_CRITERIA_SET = 'regional'
 $env:OPENBLAS_NUM_THREADS = '1'
-& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -m builder.analysis.alternatives --study-id 2026-09-15-controlled-alternatives
+& '../../.venv/Scripts/python.exe' -m builder.analysis.alternatives --study-id 2026-09-15-controlled-alternatives
 ```
 
 The ordered stages are `snapshot`, `candidates`, `observations`, `evidence`,
@@ -38,7 +38,7 @@ recorded `Retry-After` time, call the same acquisition producer from this
 directory. Successful cached responses are reused:
 
 ```powershell
-& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -c "from pathlib import Path; from builder.analysis.alternatives.acquisition import acquire; r=Path('D:/Data/easi-national'); acquire(r, r/'review/alternative-studies/2026-09-15-controlled-alternatives')"
+& '../../.venv/Scripts/python.exe' -c "from pathlib import Path; from builder.analysis.alternatives.acquisition import acquire; r=Path('D:/Data/easi-national'); acquire(r, r/'review/alternative-studies/2026-09-15-controlled-alternatives')"
 ```
 
 Then run the CLI with `--steps acquisition field spatial report` to regenerate

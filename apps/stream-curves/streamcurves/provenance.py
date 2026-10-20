@@ -27,7 +27,6 @@ from __future__ import annotations
 import copy
 import functools
 import logging
-import os
 import platform
 import hashlib
 import json
@@ -439,12 +438,6 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "gitDiffDigest": git_state["diff_digest"],
             "python": platform.python_version(),
             "packages": _package_versions(),
-            # The AI operator behind the run, when one drove it. Set
-            # STAF_AI_MODEL (e.g. "claude-fable-5") and optionally
-            # STAF_AI_TOOL; absent means the run was launched by a person
-            # directly, and the manifest says so rather than guessing.
-            "aiModel": os.environ.get("STAF_AI_MODEL"),
-            "aiTool": os.environ.get("STAF_AI_TOOL"),
         },
         "diagnostics": {
             "runSeed": result.get("run_seed"),
@@ -2432,8 +2425,6 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
         "finishedAt": timestamp,
         "agent": {
             "module": "views.publish (interactive)",
-            "aiModel": os.environ.get("STAF_AI_MODEL"),
-            "aiTool": os.environ.get("STAF_AI_TOOL"),
             "python": platform.python_version(),
         },
         "methodology": {

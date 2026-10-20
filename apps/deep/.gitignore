@@ -6,9 +6,6 @@ venv/
 *.egg-info/
 .DS_Store
 
-# Local dev / assistant config (machine-specific)
-.claude/
-
 # HyRiver / aiohttp caches (generated at runtime)
 cache/
 *.sqlite

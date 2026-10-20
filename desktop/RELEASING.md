@@ -224,9 +224,9 @@ testing, point both at a build folder: `STREAMCURVES_GALLERY_SOURCE=release` plu
 6. Validate's **Approve as Preliminary**, **Certify as Final** and **Show in DEEP** move a version
    on later; commit and push again.
 
-The bake stays as DEEP's offline fallback, so CLAUDE.md guardrail 11 still applies: re-bake,
-commit, then assemble and redeploy STAF (DEEP's one deployment) when the cloud copy should carry a
-version even with the release unreachable.
+The bake stays as DEEP's offline fallback, so a publish still means: re-bake, commit, then
+assemble and redeploy STAF (DEEP's one deployment) when the cloud copy should carry a version even
+with the release unreachable.
 
 ## Local dev & QA
 

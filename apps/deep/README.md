@@ -351,7 +351,7 @@ Uses the shared repo-root `.venv` (see the monorepo README). From `apps/deep`:
 ..\..\.venv\Scripts\python.exe -m shiny run --port 8003 app.py
 ```
 
-Then open <http://127.0.0.1:8003>. (`.claude/launch.json` encodes this.)
+Then open <http://127.0.0.1:8003>.
 
 ## Data model / contract
 

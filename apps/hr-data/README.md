@@ -5,9 +5,8 @@ catchments, so the STAF apps no longer depend on the USGS NHDPlus HR MapServer
 (`hydro.nationalmap.gov`), which answers its root in a second but takes 20 s to
 over two minutes, or times out, on the spatial queries the apps need.
 
-Status: **bundle v2 pilot** (plan: `~/.claude/plans/i-m-having-alot-of-bubbly-starlight.md`,
-review: `notes/2026-10-01_HR_Mirror/precompute_review.md`). The engine and the three
-apps do not call it yet.
+Status: **bundle v2 pilot** (review: `notes/2026-10-01_HR_Mirror/precompute_review.md`).
+The engine and the three apps do not call it yet.
 
 ## What it serves
 

@@ -332,14 +332,14 @@ cohort under the active Alternative 2 method. It reads the existing Alternative 
 publishes. Its only output directory is
 `D:/Data/easi-national/review/alternative-2-rollout`.
 
-Run from `tools/easi-national` with the workspace interpreter and the reviewed
+Run from `tools/easi-national` with the repo's shared .venv and the reviewed
 current method digest (the command rejects any other active identity):
 
 ```powershell
 $env:OPENBLAS_NUM_THREADS = '1'
 $env:OMP_NUM_THREADS = '1'
 $env:MKL_NUM_THREADS = '1'
-& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -m builder.alternative2_rollout --expected-method b2e3033116e3 --workers 8
+& '../../.venv/Scripts/python.exe' -m builder.alternative2_rollout --expected-method b2e3033116e3 --workers 8
 ```
 
 The runner captures hashes of source evidence, score metadata, geometry, state
@@ -375,5 +375,5 @@ not coincide at boundaries even though their complete scored cohort agrees.
 Read-only verification of an existing completed build:
 
 ```powershell
-& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -m builder.alternative2_rollout --expected-method b2e3033116e3 --verify-only
+& '../../.venv/Scripts/python.exe' -m builder.alternative2_rollout --expected-method b2e3033116e3 --verify-only
 ```

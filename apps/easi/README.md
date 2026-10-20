@@ -668,10 +668,6 @@ with a data-confidence level and can be overridden with local/field data. EASI
 results are **not** a regulatory determination, a jurisdictional waters delineation,
 or a substitute for a field assessment.
 
-## License
-
-[MIT](LICENSE) © 2026 WRISES.
-
 ## Release record
 
 EASI 1.0.0, tagged `easi-v1.0.0` (2026-09-16). The scoring method of this release is frozen and identified by:

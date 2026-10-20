@@ -208,8 +208,6 @@
         "statsmodels": "0.14.6",
         "pyarrow": "24.0.0"
       },
-      "aiModel": null,
-      "aiTool": null,
       "codeFingerprint": "2eb9d3272c9c08c674dc9e8e5a948342521a8fa0f68f4e08b414aae2ea47e503"
     },
     "diagnostics": {

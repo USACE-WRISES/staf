@@ -93,7 +93,7 @@ dataset `huggingface.co/datasets/gtmenichino/staf-data`, because a browser can't
 downloads (no CORS header). `web-manifest.json` maps each logical file to a content-hashed one.
 
 - `src/data/range.ts` holds every range read to the bytes it asked for. A short body arrived with no
-  error in testing (3 of 213 reads in the Claude app's browser pane), so a failed read is read again,
+  error in testing (3 of 213 reads in one test browser), so a failed read is read again,
   bypassing the HTTP cache. A dropped connection is read again too. A host that refuses for now (429,
   503) is asked again after growing waits, for up to 6 minutes.
 - `src/data/source.ts` reuses the address Hugging Face redirects a file to. Big files go to its CDN,

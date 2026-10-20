@@ -516,7 +516,7 @@ CFPs:
   count_model: false
   stratification_mode: subset
   include_in_summary: true
-  notes: "Categorical Y/N — NOT a count metric despite CLAUDE.md listing"
+  notes: "Categorical Y/N, not a count metric"
 
 BEHI_NBS:
   display_name: "BEHI / NBS"

@@ -47,7 +47,7 @@ Stopping the process tree outright (Task Manager, `taskkill /T`) also loses noth
 
 ## Publishing (the rolling `staf-xs-current` prerelease)
 
-The grid goes out region by region while the build runs. `xsgrid/release.py` packs each merged region into release files in `D:\Data\xs-grid\release` (`XSGRID_RELEASE` overrides). It only reads the archive drive and never changes it. The release is **always a prerelease** (CLAUDE.md guardrail 8), and publishing needs the owner's go.
+The grid goes out region by region while the build runs. `xsgrid/release.py` packs each merged region into release files in `D:\Data\xs-grid\release` (`XSGRID_RELEASE` overrides). It only reads the archive drive and never changes it. The release is **always a prerelease**, and publishing needs the owner's go.
 
 - **Per region, three files**, read as they are by the apps and the static web app. Rows are sorted by flowline, and only `nhdplusid` carries row-group statistics, so a reader range-reads one row group.
   - `xs-<vpu>.parquet`: every section's scoring numbers. These are status, DEM resolution, bank method, the quality flags, ER, BHR, bankfull depth and the two widths, stored as scaled integers. They are exact at the grid's precision: ratios and depth to 0.01, widths to 0.1.

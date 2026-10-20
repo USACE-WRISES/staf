@@ -31,8 +31,8 @@ measures) and every request the page made, with when and how many bytes (``parit
 profile is new each run, so every read is cold; ``--visits 2`` runs each tool's steps again in the same
 profile (``<stem>-visit2``), as a user's next visit would, with what the first read kept in the browser.
 
-``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf, or
-.claude/launch.json "staf") and also writes its dialogs to ``src/app/content/dialogs.json``, which
+``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf) and
+also writes its dialogs to ``src/app/content/dialogs.json``, which
 the static app shows (About and Help are written in each tool's app.py). ``--app static`` reads the
 static app's dev server (``npm run dev`` in apps/staf-web, port 5180). ``parity/compare.py``
 compares the two.

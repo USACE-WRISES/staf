@@ -74,9 +74,7 @@
         "scipy": "1.18.0",
         "statsmodels": "0.14.6",
         "pyarrow": "24.0.0"
-      },
-      "aiModel": "claude-fable-5",
-      "aiTool": "claude-code"
+      }
     },
     "diagnostics": {
       "runSeed": 1429713731,
