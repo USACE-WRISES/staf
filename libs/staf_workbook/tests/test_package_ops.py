@@ -43,8 +43,8 @@ def test_rename_reorder_and_local_names_follow_the_sheet():
     pkg = Package(EASI.read_bytes())
     wb = WorkbookModel(pkg)
     local = [n for n in wb.names if n.scope is not None]
-    assert local and local[0].scope == "EASI Score"            # the print area
-    wb.rename("EASI Score", "Existing Conditions")
+    assert local and local[0].scope == "Scenario"              # the print area
+    wb.rename("Scenario", "Existing Conditions")
     order = [s.name for s in wb.sheets]
     order.remove("Existing Conditions")
     wb.reorder(["Existing Conditions"] + order)

@@ -21,6 +21,8 @@ from .package import CT_CHART, CT_DRAWING, R_CHART, R_DRAWING, Package, Rel
 from .workbook import DefinedName, WorkbookModel
 
 _UNESC = {"&quot;": '"', "&apos;": "'"}
+#: a numeric character reference: openpyxl writes a formula's non-ASCII characters as ``&#8805;``
+_CHAR_REF = re.compile(r"&#(x[0-9A-Fa-f]+|[0-9]+);")
 _UID_NS = uuid.UUID("6f1c2a52-4e7f-4a8e-9b1d-7d1d8f0a5c11")
 _FORMULA_TAGS = ("f", "formula", "formula1", "formula2", "xm:f")
 _REFUSE = (("<tableParts", "a table"), ("<oleObjects", "an embedded object"), ("<controls", "a form control"),
@@ -34,11 +36,19 @@ class CloneError(ValueError):
     """The template cannot be copied per scenario as it is."""
 
 
+def _unescape(text: str) -> str:
+    """XML text to its characters: numeric character references, then the entities. A formula read
+    without the references would be written back with them escaped (``&amp;#8805;``), so a copy
+    would show the reference's text instead of the character."""
+    text = _CHAR_REF.sub(lambda m: chr(int(m.group(1)[1:], 16) if m.group(1)[0] in "xX" else int(m.group(1))), text)
+    return unescape(text, _UNESC)
+
+
 def _rewrite_tag(xml: str, tag: str, fn: Callable[[str], str]) -> str:
     pat = re.compile(rf"(<{re.escape(tag)}\b[^>]*?(?<!/)>)(.*?)(</{re.escape(tag)}>)", re.S)
 
     def sub(m):
-        text = unescape(m.group(2), _UNESC)
+        text = _unescape(m.group(2))
         new = fn(text)
         return m.group(0) if new == text else m.group(1) + escape(new) + m.group(3)
     return pat.sub(sub, xml)
@@ -52,7 +62,7 @@ def rewrite_sheet_xml(xml: str, mapping: dict) -> str:
         xml = _rewrite_tag(xml, tag, lambda t: F.rewrite(t, mapping))
 
     def link(m):
-        loc = unescape(m.group(2), _UNESC)
+        loc = _unescape(m.group(2))
         new = F.rewrite(loc, mapping)
         return m.group(0) if new == loc else m.group(1) + escape(new, {'"': "&quot;"}) + m.group(3)
     return re.sub(r'(<hyperlink\b[^>]*\slocation=")([^"]*)(")', link, xml)
@@ -65,14 +75,14 @@ def rewrite_chart_xml(xml: str, mapping: dict) -> str:
 def sheet_formulas(xml: str) -> list:
     out = []
     for tag in _FORMULA_TAGS:
-        out += [unescape(t, _UNESC) for t in re.findall(rf"<{re.escape(tag)}\b[^>]*?(?<!/)>(.*?)</{re.escape(tag)}>",
+        out += [_unescape(t) for t in re.findall(rf"<{re.escape(tag)}\b[^>]*?(?<!/)>(.*?)</{re.escape(tag)}>",
                                                         xml, re.S)]
-    out += [unescape(t, _UNESC) for t in re.findall(r'<hyperlink\b[^>]*\slocation="([^"]*)"', xml)]
+    out += [_unescape(t) for t in re.findall(r'<hyperlink\b[^>]*\slocation="([^"]*)"', xml)]
     return [t for t in out if t.strip()]
 
 
 def chart_formulas(xml: str) -> list:
-    return [unescape(t, _UNESC) for t in re.findall(r"<c:f\b[^>]*?(?<!/)>(.*?)</c:f>", xml, re.S) if t.strip()]
+    return [_unescape(t) for t in re.findall(r"<c:f\b[^>]*?(?<!/)>(.*?)</c:f>", xml, re.S) if t.strip()]
 
 
 def _deterministic_uids(xml: str, seed: str) -> str:
@@ -193,7 +203,7 @@ class ScenarioCloner:
             for m in _CELL.finditer(xml):
                 ref = re.search(r'\br="([A-Z]+\d+)"', m.group(1))
                 fm = re.search(r"<f\b[^>]*?(?<!/)>(.*?)</f>", m.group(2) or "", re.S)
-                if ref and fm and F.referenced_sheets(unescape(fm.group(1), _UNESC)) & members:
+                if ref and fm and F.referenced_sheets(_unescape(fm.group(1))) & members:
                     if not _inside(_cell_range(ref.group(1)), box):
                         raise CloneError(f"{block_sheet}!{ref.group(1)} reads the score sheet outside {rng}")
         into = []

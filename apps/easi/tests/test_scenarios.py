@@ -123,13 +123,14 @@ def test_workbook_has_a_calculator_per_scenario_behind_the_instructions_and_a_su
     z = zipfile.ZipFile(io.BytesIO(data))
     tags = re.findall(r"<sheet\b[^>]*/>", z.read("xl/workbook.xml").decode("utf-8"))
     names = [re.search(r'name="([^"]+)"', t).group(1) for t in tags]
-    # the template's Instructions first, and the tab it opens on (owner, 2026-10-19)
-    assert names[:5] == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "ReferenceCurves"]
+    # the template's Instructions first, and the tab it opens on (owner, 2026-10-19); no per-site
+    # ReferenceCurves tab: Reference draws every curve, once for all scenarios (owner, 2026-10-23)
+    assert names == ["Instructions", "Summary", "Existing Conditions", "Restore riparian", "Metrics", "Reference",
+                     "Results", "ChartData", "S2 Metrics", "S2 Results", "S2 ChartData"]
     hidden = set(re.search(r'name="([^"]+)"', t).group(1) for t in tags if 'state="hidden"' in t)
     assert {"S2 Metrics", "S2 Results", "S2 ChartData"} <= hidden
-    assert calculator.blank_bytes() == calculator.template_path().read_bytes()    # never changed
-    curves = _sheet_xml(z, "ReferenceCurves")
-    assert curves.count("<drawing ") == 1                     # the six curve charts sit on one drawing
+    assert calculator.template_bytes() == calculator.template_path().read_bytes()    # never changed
+    assert _sheet_xml(z, "Reference").count("<drawing ") == 1    # the four curve charts, shared
 
 
 def test_recalculated_workbook_matches_the_application(report):
@@ -150,8 +151,8 @@ def test_recalculated_workbook_matches_the_application(report):
             v = v[0]
         return v
 
-    names = workbook._named_cells(calculator.blank_bytes())
-    cells = workbook.summary_cells(calculator.blank_bytes())
+    names = workbook._named_cells(calculator.template_bytes())
+    cells = workbook.summary_cells(calculator.template_bytes())
     for k, (_s, sc) in enumerate(rows):
         res = "Results" if k == 0 else f"S{k + 1} Results"
         assert value(res, names["eci"][1]) == pytest.approx(sc["ecosystemConditionIndexRaw"], abs=1e-9)
@@ -162,10 +163,12 @@ def test_recalculated_workbook_matches_the_application(report):
             assert value(metrics, cell) == pytest.approx(sc["functionScores"][fid], abs=1e-9), fid
     summary = _sheet_xml(zipfile.ZipFile(io.BytesIO(data)), "Summary")
     checked = 0
-    for ref, cached in re.findall(r'<c r="([A-Z]+\d+)"[^>]*><f>[^<]*</f><v>([^<]*)</v></c>', summary):
+    for ref, attrs, cached in re.findall(r'<c r="([A-Z]+\d+)"([^>]*)><f>[^<]*</f><v>([^<]*)</v></c>', summary):
         got = value("Summary", ref)
         if cached == "":
             assert got in (None, ""), ref
+        elif 't="str"' in attrs:          # the site rows read live from the scenario sheet store text
+            assert got == cached, ref
         else:
             assert got == pytest.approx(float(cached), abs=1e-9), ref
             checked += 1
@@ -198,19 +201,29 @@ def test_the_summary_is_the_compare_table_on_its_side(report, n_alt):
     assert [ws.cell(head, c).value for c in range(1, len(expect) + 2)] == expect + [None]
     labels = [ws.cell(r, 1).value for r in range(head + 1, ws.max_row + 1)]
     assert [x for x in labels if x in GROUPS] == GROUPS
-    assert len([x for x in labels if x not in GROUPS]) == 4 + len(workbook.summary_cells(calculator.blank_bytes()).functions)
+    assert len([x for x in labels if x not in GROUPS]) == 4 + len(workbook.summary_cells(calculator.template_bytes()).functions)
     assert len(list(ws.conditional_formatting)) == n_alt
     if n_alt <= 1:
         assert ws.page_setup.orientation == "portrait" and str(ws.page_setup.fitToHeight) == "1"
 
 
-def test_reference_curves_are_the_ones_this_site_was_scored_against(report):
-    rc = workbook.reference_curves(report)
-    curves = [b for b in rc.blocks if getattr(b, "series", None)]
-    assert len(curves) == 6 and all(len(b.series) == 1 and b.series[0][1] for b in curves)
-    assert any("Entrenchment ratio" in b.x_label for b in curves)
-    table = next(b for b in rc.blocks if getattr(b, "rows", None) is not None and b.title == "Rating bands")
-    assert table.header == ["Function", "Measure", "Good", "Fair", "Poor"] and table.rows
+def test_the_summary_reads_the_site_block_live_from_existing_conditions(report):
+    """Owner, 2026-10-23, as SFARI's: right under the title, Reach name and NARS-9 region read live
+    from the scenario sheet's Reach ID and NARS-9 region entries, storing what they hold."""
+    openpyxl = pytest.importorskip("openpyxl")
+    _sset, rows = _two(report)
+    data = workbook.build({"delineation": BASE_DELIN, "report": report}, rows, {}, today=dt.date(2026, 10, 3))
+    ws = openpyxl.load_workbook(io.BytesIO(data))["Summary"]
+    site = dict((ws.cell(r, 1).value, r) for r in range(3, 12))
+    cells = calculator.entry_cells()
+    ec = "'Existing Conditions'!" + cells["site_name"]
+    assert ws.cell(site["Reach name"], 2).value == f'=IF(ISBLANK({ec}),"",{ec})'
+    assert ws.cell(site["NARS-9 region"], 2).value.endswith(f"!{cells['ctx_region']})")
+    assert ws.cell(site["Assessment tier"], 2).value == "Screening"
+    stored = _sheet_xml(zipfile.ZipFile(io.BytesIO(data)), "Summary")
+    values, _notes = calculator.filled_values(workbook.scenario_result({"delineation": BASE_DELIN, "report": report},
+                                                                       rows[0][1], {}), today=dt.date(2026, 10, 3))
+    assert values[cells["ctx_region"]] and f"<v>{values[cells['ctx_region']]}</v>" in stored
 
 
 def test_summary_info_takes_easis_own_regions(report):

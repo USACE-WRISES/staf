@@ -185,7 +185,7 @@ def test_observations_reach_the_completed_workbook_and_the_list():
     assert entries["ov_erodingBankPct"] == 70.0 and entries["ov_armoredBankPct"] == 10.0
     assert "ov_m09_rating" not in entries and "ov_m10_rating" not in entries          # observed, not overridden
     assert entries["in_bhr"] == 1.1 and entries["in_er"] == 2.5                       # still from the other rows
-    ws = openpyxl.load_workbook(io.BytesIO(calculator.build_filled(res)))["EASI Score"]
+    ws = openpyxl.load_workbook(io.BytesIO(calculator.build_filled(res)))["Scenario"]
     cells = calculator.entry_cells()
     assert ws[cells["ov_stageClass"]].value == "Poor" and ws[cells["ov_erodingBankPct"]].value == 70
     rows = {r["metricId"]: r for r in report.desktop_metric_rows(res)}
@@ -227,7 +227,7 @@ def test_the_completed_workbook_carries_the_twelve_flows_behind_the_variability(
     res = {"delineation": dict(DELINEATION), "report": _scored(), "eromMonthly": flows}
     entries, _ = calculator.entries_from_result(res)
     assert [entries[f"in_m{m:02d}"] for m in range(1, 13)] == flows
-    ws = openpyxl.load_workbook(io.BytesIO(calculator.build_filled(res)))["EASI Score"]
+    ws = openpyxl.load_workbook(io.BytesIO(calculator.build_filled(res)))["Scenario"]
     cells = calculator.entry_cells()
     assert [ws[cells[f"in_m{m:02d}"]].value for m in range(1, 13)] == flows
     # without a full year, or without the variability entry itself, the helper stays blank

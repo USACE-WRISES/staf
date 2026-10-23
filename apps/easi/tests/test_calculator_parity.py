@@ -34,7 +34,7 @@ from calculator_eval import ExcelComBackend, FormulasBackend
 ALLOWED_FUNCTIONS = {"IF", "AND", "OR", "NOT", "MIN", "MAX", "ROUND", "INDEX", "MATCH", "IFERROR",
                      "ISNUMBER", "COUNT", "SUM", "SUMPRODUCT", "AVERAGE", "STDEV.P", "PRODUCT",
                      "UPPER", "TRIM", "SUBSTITUTE", "LEN", "NA"}
-SHEETS = ["Instructions", "EASI Score", "Metrics", "Results", "Reference", "Metadata", "ChartData"]
+SHEETS = ["Instructions", "Scenario", "Metrics", "Results", "Reference", "ChartData"]
 HIDDEN = {"Results", "ChartData"}
 OUTPUT_NAMES = ([f"m{n:02d}_{field}" for n in range(1, 21)
                  for field in ("rating", "score", "index", "status", "computed")]
@@ -156,7 +156,7 @@ def test_committed_workbook_equals_the_generated_bytes():
     assert "0" * 12 not in cc.bc.accepted_method_stamps()
 
 
-def test_workbook_structure_and_metadata():
+def test_workbook_structure_and_identity():
     from easi import config
     from easi.national import method_version
     wb = openpyxl.load_workbook(cc.WORKBOOK)
@@ -164,7 +164,7 @@ def test_workbook_structure_and_metadata():
     for ws in wb.worksheets:
         assert ws.protection.sheet, f"{ws.title} is not protected"
         assert (ws.sheet_state == "hidden") == (ws.title in HIDDEN), ws.title
-    score = wb["EASI Score"]
+    score = wb["Scenario"]
     assert score.freeze_panes == "A8" and score.sheet_view.showGridLines is False
     assert len(score._charts) == 2, "the Function Score and Outcome Score charts"
     rules = sum(len(cf.rules) for cf in score.conditional_formatting)
@@ -205,21 +205,64 @@ def test_workbook_structure_and_metadata():
                 for n in names if n.startswith(("in_", "ctx_", "ov_", "site_"))
                 for ws in [wb[names[n].split("!")[0].strip("'")]]]
     assert unlocked and all(not c.protection.locked for c in unlocked)
-    meta = {r[0].value: r[1].value for r in wb["Metadata"].iter_rows(min_row=3) if r[0].value}
-    identity = config.scoring_identity()
-    assert meta["Scoring method digest"] in cc.bc.accepted_method_stamps()
-    assert method_version() in cc.bc.accepted_method_stamps()
-    assert meta["Catalog sha256"] == identity["catalog_sha256"]
-    assert meta["Curves sha256"] == identity["curves_sha256"]
-    assert meta["Calculator version"] == cc.bc.TEMPLATE_VERSION
-    # one version: the generator reads it from the module that serves the workbook
+    # the identity sits out of sight in the document properties (owner, 2026-10-23: no Metadata
+    # sheet): what --check regenerates with, what the apps match before serving the template, and
+    # what StreamCurves verifies before a calculator rides in a method package
     from easi import calculator
-    assert cc.bc.TEMPLATE_VERSION == calculator.TEMPLATE_VERSION == "1.1"
-    assert cc.bc.OUT_NAME == calculator.blank_filename() == cc.WORKBOOK.name
+    identity = config.scoring_identity()
+    stamps = calculator.workbook_stamps(cc.WORKBOOK.read_bytes())
+    assert set(stamps) == {cc.bc.STAMP_METHOD, cc.bc.STAMP_PACKAGE, cc.bc.STAMP_GENERATOR}
+    assert stamps[cc.bc.STAMP_METHOD] in cc.bc.accepted_method_stamps()
+    assert method_version() in cc.bc.accepted_method_stamps()
+    assert stamps[cc.bc.STAMP_PACKAGE] == cc.bc.method_files_digest() == calculator.active_package_digest()
+    assert re.fullmatch(r"[0-9a-f]{64}", stamps[cc.bc.STAMP_GENERATOR])
+    assert not [n for n, v in names.items() if n.startswith("meta_") or "#REF" in v]
+    # one version, a date: the generator reads it from the module that serves the workbook
+    assert cc.bc.TEMPLATE_VERSION == calculator.TEMPLATE_VERSION == "2026-10-23"
+    assert cc.bc.OUT_NAME == calculator.TEMPLATE_PATH.name == cc.WORKBOOK.name
+    assert calculator.template_path() == calculator.TEMPLATE_PATH
     ref = wb["Reference"]
     keys = [c.value for c in ref["A"] if isinstance(c.value, str) and "|" in c.value]
     curves = cc.sm.curve_sets()
     assert len(keys) == sum(len(s["curves"]) for s in curves.values()) == identity["curve_count"]
+    # the sheets that take no entries say so, as SFARI's do, and their tabs are grey
+    for name in ("Metrics", "Reference"):
+        ws = wb[name]
+        assert cc.bc.NO_INPUT in [c.value for c in ws[1]], name
+        assert ws.sheet_properties.tabColor.rgb.endswith(cc.bc.C_TAB_NO_INPUT), name
+    # the reference curves drawn: a chart per curve set, a line per region or slope class
+    assert len(ref._charts) == len(curves) == 4
+    for ch, (set_id, s) in zip(ref._charts, curves.items()):
+        assert len(ch.series) == len(s["curves"]) + 2, set_id      # and the 0.39 and 0.69 lines
+    # the instructions as SFARI lays them out
+    ins = wb["Instructions"]
+    assert ins["A7"].value == "Model Version" and ins["B7"].value == cc.bc.MODEL_VERSION == "EASI v1.0"
+    assert ins["I1"].value == "Color Coding Key:" and ins["I7"].value == cc.bc.PASSWORD
+    assert ins["A15"].value == "Instructions"
+
+
+def test_metrics_show_the_ranges_each_value_is_rated_against():
+    """Owner, 2026-10-23: the Good, Fair and Poor ranges beside every rated value, in the catalog's
+    own labels; a curve's ranges follow the curve the scenario uses (its region or slope class)."""
+    wb = openpyxl.load_workbook(cc.WORKBOOK)
+    ws = wb["Metrics"]
+    head = [c.value for c in ws[4]]
+    assert head == ["Item", "Value", "Good", "Fair", "Poor", "Rating", "Index", "Note"]
+    rows = dict((ws.cell(r, 1).value, r) for r in range(1, ws.max_row + 1) if ws.cell(r, 1).value)
+    method = cc.sm.catalog()["methods"][0]
+    bands = dict((b["rating"], b["label"]) for b in next(i for i in method["inputs"] if i["key"] == "impervious")["bands"])
+    r = rows["Watershed impervious cover"]
+    assert [ws.cell(r, c).value for c in (3, 4, 5)] == [bands["Good"], bands["Fair"], bands["Poor"]]
+    r = rows["Monthly flow variability"]
+    good, fair, poor = (ws.cell(r, c).value for c in (3, 4, 5))
+    assert good.startswith("=IF(NOT(ISNUMBER(") and '"≤"&ROUND(INDEX(' in good       # lower is better
+    assert '"-≤"' in fair and '">"&ROUND(INDEX(' in poor
+    ref = wb["Reference"]
+    keys = dict((ref.cell(r, 1).value, r) for r in range(1, ref.max_row + 1))
+    r = keys["corridor-natural|CPL"]
+    curve = cc.sm.curve_sets()["corridor-natural"]["curves"]["CPL"]
+    assert ref.cell(r, cc.bc.CURVE_BINS).value == "≥" + cc.bc.num_text(curve["x69"], 1) + "%"
+    assert ref.cell(r, cc.bc.CURVE_BINS + 2).value == "<" + cc.bc.num_text(curve["x39"], 1) + "%"
 
 
 # --------------------------------------------------------------------------- #

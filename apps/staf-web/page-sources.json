@@ -201,6 +201,14 @@
    "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, cut to the image's characters)",
    "sha256": "8f6e3e17d3b8747af3f55c5c1704be8ecede2011c71348be82947a40a7c3d302"
   },
+  "forms/easi/2026-10-23_EASI Calculator.xlsx": {
+   "source": "apps/easi/www/calculator/2026-10-23_EASI Calculator.xlsx",
+   "sha256": "386075ada6ad105f6db2220a97476f0efc4c90903fe0d17360b968b785db1613"
+  },
+  "forms/easi/EASI_Calculator_Template_2026-10-23.xlsx": {
+   "source": "apps/easi/www/calculator/EASI_Calculator_Template_2026-10-23.xlsx",
+   "sha256": "6d5f80863f6e574911be300bcfa57d3a21040430781805e233b4c38e0095fa19"
+  },
   "forms/sfari/2026-10-19_SFARI Calculator.xlsx": {
    "source": "apps/sfari/data/calculator/2026-10-19_SFARI Calculator.xlsx",
    "sha256": "157e7bad2de4eb403ccdc033fa906772d6ad017dfa558792f874ee5789350cf8"

@@ -261,7 +261,7 @@ export function buildDesktopMetricsPdf(result: Obj, cells: Record<string, string
     for (const r of notes) story.push(new Paragraph(`<b>${esc(r.function)}.</b> ${esc(r.note)}`, noteStyle))
   }
   story.push(new Spacer(1, 8), new Paragraph(
-    'The entries are the values the EASI calculator takes in column J of its EASI Score sheet, as the '
+    'The entries are the values the EASI calculator takes in column J of each scenario worksheet, as the '
     + 'application rated them. Generated from national datasets. A desktop screening estimate with '
     + 'per-metric confidence, not a field-validated assessment.', dim))
   const doc = new SimpleDocTemplate({ pagesize: letter, topMargin: 0.6 * inch, bottomMargin: 0.6 * inch, leftMargin: 0.6 * inch,

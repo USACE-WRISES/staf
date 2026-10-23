@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-EASI = REPO / "apps" / "easi" / "www" / "calculator" / "EASI_Calculator_1.1.xlsx"
+EASI = REPO / "apps" / "easi" / "www" / "calculator" / "EASI_Calculator_Template_2026-10-23.xlsx"
 SFARI = REPO / "apps" / "sfari" / "data" / "calculator" / "SFARI_Calculator_Template_2026-10-19.xlsx"
 DEEP_DIR = REPO / "apps" / "deep" / "www" / "calculators"
 DEEP = DEEP_DIR / "blue-ridge@v1.xlsx"

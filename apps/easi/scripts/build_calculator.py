@@ -8,11 +8,17 @@ and written as worksheet formulas, so the calculator and the web application
 implement one methodology. ``tests/test_calculator_parity.py`` proves that on a
 retained case set scored by the application's own engine.
 
-Sheets: Instructions, EASI Score (the worksheet the user fills, laid out like
-the SFARI calculator: outcomes, functional categories, functions and metrics
-side by side, orange entry cells, a scoring summary table, legends and two bar
-charts), Metrics (every rule and route, read only), Results (the rollup, hidden
-engine sheet), Reference, Metadata and ChartData (hidden chart series).
+Sheets: Instructions (laid out as SFARI's), Scenario (the worksheet the user fills,
+laid out like the SFARI calculator: outcomes, functional categories, functions and
+metrics side by side, orange entry cells, a scoring summary table, legends and two bar
+charts), Metrics (every rule and route beside the Good, Fair and Poor ranges of each
+rated value, read only), Results (the rollup, hidden engine sheet), Reference (the
+reference curves drawn, then every table the formulas read) and ChartData (hidden chart
+series). The workbook's identity (scoring method digest, package digest of the method
+files, generator sha256) sits in its document properties, out of sight (owner,
+2026-10-23: no Metadata sheet). The apps serve it as the template every EASI workbook
+is assembled from (``easi/workbook.py``), named by its date.
+
 Formulas use direct cell references and a small function vocabulary (IF AND OR
 NOT MIN MAX ROUND INDEX MATCH IFERROR ISNUMBER COUNT SUM SUMPRODUCT AVERAGE
 STDEV.P PRODUCT UPPER TRIM SUBSTITUTE LEN NA) so Excel 2016 and later,
@@ -61,12 +67,14 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
 from openpyxl import Workbook  # noqa: E402
-from openpyxl.chart import BarChart, Reference  # noqa: E402
+from openpyxl.chart import BarChart, Reference, ScatterChart, Series  # noqa: E402
 from openpyxl.chart.data_source import NumFmt  # noqa: E402
 from openpyxl.chart.label import DataLabelList  # noqa: E402
+from openpyxl.chart.marker import Marker  # noqa: E402
 from openpyxl.chart.shapes import GraphicalProperties  # noqa: E402
 from openpyxl.drawing.line import LineProperties  # noqa: E402
 from openpyxl.formatting.rule import FormulaRule  # noqa: E402
+from openpyxl.packaging.custom import StringProperty  # noqa: E402
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Protection, Side  # noqa: E402
 from openpyxl.utils import get_column_letter  # noqa: E402
 from openpyxl.workbook.defined_name import DefinedName  # noqa: E402
@@ -78,12 +86,17 @@ from easi import screening_methods as sm  # noqa: E402
 from easi.national import method_version  # noqa: E402
 
 TEMPLATE_VERSION = served.TEMPLATE_VERSION   # one source: the module that serves the workbook
-TEMPLATE_DATE = "2026-09-18"
+TEMPLATE_DATE = TEMPLATE_VERSION              # the calculator is named by its date (owner, 2026-10-23)
+MODEL_VERSION = "EASI v1.0"                   # as SFARI's "SFARI v1.0"
 OUT_DIR = os.path.join(ROOT, "www", "calculator")
-OUT_NAME = f"EASI_Calculator_{TEMPLATE_VERSION}.xlsx"
+OUT_NAME = served.TEMPLATE_PATH.name
 PASSWORD = "easi"      # a guard rail against accidental edits, not a secret
-FIXED_STAMP = _dt.datetime(2026, 9, 18, 0, 0, 0)
-SCORE = "EASI Score"   # the worksheet the user fills
+FIXED_STAMP = _dt.datetime.strptime(TEMPLATE_DATE, "%Y-%m-%d")
+SCORE = "Scenario"     # the worksheet the user fills
+#: The identity a workbook carries in its document properties (File, Info, Properties):
+#: what ``check`` regenerates with and what StreamCurves verifies before a calculator rides in
+#: a method package. Out of sight, so no sheet of the workbook holds it (owner, 2026-10-23).
+STAMP_METHOD, STAMP_PACKAGE, STAMP_GENERATOR = "Scoring method digest", "Package digest", "Generator sha256"
 
 #: The namespace prefixes openpyxl registers when it is imported (``openpyxl/xml/functions.py``).
 #: lxml and ElementTree keep one prefix registry per process, and a library imported later may
@@ -163,6 +176,59 @@ OUTCOME_OF = {"Hydrology": "physical", "Hydraulics": "physical", "Geomorphology"
 OUTCOME_FILL = {"physical": C_BAND, "chemical": C_CHEM, "biological": C_BIO}
 OUTCOME_LABEL = {"physical": "Physical", "chemical": "Chemical", "biological": "Biological"}
 CLASS_LABELS = {"Good": "Functioning", "Fair": "Functioning At-Risk", "Poor": "Non-Functioning"}
+#: Metrics columns: the item, its value, the Good / Fair / Poor ranges it is rated against (the
+#: criteria beside every rated value, owner 2026-10-23), the rating, the index anchor and a note.
+M_ITEM, M_VALUE, M_GOOD, M_FAIR, M_POOR, M_RATING, M_INDEX, M_NOTE = range(1, 9)
+#: the ranges' tints: the web application's Good / Fair / Poor band colours (its Scoring method panel)
+BIN_FILL = {"Good": "C8D9F2", "Fair": "F5E7A6", "Poor": "F5B5B5"}
+CLASS_FILL = {"Good": C_GOOD, "Fair": C_FAIR, "Poor": C_POOR}
+#: SFARI's line on the sheets that take no entries, and their tab colour
+NO_INPUT = "**DO NOT INPUT VALUES HERE**"
+C_TAB_NO_INPUT = "A6A6A6"
+#: How each curve set's value reads in a range: decimals and unit (the reference curves' axes)
+CURVE_DISPLAY = {"flow-variability": (2, ""), "entrenchment": (2, ""),
+                 "corridor-woody": (1, "%"), "corridor-natural": (1, "%")}
+CURVE_AXIS = {"flow-variability": "Monthly flow variability (CV of the twelve EROM monthly flows)",
+              "entrenchment": "Entrenchment ratio", "corridor-woody": "Woody riparian cover in the 100 m corridor (%)",
+              "corridor-natural": "Natural cover in the 100 m corridor (%)"}
+CURVE_TITLE = {"flow-variability": "Low flow and baseflow dynamics",
+               "entrenchment": "Floodplain connectivity, Channel evolution",
+               "corridor-woody": "Light and thermal regime, Habitat provision",
+               "corridor-natural": "Carbon processing"}
+SLOPE_LABEL = {"lt_0.5": "Slope under 0.5%", "0.5_to_2": "Slope 0.5 to 2%", "ge_2": "Slope 2% or more",
+               "national": "National"}
+#: Reference's curve table: the knot values from column G, their indices from L, the ranges from Q
+CURVE_X, CURVE_BINS = 7, 17
+#: the curve charts, two across and two down above the table (rows per chart, size in cm)
+CHART_ROWS, CHART_WIDTH_CM, CHART_HEIGHT_CM = 25, 16.5, 12.5
+
+
+def num_text(x: float, digits: int) -> str:
+    """A rounded value as a range shows it (Excel's general format: no trailing zeros)."""
+    text = f"{round(float(x), digits):.{digits}f}"
+    return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+def band_bins(bands: list[dict]) -> dict:
+    """Rating -> the catalog's own label of its band (the text the application shows)."""
+    out: dict = {}
+    for b in bands:
+        assert b.get("label"), b
+        out[b["rating"]] = f"{out[b['rating']]} or {b['label']}" if b["rating"] in out else b["label"]
+    return out
+
+
+def curve_bins(higher_is_better: bool, x39: str, x69: str, unit: str, *, formula: bool = False) -> dict:
+    """Rating -> its range on a curve, in the catalog's notation, from the curve's 0.39 and 0.69
+    crossings (index 0.69 and above is Good, 0.39 and above Fair). ``x39`` and ``x69`` are text, or
+    with ``formula`` expressions, and the range is then an expression joining them with ``&``."""
+    lit = q if formula else (lambda s: s)
+    tail = [lit(unit)] if unit else []
+    if higher_is_better:
+        spec = {"Good": [lit("≥"), x69], "Fair": [x39, lit("-<"), x69], "Poor": [lit("<"), x39]}
+    else:
+        spec = {"Good": [lit("≤"), x69], "Fair": [lit(">"), x69, lit("-≤"), x39], "Poor": [lit(">"), x39]}
+    return dict((k, ("&" if formula else "").join(v + tail)) for k, v in spec.items())
 
 
 def solid(hex_: str) -> PatternFill:
@@ -334,7 +400,7 @@ def score_override_name(mkey: str) -> str:
 MONTH_INPUTS = [f"m{i:02d}" for i in range(1, 13)]
 
 # ---------------------------------------------------------------------------
-# The EASI Score worksheet: which rows each function shows in the Metrics
+# The Scenario worksheet: which rows each function shows in the Metrics
 # columns. ("in", key) is a quantity (an entry the first time it appears, a
 # linked cell afterwards), ("ov", name) an observed-evidence entry, and
 # ("calc", field, label, units) a computed quantity taken from the Metrics
@@ -419,49 +485,49 @@ FRONT_NOTES = {
                "integrity indices (ICI and IWI products).",
 }
 
+#: The Instructions sheet's text, in SFARI's words where the two calculators work alike (owner, 2026-10-23)
 INSTRUCTIONS = [
-    "Add the site information into the orange cells at the top of the EASI Score worksheet: reach ID, "
-    "coordinates, date, assessor, NHDPlus V2 COMID, the NARS-9 ecoregion (drop-down) and the NHD feature code.",
-    "Enter each desktop quantity once in the orange cells of the Metrics columns (column J). The Source column "
-    "names the StreamCat field or the EASI report item each value comes from. Select a cell to read its guidance "
-    "note.",
-    "Grey cells repeat an entry made higher in the table and cannot be edited. White cells in column J are "
-    "computed from the entries above them.",
-    "Leave a cell blank when the evidence is unavailable. Never enter zero for unknown: a zero is evidence. A "
-    "blank input leaves its function unrated, and unrated functions drop out of the sub-indices and the index.",
-    "Optional: enter the twelve EROM mean monthly flows in the helper block below the table and copy the computed "
-    "variability into the Low flow row, enter the observed channel class, indicators and bank percentages "
-    "if you have field observations, and pick an Override Score (Good, Fair or Poor) in the last row of any "
-    "function whose computed rating your review replaces.",
-    "Ratings, function scores (0 to 15), the outcome sub-indices and the EASI index auto-populate (columns A to "
-    "H). The scoring summary table, the legends and the charts to the right of the table also auto-populate.",
-    "Record other observations, sources or assumptions in the grey box at the bottom of the worksheet.",
+    "Add the site information into the orange cells at the top of each scenario worksheet.",
+    "Enter each metric value in the orange cells of the Value column (column J). The Source column names "
+    "where each value comes from, and selecting a cell shows its guidance note. Grey cells repeat a value "
+    "entered higher in the table.",
+    "Leave a cell blank when a value is unavailable, and never enter zero for an unknown value. A blank "
+    "metric leaves its function unrated, and unrated functions drop out of the sub-indices and the EASI Index.",
+    "Optional. Pick an Override Score (Good, Fair or Poor) in the last row of a function to replace its "
+    "computed rating, and enter observed channel and bank conditions in their rows when you have field "
+    "observations.",
+    "Once the metric values are entered, the ratings and Function Scores (columns G and H), the Functional "
+    "Categories, the Outcomes and the overall EASI Index (column A) will auto-populate. The scoring summary "
+    "table and the bar charts to the right of the table will also auto-populate.",
+    "Record other metrics, notes, or sources in the grey box at the bottom of the worksheet.",
 ]
 COMMENTS = [
-    "The calculator implements the EASI scoring method of the web application exactly: the same bands, regional "
-    "reference curves, lookups, weights and rounding, generated from the application's own scoring definitions. "
-    "Same inputs give the same ratings, function scores, sub-indices and index. The Metadata sheet identifies the "
-    "method.",
-    "The Metrics sheet shows every input, rule and route that produced a rating. The Reference sheet lists the "
-    "bands, the reference curves, the regional nutrient thresholds, the lookups and the outcome weights.",
-    "Derived values (ratios, sums and products) are rounded to twelve decimals before banding, as in the "
-    "application. Displayed indices are rounded to two decimals. When a sub-index lands exactly on a "
-    "half-hundredth, Excel rounds away from zero and the application rounds to the even digit, so the displayed "
-    "value can differ by 0.01 while the class is the same.",
-    "The calculator does not retrieve data, delineate a watershed or draw cross-sections. The observed channel and "
-    "bank entries and the optional Override Score of each function are the expert-review inputs it supports. An "
-    "Override Score replaces the computed rating and score of its function, as a rating changed in the web "
-    "application does, and the Metrics sheet keeps the computed rating beside it. Entries outside the documented "
-    "ranges are refused.",
-    "EASI is a screening-level desktop estimate, not a field-validated assessment. The reference curves express "
-    "regional expectations derived from least-disturbed reaches, and several proxies remain unvalidated. The "
-    "technical report states each metric's limitations.",
-    "All computed cells are locked and the sheets are protected without a secret password (it is 'easi'), so a "
-    "mistaken edit is unlikely, not impossible.",
+    "The calculator scores exactly as the EASI web application does, with the same criteria, reference "
+    "curves, weights and rounding. The same inputs give the same ratings, Function Scores, sub-indices and "
+    "EASI Index.",
+    "The Metrics sheet shows how each rating was reached, beside the Good, Fair and Poor ranges of every "
+    "metric. The Reference sheet plots the reference curves and holds the tables the calculator reads. "
+    "Nothing is entered on either sheet.",
+    "The optional monthly flow helper below the table computes the monthly flow variability from the twelve "
+    "EROM mean monthly flows. Copy its result into the Low flow and baseflow dynamics row.",
+    "Derived values are rounded to twelve decimals before they are rated, and displayed indices to two "
+    "decimals, as in the web application. When a sub-index lands exactly on a half-hundredth, Excel rounds "
+    "away from zero and the web application rounds to the even digit, so a displayed value can differ by "
+    "0.01 while the class stays the same.",
+    "The calculator does not retrieve data, delineate a watershed or draw cross-sections. An Override Score "
+    "replaces the computed rating and score of its function, as a rating changed in the web application "
+    "does, and the Metrics sheet keeps the computed rating beside it.",
+    "EASI is a screening-level desktop estimate, not a field-validated assessment. The reference curves "
+    "express regional expectations derived from least-disturbed reaches, and several proxies remain "
+    "unvalidated. The technical report states each metric's limitations.",
 ]
 DEVELOPERS = "Leanne M. Stepchinski, Gabrielle C. David, Samantha R. Wiest, and Garrett T. Menichino"
 EMAILS = ("Leanne.M.Stepchinski@usace.army.mil, Gabrielle.C.David@usace.army.mil, "
           "Samantha.R.Wiest@erdc.dren.mil, Garrett.T.Menichino@usace.army.mil")
+WAIVER = ('This model is provided for free as part of the USACE Technical Report "Ecosystem Assessment '
+          'Screening Index (EASI)" by ' + DEVELOPERS + ".")
+NO_LIABILITY = ("None of the authors nor the US Army Corps of Engineers accepts responsibility or liability for "
+                "the model's use by third parties.")
 
 
 # ---------------------------------------------------------------------------
@@ -735,11 +801,22 @@ class Builder:
     def build_reference(self):
         ws = self.wb.create_sheet("Reference")
         S = Sheet(self.wb, ws, "Reference")
+        self.reference_ws = ws
+        S.cell(6, NO_INPUT, font=FONT_BOLD)
         S.title("Reference tables generated from the EASI scoring definitions")
-        S.cell(1, "Read only. These values are the application's own catalog, reference curves, regional "
-                  "thresholds, lookups and weights. The Metrics sheet reads them by cell reference.",
-               font=FONT_NOTE)
-        S.row += 2
+        S.row += 1
+
+        # the reference curves, drawn (owner, 2026-10-23): a chart per curve set over the rows of
+        # the curve table below it, the tables the formulas read after it
+        S.title("Reference curves", 11)
+        S.cell(1, "Each line is the curve of one NARS-9 region or slope class. A value scores the index of its "
+                  "curve: Good at 0.69 and above, Fair at 0.39 and above, Poor below. The Good, Fair and Poor "
+                  "ranges of every curve are in the table under the charts.", font=FONT_NOTE)
+        S.row += 1
+        self.chart_rows = (S.row, S.row + CHART_ROWS)
+        S.row += 2 * CHART_ROWS + 1
+        self._curve_table(S)
+        self._rating_lines(S)
 
         # rating anchors
         S.title("Rating anchors and function scores", 11)
@@ -776,36 +853,6 @@ class Builder:
                         self._band_row(S, v.get("methodKey"), i["key"], b)
                 for b in v.get("bands") or []:
                     self._band_row(S, v.get("methodKey"), "(combined)", b)
-        S.blank()
-
-        # curves, long form, padded to five knots
-        S.title("Reference curves (frozen), one row per curve, knots padded to five", 11)
-        S.header("Key", "Set", "Stratum", "Higher is better", "n", "Members", "x1", "y1", "x2", "y2",
-                 "x3", "y3", "x4", "y4", "x5", "y5", "x39", "x69", "q25", "q50", "q75", "Tier")
-        first = S.row
-        for set_id, s in self.curves.items():
-            for key, c in s["curves"].items():
-                pts = [(float(x), float(y)) for x, y in c["points"]]
-                assert all(pts[i][0] < pts[i + 1][0] for i in range(len(pts) - 1)), (set_id, key)
-                assert 2 <= len(pts) <= 5, (set_id, key, len(pts))
-                while len(pts) < 5:
-                    pts.append(pts[-1])
-                S.cell(1, f"{set_id}|{key}"); S.cell(2, set_id); S.cell(3, key)
-                S.cell(4, "TRUE" if s["higherIsBetter"] else "FALSE")
-                S.cell(5, c.get("n")); S.cell(6, c.get("nMembers"))
-                for k, (x, y) in enumerate(pts):
-                    S.cell(7 + 2 * k, x); S.cell(8 + 2 * k, y)
-                S.cell(17, c.get("x39")); S.cell(18, c.get("x69"))
-                S.cell(19, c.get("q25")); S.cell(20, c.get("q50")); S.cell(21, c.get("q75"))
-                S.cell(22, c.get("panelTier"))
-                S.row += 1
-        last = S.row - 1
-        self.curve_rows["all"] = (first, last)
-        self.curve_key_range = S.name_range("curve_keys", 1, first, last)
-        self.curve_col_range = {}
-        for k, col in (("x1", 7), ("y1", 8), ("x2", 9), ("y2", 10), ("x3", 11), ("y3", 12),
-                       ("x4", 13), ("y4", 14), ("x5", 15), ("y5", 16), ("x39", 17), ("x69", 18)):
-            self.curve_col_range[k] = S.name_range(f"curve_{k}", col, first, last)
         S.blank()
 
         # nutrient regional bands
@@ -861,10 +908,124 @@ class Builder:
             S.cell(1, cls); S.cell(2, txt); S.row += 1
         for col, width in ((1, 34), (2, 16), (3, 16), (4, 14), (5, 12), (6, 12)):
             ws.column_dimensions[get_column_letter(col)].width = width
+        for col in range(CURVE_X, CURVE_X + 10):
+            ws.column_dimensions[get_column_letter(col)].width = 10
+        for col in (CURVE_BINS, CURVE_BINS + 1, CURVE_BINS + 2):
+            ws.column_dimensions[get_column_letter(col)].width = 13
+        self._curve_charts()
         ws.freeze_panes = None
         ws.sheet_view.showGridLines = False
+        ws.sheet_properties.tabColor = C_TAB_NO_INPUT
         ws.protection.sheet = True
         ws.protection.password = PASSWORD
+
+    # -- the reference curves: one row per curve, drawn as a chart per set -------------
+    def _curve_table(self, S: Sheet):
+        """The 34 curves, knots padded to five, values (x1 to x5) then indices (y1 to y5) side by
+        side so each row is a chart series, with the Good, Fair and Poor ranges each curve gives."""
+        S.title("Reference curves (frozen), one row per curve, knots padded to five", 11)
+        heads = (["Key", "Set", "Stratum", "Higher is better", "n", "Members"]
+                 + [f"x{k}" for k in range(1, 6)] + [f"y{k}" for k in range(1, 6)]
+                 + ["Good", "Fair", "Poor", "x39", "x69", "q25", "q50", "q75", "Tier"])
+        S.header(*heads)
+        for j, rating in enumerate(RATINGS):
+            S.cell(CURVE_BINS + j, row=S.row - 1, fill=solid(CLASS_FILL[rating]), align=CENTER_NOWRAP)
+        first = S.row
+        self.curve_set_rows: dict[str, list[tuple[str, int]]] = {}
+        for set_id, s in self.curves.items():
+            digits, unit = CURVE_DISPLAY.get(set_id, (2, ""))
+            for key, c in s["curves"].items():
+                pts = [(float(x), float(y)) for x, y in c["points"]]
+                assert all(pts[i][0] < pts[i + 1][0] for i in range(len(pts) - 1)), (set_id, key)
+                assert 2 <= len(pts) <= 5, (set_id, key, len(pts))
+                while len(pts) < 5:
+                    pts.append(pts[-1])
+                S.cell(1, f"{set_id}|{key}"); S.cell(2, set_id); S.cell(3, key)
+                S.cell(4, "TRUE" if s["higherIsBetter"] else "FALSE")
+                S.cell(5, c.get("n")); S.cell(6, c.get("nMembers"))
+                for k, (x, y) in enumerate(pts):
+                    S.cell(CURVE_X + k, x); S.cell(CURVE_X + 5 + k, y)
+                bins = curve_bins(s["higherIsBetter"], num_text(c["x39"], digits), num_text(c["x69"], digits), unit)
+                for j, rating in enumerate(RATINGS):
+                    S.cell(CURVE_BINS + j, bins[rating], fill=solid(BIN_FILL[rating]), align=CENTER_NOWRAP)
+                S.cell(CURVE_BINS + 3, c.get("x39")); S.cell(CURVE_BINS + 4, c.get("x69"))
+                S.cell(CURVE_BINS + 5, c.get("q25")); S.cell(CURVE_BINS + 6, c.get("q50"))
+                S.cell(CURVE_BINS + 7, c.get("q75")); S.cell(CURVE_BINS + 8, c.get("panelTier"))
+                self.curve_set_rows.setdefault(set_id, []).append((key, S.row))
+                S.row += 1
+        last = S.row - 1
+        self.curve_rows["all"] = (first, last)
+        self.curve_key_range = S.name_range("curve_keys", 1, first, last)
+        self.curve_col_range = {}
+        for k in range(1, 6):
+            self.curve_col_range[f"x{k}"] = S.name_range(f"curve_x{k}", CURVE_X + k - 1, first, last)
+            self.curve_col_range[f"y{k}"] = S.name_range(f"curve_y{k}", CURVE_X + 4 + k, first, last)
+        for k, col in (("x39", CURVE_BINS + 3), ("x69", CURVE_BINS + 4)):
+            self.curve_col_range[k] = S.name_range(f"curve_{k}", col, first, last)
+        S.blank()
+
+    def _rating_lines(self, S: Sheet):
+        """The two index lines every curve chart draws (0.39 and 0.69), across each set's values."""
+        S.title("Rating lines of the curve charts", 11)
+        S.header("Set", "Value from", "Value to", "Index 0.39", "Index 0.39", "Index 0.69", "Index 0.69")
+        self.rating_line_rows = {}
+        for set_id, s in self.curves.items():
+            xs = [float(x) for c in s["curves"].values() for x, _y in c["points"]]
+            S.cell(1, set_id); S.cell(2, min(xs)); S.cell(3, max(xs))
+            for col, y in ((4, 0.39), (5, 0.39), (6, 0.69), (7, 0.69)):
+                S.cell(col, y)
+            self.rating_line_rows[set_id] = S.row
+            S.row += 1
+        S.blank()
+
+    def _curve_charts(self):
+        """A scatter chart per curve set, two across: a line per region or slope class through its
+        knots, and the 0.39 and 0.69 lines dashed. They read the Reference sheet only, so the sheet
+        stays one copy for every scenario of a completed workbook."""
+        ws = self.reference_ws
+        top, second = self.chart_rows
+        places = [f"A{top}", f"F{top}", f"A{second + 1}", f"F{second + 1}"]
+        for place, (set_id, rows) in zip(places, self.curve_set_rows.items()):
+            ch = ScatterChart(scatterStyle="lineMarker")
+            ch.title = CURVE_TITLE.get(set_id, set_id)
+            ch.title.overlay = False
+            ch.style = 2
+            for key, r in rows:
+                xs = Reference(ws, min_col=CURVE_X, max_col=CURVE_X + 4, min_row=r, max_row=r)
+                ys = Reference(ws, min_col=CURVE_X + 5, max_col=CURVE_X + 9, min_row=r, max_row=r)
+                label = SLOPE_LABEL.get(key) or ("National" if key == "national" else key)
+                s = Series(ys, xs, title=label)
+                s.marker = Marker(symbol="circle", size=3)
+                s.smooth = False
+                ch.series.append(s)
+            lr = self.rating_line_rows[set_id]
+            xs = Reference(ws, min_col=2, max_col=3, min_row=lr, max_row=lr)
+            for c1, label in ((4, "Index 0.39 (Fair at or above)"), (6, "Index 0.69 (Good at or above)")):
+                s = Series(Reference(ws, min_col=c1, max_col=c1 + 1, min_row=lr, max_row=lr), xs, title=label)
+                s.marker = Marker(symbol="none")
+                s.smooth = False
+                s.graphicalProperties = GraphicalProperties(
+                    ln=LineProperties(solidFill="404040", prstDash="dash", w=15875))
+                ch.series.append(s)
+            ch.x_axis.title = CURVE_AXIS.get(set_id, set_id)
+            ch.y_axis.title = "Index"
+            ch.x_axis.title.overlay = False
+            ch.y_axis.title.overlay = False
+            ch.x_axis.scaling.min = 0
+            if CURVE_DISPLAY.get(set_id, (2, ""))[1] == "%":
+                ch.x_axis.scaling.max = 100
+                ch.x_axis.majorUnit = 10
+            ch.y_axis.scaling.min = 0
+            ch.y_axis.scaling.max = 1
+            ch.y_axis.majorUnit = 0.1
+            ch.y_axis.numFmt = NumFmt(formatCode="0.0", sourceLinked=False)
+            ch.x_axis.delete = False
+            ch.y_axis.delete = False
+            ch.x_axis.majorGridlines = None
+            ch.legend.position = "b"
+            ch.legend.overlay = False
+            ch.width, ch.height = CHART_WIDTH_CM, CHART_HEIGHT_CM
+            ws.add_chart(ch, place)
 
     def _band_row(self, S: Sheet, method: str, key: str, b: dict):
         S.cell(1, method); S.cell(2, key); S.cell(3, b["rating"])
@@ -878,7 +1039,7 @@ class Builder:
                 return v
         raise KeyError(variant_key)
 
-    # ---- EASI Score: layout and entry cells (first pass) --------------------
+    # ---- Scenario: layout and entry cells (first pass) ----------------------
     def _validation(self, ws, kind: str, bounds, *, title: str = "", note: str = "",
                     error_title: str = "", error: str = "") -> DataValidation | None:
         """One validation per entry so each cell carries its own guidance note."""
@@ -903,9 +1064,10 @@ class Builder:
         return dv
 
     def _entry(self, S: Sheet, row: int, c1: int, c2: int, name: str, *, kind: str = "text", bounds=None,
-               title: str = "", note: str = "", error: str = "", fmt: str | None = None) -> str:
+               title: str = "", note: str = "", error: str = "", fmt: str | None = None,
+               font: Font | None = None, align: Alignment = CENTER_NOWRAP) -> str:
         """An orange, unlocked entry cell (merged c1..c2) with its validation and guidance."""
-        c = S.cell(c1, None, row=row, fill=FILL_INPUT, unlocked=True, align=CENTER_NOWRAP, fmt=fmt)
+        c = S.cell(c1, None, row=row, fill=FILL_INPUT, unlocked=True, align=align, fmt=fmt, font=font)
         S.merge(row, c1, row, c2)
         dv = self._validation(S.ws, kind, bounds, title=title, note=note, error=error)
         if dv is not None:
@@ -917,14 +1079,19 @@ class Builder:
         S = Sheet(self.wb, ws, SCORE)
         self.score_ws, self.score = ws, S
         ws.sheet_view.showGridLines = False
-        ws.sheet_view.zoomScale = 80
-        # title
+        ws.sheet_view.zoomScale = 70                # SFARI's worksheet
+        # title, boxed as SFARI's
         S.cell(1, "Ecosystem Assessment Screening Index (EASI) Worksheet", row=1, fill=FILL_BAND,
                font=Font(bold=True, size=16), align=CENTER_NOWRAP)
         S.merge(1, 1, 1, 13)
+        box(ws, 1, 1, 1, 13, outer=MED, inner=None)
         ws.row_dimensions[1].height = 24
-        # site block: label, entry (merged), label, entry, label, entry per row
+        # site block: label, entry (merged), label, entry, label, entry per row; SFARI's 16 pt labels
+        # and 12 pt entries
         label_font = Font(bold=True, size=12)
+        site_font = Font(bold=True, size=16)
+        entry_font = Font(size=12)
+        entry_align = Alignment(horizontal="left", vertical="center")
         region_note = self.ctxspec["ctx_region"][4]
         fcode_note = self.ctxspec["ctx_fcode"][4]
         slope_note = self.ctxspec["ctx_slope_override"][4]
@@ -946,10 +1113,10 @@ class Builder:
                   note=slope_note, error="Pick lt_0.5, 0.5_to_2, ge_2 or national, or leave the cell blank.")),
         ]
         for row, lc, label, c1, c2, name, opts in site:
-            S.cell(lc, label, row=row, font=label_font, align=CENTER_NOWRAP)
-            self.inputs[name] = self._entry(S, row, c1, c2, name, **opts)
-        S.cell(10, "Slope class used", row=4, font=label_font, align=CENTER_NOWRAP)
-        S.cell(11, None, row=4, align=CENTER_NOWRAP)
+            S.cell(lc, label, row=row, font=site_font, align=CENTER_NOWRAP)
+            self.inputs[name] = self._entry(S, row, c1, c2, name, font=entry_font, align=entry_align, **opts)
+        S.cell(10, "Slope class used", row=4, font=site_font, align=CENTER_NOWRAP)
+        S.cell(11, None, row=4, align=entry_align, font=entry_font)
         S.merge(4, 11, 4, 13)
         self.inputs["ctx_slope_class"] = S.name_cell("calc_slope_class", 11, 4)
         for r in (2, 3, 4):
@@ -1094,12 +1261,9 @@ class Builder:
     def build_metrics(self):
         ws = self.wb.create_sheet("Metrics")
         S = Sheet(self.wb, ws, "Metrics")
+        S.cell(M_GOOD, NO_INPUT, font=FONT_BOLD)
         S.title("EASI calculator: metric scoring")
-        S.cell(1, "Read only. One block per function: the inputs it reads, the route that applied, the rating, "
-                  "the index anchor and the function score. Ratings follow the application's catalog exactly. "
-                  "The entries live on the EASI Score sheet.",
-               font=FONT_NOTE)
-        S.row += 2
+        S.row += 1
         A = {r: self.anchor_ref[r] for r in RATINGS}
         n = 0
         for m in self.metrics:
@@ -1109,16 +1273,43 @@ class Builder:
             S.cell(1, f"{n}. {m['functionName']}", font=Font(bold=True, size=11))
             S.cell(2, f"{method['title']} ({method['methodKey']}, {method['operator']})", font=FONT_NOTE)
             S.row += 1
-            S.header("Item", "Value", "Rating", "Index", "Note")
+            S.header("Item", "Value", "Good", "Fair", "Poor", "Rating", "Index", "Note")
+            for col, rating in ((M_GOOD, "Good"), (M_FAIR, "Fair"), (M_POOR, "Poor")):
+                S.cell(col, row=S.row - 1, fill=solid(CLASS_FILL[rating]), align=CENTER_NOWRAP)
             cells = getattr(self, f"_m_{method['methodKey'].replace('-', '_')}", self._m_generic)(S, method, A)
             cells["functionId"] = m["functionId"]
             self.result_cells[m["metricId"]] = cells
             S.blank()
-        for col, width in ((1, 52), (2, 18), (3, 12), (4, 12), (5, 70)):
+        for col, width in ((M_ITEM, 52), (M_VALUE, 18), (M_GOOD, 15), (M_FAIR, 17), (M_POOR, 15),
+                           (M_RATING, 12), (M_INDEX, 12), (M_NOTE, 70)):
             ws.column_dimensions[get_column_letter(col)].width = width
         ws.sheet_view.showGridLines = False
+        ws.sheet_properties.tabColor = C_TAB_NO_INPUT
         ws.protection.sheet = True
         ws.protection.password = PASSWORD
+
+    # -- the Good / Fair / Poor ranges beside each rated value (owner, 2026-10-23) -------
+    def write_bins(self, S: Sheet, row: int, bins: dict | None):
+        """The ranges a value is rated against, in the three columns after it."""
+        for col, rating in ((M_GOOD, "Good"), (M_FAIR, "Fair"), (M_POOR, "Poor")):
+            value = (bins or {}).get(rating)
+            if value:
+                S.cell(col, value, row=row, fill=solid(BIN_FILL[rating]), align=CENTER)
+
+    def rule_bins(self, rule: dict) -> dict:
+        """A catalog rule's ranges: its bands' labels, or for a curve the ranges of the curve the
+        rule's lookup row (``_rule_formula``, just written) found for this scenario."""
+        if rule.get("curve"):
+            return self.live_curve_bins(rule["curve"]["set"], self.last_curve_row)
+        return band_bins(rule.get("bands") or [])
+
+    def live_curve_bins(self, set_id: str, row_ref: str) -> dict:
+        """The ranges of the curve in row ``row_ref`` of the curve table (the scenario's region or
+        slope class, else the national curve), rounded for reading; the rating itself is exact."""
+        digits, unit = CURVE_DISPLAY.get(set_id, (2, ""))
+        x = dict((k, f"ROUND(INDEX({self.curve_col_range[k]},{row_ref}),{digits})") for k in ("x39", "x69"))
+        bins = curve_bins(self.curves[set_id]["higherIsBetter"], x["x39"], x["x69"], unit, formula=True)
+        return dict((k, f'=IF(NOT(ISNUMBER({row_ref})),"",{v})') for k, v in bins.items())
 
     # -- shared block pieces --------------------------------------------------
     def _finish(self, S: Sheet, key: str, rating_formula: str, A: dict, route_formula: str,
@@ -1144,21 +1335,21 @@ class Builder:
         if combined_formula is not None:
             S.cell(1, "Combined value"); S.cell(2, combined_formula, fill=FILL_CALC)
             cells["combined"] = S.name_cell(f"{key}_combined", 2, S.row); S.row += 1
-        S.cell(1, "Computed rating (before the override score)"); S.cell(3, rating_formula, fill=FILL_CALC)
-        cells["computed"] = S.name_cell(f"{key}_computed", 3, S.row); S.row += 1
-        S.cell(1, "Override score (optional entry on the EASI Score sheet)")
+        S.cell(1, "Computed rating (before the override score)"); S.cell(M_RATING, rating_formula, fill=FILL_CALC)
+        cells["computed"] = S.name_cell(f"{key}_computed", M_RATING, S.row); S.row += 1
+        S.cell(1, "Override score (optional entry on the Scenario sheet)")
         S.cell(2, link_formula(ov), fill=FILL_CALC)
-        S.cell(5, "Replaces the computed rating, as a rating changed in the web application does."
+        S.cell(M_NOTE, "Replaces the computed rating, as a rating changed in the web application does."
                   + (" Complete observed entries take precedence." if blocked else ""),
                font=FONT_NOTE, wrap=True)
         S.row += 1
         S.cell(1, "Function rating")
-        S.cell(3, f"=IF({applies},{ov},{cells['computed']})", fill=FILL_CALC, font=FONT_BOLD)
-        cells["rating"] = S.name_cell(f"{key}_rating", 3, S.row)
-        S.cell(4, "=" + index_from_rating(cells["rating"], A), fill=FILL_CALC, fmt="0.000")
-        cells["index"] = S.name_cell(f"{key}_index", 4, S.row)
+        S.cell(M_RATING, f"=IF({applies},{ov},{cells['computed']})", fill=FILL_CALC, font=FONT_BOLD)
+        cells["rating"] = S.name_cell(f"{key}_rating", M_RATING, S.row)
+        S.cell(M_INDEX, "=" + index_from_rating(cells["rating"], A), fill=FILL_CALC, fmt="0.000")
+        cells["index"] = S.name_cell(f"{key}_index", M_INDEX, S.row)
         if note:
-            S.cell(5, note, font=FONT_NOTE, wrap=True)
+            S.cell(M_NOTE, note, font=FONT_NOTE, wrap=True)
         S.row += 1
         S.cell(1, "Function score (0 to 15)")
         r = cells["rating"]
@@ -1174,8 +1365,9 @@ class Builder:
         return cells
 
     def _input_row(self, S: Sheet, key: str, label: str, rule_formula: str | None, A: dict,
-                   note: str = "", value_ref: str | None = None) -> tuple[str, str, str]:
-        """An input row: value, rating (if rule), index. Returns (value, rating, index) refs.
+                   note: str = "", value_ref: str | None = None, bins: dict | None = None) -> tuple[str, str, str]:
+        """An input row: value, its Good / Fair / Poor ranges, rating (if rule), index. Returns
+        (value, rating, index) refs.
 
         The value returned is the entry cell itself, never the mirror in column
         B: in Excel a formula that references an empty cell evaluates to 0, so a
@@ -1183,16 +1375,17 @@ class Builder:
         """
         vref = value_ref or self.inputs[key]
         S.cell(1, label); S.cell(2, f'=IF({vref}="","",{vref})', fill=FILL_CALC)
+        self.write_bins(S, S.row, bins)
         v = vref
         rat = idx = ""
         if rule_formula is not None:
-            S.cell(3, "=" + rule_formula, fill=FILL_CALC)
-            rat = S.ref(3, S.row)
-            S.cell(4, "=" + index_from_rating(rat, A), fill=FILL_CALC, fmt="0.000")
-            idx = S.ref(4, S.row)
+            S.cell(M_RATING, "=" + rule_formula, fill=FILL_CALC)
+            rat = S.ref(M_RATING, S.row)
+            S.cell(M_INDEX, "=" + index_from_rating(rat, A), fill=FILL_CALC, fmt="0.000")
+            idx = S.ref(M_INDEX, S.row)
             self.input_rating[(self.current_mkey, key)] = rat
         if note:
-            S.cell(5, note, font=FONT_NOTE, wrap=True)
+            S.cell(M_NOTE, note, font=FONT_NOTE, wrap=True)
         S.row += 1
         return v, rat, idx
 
@@ -1210,7 +1403,8 @@ class Builder:
                    font=FONT_NOTE)
             S.cell(2, "=" + self.curve_lookup(spec["set"], strat), fill=FILL_CALC)
             row_ref = S.ref(2, S.row)
-            S.cell(5, f'=INDEX({self.curve_key_range},{row_ref})', fill=FILL_CALC, font=FONT_NOTE)
+            self.last_curve_row = row_ref
+            S.cell(M_NOTE, f'=INDEX({self.curve_key_range},{row_ref})', fill=FILL_CALC, font=FONT_NOTE)
             S.row += 1
             S.cell(1, "Curve index (interpolated, 0 to 1; Good at or above 0.69, Fair at or above 0.39)",
                    font=FONT_NOTE)
@@ -1228,12 +1422,12 @@ class Builder:
             rule = sm.rule_for_input(method, i) if not i.get("regionalBands") else i
             x = self.inputs[i["key"]]
             formula = self._rule_formula(S, rule, x, self.inputs["ctx_region"])
-            _, _, idx = self._input_row(S, i["key"], i["label"], formula, A)
+            _, _, idx = self._input_row(S, i["key"], i["label"], formula, A, bins=self.rule_bins(rule))
             idx_refs.append(idx)
             first_row = first_row or S.row - 1
         last_row = S.row - 1
         allow = bool((method.get("formula") or {}).get("allowPartial"))
-        idx_rng = S.rng(4, first_row, last_row)
+        idx_rng = S.rng(M_INDEX, first_row, last_row)
         rated = f"COUNT({idx_rng})"
         pick = "MIN" if op == "worst_index" else "MAX"
         gate = f"{rated}=0" if allow else f"{rated}<{len(required)}"
@@ -1272,9 +1466,11 @@ class Builder:
         all_num = "AND(" + ",".join(f"ISNUMBER({r})" for r in refs) + ")"
         combined = f'=IF({all_num},ROUND(MIN({"+".join(refs)},{cap}),12),"")'
         S.cell(1, f"Combined value (sum capped at {method['formula']['cap']})"); S.cell(2, combined, fill=FILL_CALC)
+        comb_row = S.row
         comb = S.name_cell(f"{key}_combined", 2, S.row); S.row += 1
         rule = sm.rule_for_method(method)
         rating = "=" + self._rule_formula(S, rule, comb, self.inputs["ctx_region"])
+        self.write_bins(S, comb_row, self.rule_bins(rule))
         cells = self._finish(S, key, rating, A, "=" + q("automatic method"),
                              note="All classes are required. A missing class is unknown, not zero.")
         cells["combined"] = comb
@@ -1286,6 +1482,7 @@ class Builder:
 
     def _threshold(self, S, key, method, A, note=""):
         inp = next(i for i in method["inputs"] if not i.get("contextOnly"))
+        value_row = S.row
         v, _, _ = self._input_row(S, inp["key"], inp["label"], None, A)
         for ctx in (i for i in method["inputs"] if i.get("contextOnly")):
             if ctx["key"] in self.inputs or ctx["key"] == "fcodeContext":
@@ -1293,6 +1490,7 @@ class Builder:
                 self._input_row(S, ctx["key"], ctx["label"] + " (context only)", None, A, value_ref=ref)
         rule = sm.rule_for_method(method)
         rating = "=" + self._rule_formula(S, rule, v, self.inputs["ctx_region"])
+        self.write_bins(S, value_row, self.rule_bins(rule))
         cells = self._finish(S, key, rating, A, "=" + q("automatic method"), note=note)
         self.input_rating[(key, inp["key"])] = cells["computed"]
         return cells
@@ -1310,6 +1508,7 @@ class Builder:
         combined = (f'=IF(AND({",".join(guards)}),ROUND(({fnum(f.get("numeratorMultiplier", 1))}*{nv})/'
                     f'({fnum(f.get("denominatorMultiplier", 1))}*{dv}),12),"")')
         S.cell(1, "Degree of regulation (%)"); S.cell(2, combined, fill=FILL_CALC)
+        self.write_bins(S, S.row, band_bins(method["bands"]))
         comb = S.name_cell("m04_combined", 2, S.row); S.row += 1
         rating = "=" + bands_formula(method["bands"], comb)
         cells = self._finish(S, "m04", rating, A, "=" + q("automatic method"))
@@ -1336,12 +1535,13 @@ class Builder:
         # inputs of the automatic proxy
         bhr = next(i for i in method["inputs"] if i["key"] == "bhr")
         er = next(i for i in method["inputs"] if i["key"] == "er")
-        _, _, bhr_idx = self._input_row(S, "bhr", bhr["label"], bands_formula(bhr["bands"], self.inputs["bhr"]), A)
+        _, _, bhr_idx = self._input_row(S, "bhr", bhr["label"], bands_formula(bhr["bands"], self.inputs["bhr"]), A,
+                                        bins=band_bins(bhr["bands"]))
         first = S.row - 1
         er_rule = sm.rule_for_input(method, er)
         er_formula = self._rule_formula(S, er_rule, self.inputs["er"], None)
-        _, _, er_idx = self._input_row(S, "er", er["label"], er_formula, A)
-        idx_rng = S.rng(4, first, S.row - 1)
+        _, _, er_idx = self._input_row(S, "er", er["label"], er_formula, A, bins=self.rule_bins(er_rule))
+        idx_rng = S.rng(M_INDEX, first, S.row - 1)
         fcode = self.inputs["ctx_fcode"]
         canal = "OR(" + ",".join(f"{fcode}={c}" for c in self.canal_codes) + ")"
         stage, note_ref = self.inputs["ov_stageClass"], self.inputs["ov_indicators"]
@@ -1359,15 +1559,17 @@ class Builder:
 
     def _m_bhr_bank_instability_susceptibility(self, S, method, A):
         key = "m10"
-        v, _, _ = self._input_row(S, "bhr", method["inputs"][0]["label"], None, A)
+        v, _, _ = self._input_row(S, "bhr", method["inputs"][0]["label"], None, A, bins=band_bins(method["bands"]))
         var = self.variant("bhr-bank-instability-susceptibility", "observed-bank-condition")
         ero = next(i for i in var["inputs"] if i["key"] == "erodingBankPct")
         arm = next(i for i in var["inputs"] if i["key"] == "armoredBankPct")
         e_ref, a_ref = self.inputs["ov_erodingBankPct"], self.inputs["ov_armoredBankPct"]
         _, _, e_idx = self._input_row(S, "ov_erodingBankPct", "Observed eroding bank (%)",
-                                      bands_formula(ero["bands"], e_ref), A, value_ref=e_ref)
+                                      bands_formula(ero["bands"], e_ref), A, value_ref=e_ref,
+                                      bins=band_bins(ero["bands"]))
         _, _, a_idx = self._input_row(S, "ov_armoredBankPct", "Observed armored bank (%)",
-                                      bands_formula(arm["bands"], a_ref), A, value_ref=a_ref)
+                                      bands_formula(arm["bands"], a_ref), A, value_ref=a_ref,
+                                      bins=band_bins(arm["bands"]))
         observed = f"AND(ISNUMBER({e_ref}),ISNUMBER({a_ref}))"
         proxy_rating = bands_formula(method["bands"], v)
         obs_idx = f"MIN({e_idx},{a_idx})"
@@ -1401,14 +1603,19 @@ class Builder:
             fpv = f"INDEX({self.nut_cols[fp]},{rrow})"
             rating = (f'IF(NOT(ISNUMBER({x})),"",IFERROR(IF({x}<={gfv},"Good",IF({x}>={fpv},"Poor","Fair")),""))')
             label = next(i["label"] for i in method["inputs"] if i["key"] == k)
-            _, rat, idx = self._input_row(S, k, label + " (mg/L)", rating, A)
+            # the region's thresholds, live: Good at or below the first, Poor at or above the second
+            bins = {"Good": f'=IFERROR("≤"&{gfv}&" mg/L","by NARS-9 region")',
+                    "Fair": f'=IFERROR(">"&{gfv}&"-<"&{fpv}&" mg/L","")',
+                    "Poor": f'=IFERROR("≥"&{fpv}&" mg/L","")'}
+            _, rat, idx = self._input_row(S, k, label + " (mg/L)", rating, A, bins=bins)
             refs[k] = idx
         first = S.row - 2
-        idx_rng = S.rng(4, first, S.row - 1)
+        idx_rng = S.rng(M_INDEX, first, S.row - 1)
         var = self.variant("regional-nutrient-condition", "streamcat-chem-integrity-nutrient")
         cat_ref, ws_ref = self.inputs["chemCatchment"], self.inputs["chemWatershed"]
         chem_val = f'IF(AND(ISNUMBER({cat_ref}),ISNUMBER({ws_ref})),ROUND(MIN({cat_ref},{ws_ref}),12),"")'
         S.cell(1, "CHEM fallback value (lower of catchment and watershed)"); S.cell(2, "=" + chem_val, fill=FILL_CALC)
+        self.write_bins(S, S.row, band_bins(var["bands"]))
         chem = S.name_cell(f"{key}_chem", 2, S.row); S.row += 1
         chem_rating = bands_formula(var["bands"], chem)
         primary = f"COUNT({idx_rng})>0"
@@ -1426,13 +1633,19 @@ class Builder:
         hit = f"INDEX({self.att_ratings},MATCH({keyx},{self.att_keys},0))"
         att = f'IF({cat}="","",IFERROR(IF({hit}="none","",{hit}),""))'
         S.cell(1, "ATTAINS category"); S.cell(2, f'=IF({cat}="","",{cat})', fill=FILL_CALC)
-        S.cell(3, "=" + att, fill=FILL_CALC); att_ref = S.ref(3, S.row)
-        S.cell(4, "=" + index_from_rating(att_ref, A), fill=FILL_CALC, fmt="0.000"); S.row += 1
+        categories: dict = {}
+        for code, item in self.methods["attains-regulatory-category"]["formula"]["lookup"].items():
+            if item.get("rating"):
+                categories.setdefault(item["rating"], []).append(str(code))
+        self.write_bins(S, S.row, dict((r, "Category " + ", ".join(c)) for r, c in categories.items()))
+        S.cell(M_RATING, "=" + att, fill=FILL_CALC); att_ref = S.ref(M_RATING, S.row)
+        S.cell(M_INDEX, "=" + index_from_rating(att_ref, A), fill=FILL_CALC, fmt="0.000"); S.row += 1
         self.input_rating[(key, "category")] = att_ref
         var = self.variant("attains-regulatory-category", "streamcat-chem-integrity-regulatory")
         cat_ref, ws_ref = self.inputs["chemCatchment"], self.inputs["chemWatershed"]
         chem_val = f'IF(AND(ISNUMBER({cat_ref}),ISNUMBER({ws_ref})),ROUND(MIN({cat_ref},{ws_ref}),12),"")'
         S.cell(1, "CHEM fallback value (lower of catchment and watershed)"); S.cell(2, "=" + chem_val, fill=FILL_CALC)
+        self.write_bins(S, S.row, band_bins(var["bands"]))
         chem = S.name_cell(f"{key}_chem", 2, S.row); S.row += 1
         chem_rating = bands_formula(var["bands"], chem)
         route = f'=IF({att_ref}<>"","ATTAINS category",IF({chem_rating}="","not rated","CHEM integrity fallback"))'
@@ -1448,9 +1661,10 @@ class Builder:
         p = self.inputs["prGBmmi"]
         valid = f"AND(ISNUMBER({p}),{p}>=0,{p}<=1)"
         S.cell(1, method["inputs"][0]["label"]); S.cell(2, f'=IF({p}="","",{p})', fill=FILL_CALC)
+        self.write_bins(S, S.row, band_bins(method["bands"]))
         model_rating = bands_formula(method["bands"], p)
-        S.cell(3, f"=IF({valid},{model_rating},\"\")", fill=FILL_CALC); mr = S.ref(3, S.row)
-        S.cell(4, "=" + index_from_rating(mr, A), fill=FILL_CALC, fmt="0.000"); S.row += 1
+        S.cell(M_RATING, f"=IF({valid},{model_rating},\"\")", fill=FILL_CALC); mr = S.ref(M_RATING, S.row)
+        S.cell(M_INDEX, "=" + index_from_rating(mr, A), fill=FILL_CALC, fmt="0.000"); S.row += 1
         self.input_rating[(key, "prGBmmi")] = mr
         var = self.variant("streamcat-prg-bmmi", "streamcat-integrity-products")
         prods = var["formula"]["products"]
@@ -1465,6 +1679,7 @@ class Builder:
         both = "AND(" + ",".join(f"ISNUMBER({r})" for r in prod_exprs) + ")"
         fb_val = f'IF({both},ROUND(MIN({",".join(prod_exprs)}),12),"")'
         S.cell(1, "Fallback value (lower of ICI and IWI)"); S.cell(2, "=" + fb_val, fill=FILL_CALC, fmt="0.0000")
+        self.write_bins(S, S.row, band_bins(var["bands"]))
         fb = S.name_cell(f"{key}_products", 2, S.row); S.row += 1
         fb_rating = bands_formula(var["bands"], fb)
         route = f'=IF({mr}<>"","published benthic model",IF({fb_rating}="","not rated","ICI/IWI integrity fallback"))'
@@ -1487,7 +1702,7 @@ class Builder:
         S.title("EASI calculator: results")
         S.cell(1, "Engine sheet (hidden). Function scores, outcome sub-indices and the Ecosystem Condition Index, "
                   "computed with the STAF rollup: unrated functions leave both the numerator and the denominator. "
-                  "The EASI Score sheet displays these cells.",
+                  "The Scenario sheet displays these cells.",
                font=FONT_NOTE)
         S.row += 2
         S.header("Function", "Discipline", "Metric", "Rating", "Score", "Class", "Physical", "Chemical",
@@ -1565,11 +1780,11 @@ class Builder:
         ws.protection.sheet = True
         ws.protection.password = PASSWORD
 
-    # ---- EASI Score: ratings, scores, rollup, summary, legends, charts (second pass)
+    # ---- Scenario: ratings, scores, rollup, summary, legends, charts (second pass)
     def build_score_results(self):
         ws, S = self.score_ws, self.score
         first_body, last_body = 8, self.front_last
-        score_font = Font(bold=True, size=12)
+        score_font = Font(size=12)          # SFARI's worksheet: 12 pt, the class colours mark them
         # function columns and per-row ratings
         metric_rows = []   # (mkey, metric, first, last)
         for n, m in enumerate(self.metrics, 1):
@@ -1627,7 +1842,7 @@ class Builder:
                    fmt="0.00", font=score_font)
             S.merge(first, 3, last, 3)
         S.cell(1, link_formula(self.rollup["eci_display"]), row=first_body, align=CENTER_NOWRAP, fmt="0.00",
-               font=Font(bold=True, size=14))
+               font=Font(size=12))
         S.merge(first_body, 1, last_body, 1)
         # borders: thin grid, medium around the groups of columns and the outcomes
         box(ws, 5, 1, 7, 13, outer=MED, inner=THIN)
@@ -1695,8 +1910,8 @@ class Builder:
         self._legends()
         self._charts(metric_rows)
         # widths, panes, print setup, protection
-        for col, width in ((1, 15.6), (2, 13), (3, 13), (4, 17), (5, 13), (6, 27), (7, 10), (8, 12), (9, 46),
-                           (10, 16), (11, 10), (12, 12), (13, 40), (14, 3), (15, 17), (16, 32), (17, 8),
+        for col, width in ((1, 17), (2, 13), (3, 13), (4, 17), (5, 13), (6, 31), (7, 10), (8, 12), (9, 46),
+                           (10, 25), (11, 10), (12, 12), (13, 40), (14, 3), (15, 17), (16, 32), (17, 8),
                            (18, 10), (19, 10), (20, 11), (21, 3), (22, 8), (23, 20), (24, 3), (25, 8), (26, 20)):
             ws.column_dimensions[get_column_letter(col)].width = width
         ws.freeze_panes = "A8"
@@ -1894,112 +2109,131 @@ class Builder:
         self.score_ws.add_chart(bar("Outcome Score", o_head, o_first, o_last, 1, 0.1, "0.00", 6.5),
                                 f"O{chart_row + 27}")
 
-    # ---- Instructions and Metadata ----------------------------------------
+    # ---- Instructions -------------------------------------------------------
     def build_instructions(self):
+        """The Instructions sheet laid out exactly as SFARI's (owner, 2026-10-23): the model block
+        and the colour key on a white ground, then the steps and the comments in ruled boxes."""
         ws = self.wb.create_sheet("Instructions", 0)
         S = Sheet(self.wb, ws, "Instructions")
-        ws.sheet_view.showGridLines = False
         label = Font(name="Arial", size=10, bold=True)
         body = Font(name="Arial", size=10)
+        # SFARI's A1:I13: a white fill and white rules hide the grid behind the model block
+        ground = Side(style="thin", color="FFFFFF")
+        for r in range(1, 14):
+            for c in range(1, 10):
+                cell = ws.cell(row=r, column=c)
+                cell.fill = solid("FFFFFF")
+                cell.border = Border(left=ground, right=ground, top=ground, bottom=ground)
         rows = [
             (1, "Model Name", "Ecosystem Assessment Screening Index (EASI)", label),
             (2, "Developers", DEVELOPERS, None),
-            (3, "", "U.S. Army Engineer Research and Development Center, Environmental Laboratory", None),
-            (4, "", "Vicksburg, MS", None),
-            (5, "", EMAILS, None),
-            (7, "Model Version", f"EASI calculator v{TEMPLATE_VERSION}, scoring method {self.method_stamp} "
-                                 f"({self.identity.get('alternative_name')})", body),
+            (3, None, "U.S. Army Engineer Research and Development Center, Environmental Laboratory", None),
+            (4, None, "Vicksburg, MS", None),
+            (5, None, EMAILS, None),
+            (7, "Model Version", MODEL_VERSION, body),
             (8, "Date of Last Update", _dt.datetime.strptime(TEMPLATE_DATE, "%Y-%m-%d"), None),
-            (10, "Waiver", 'This model is provided for free as part of the USACE Technical Report "Ecosystem '
-                           'Assessment Screening Index (EASI)" by ' + DEVELOPERS + ". It ships with the STAF web "
-                           "application, whose EASI Assessment page offers the same download under Get Forms, blank "
-                           "or completed with a site's values.", body),
-            (11, "", "None of the authors nor the US Army Corps of Engineers accepts responsibility or liability "
-                     "for the model's use by third parties.", body),
+            (10, "Waiver", WAIVER, body),
+            (11, None, NO_LIABILITY, body),
         ]
         for r, a, b, font in rows:
-            S.cell(1, a or None, row=r, font=label, align=Alignment(vertical="center"))
-            c = S.cell(2, b, row=r, font=font, align=LEFT_MID)
+            if a:
+                S.cell(1, a, row=r, font=label)
+            c = S.cell(2, b, row=r, font=font)
             if r == 8:
-                c.number_format = "mmmm d, yyyy"
-                c.alignment = Alignment(horizontal="left", vertical="center")
-        ws.row_dimensions[10].height = 45
-        box(ws, 1, 1, 5, 2, outer=THIN, inner=THIN)
-        box(ws, 7, 1, 8, 2, outer=THIN, inner=THIN)
-        box(ws, 10, 1, 11, 2, outer=THIN, inner=THIN)
-        r = 13
-        S.cell(1, "Instructions", row=r, font=label, align=CENTER_NOWRAP); S.merge(r, 1, r, 2)
-        first = r
+                c.number_format = "[$-409]mmmm d, yyyy;@"
+                c.alignment = Alignment(horizontal="left")
+            elif r == 10:
+                c.alignment = Alignment(wrap_text=True)
+        ws.row_dimensions[10].height = 39.6
+        # the colour key, column I
+        S.cell(9, "Color Coding Key:", row=1)
+        key = ((2, "User Input", FILL_INPUT, THIN), (3, "Calculated", None, THIN),
+               (4, "Linked to Another Cell", FILL_LINK, Side(style="thin", color="7F7F7F")),
+               (5, "Override Score Row", FILL_OVERRIDE, THIN))
+        for r, text, fill, rule in key:
+            S.cell(9, text, row=r, fill=fill or solid("FFFFFF"), align=Alignment(horizontal="center"),
+                   border=Border(left=rule, right=rule, top=rule, bottom=rule))
+        S.cell(9, "Protect/unprotect password:", row=6, font=Font(size=10), align=Alignment(horizontal="center"),
+               border=Border(left=ground, right=ground))
+        S.cell(9, PASSWORD, row=7, align=Alignment(horizontal="center"), border=BOX)
+        # the shared edges stay the key's own rules
+        side(ws, 1, 9, 1, 9, bottom=Side())
+        side(ws, 8, 9, 8, 9, top=Side())
+        for r in (2, 3, 4, 5, 7):
+            side(ws, r, 8, r, 8, right=Side())
+        # the steps and the comments, ruled like SFARI's
+        r = 15
+        S.cell(1, "Instructions", row=r, font=label, align=Alignment(horizontal="center"), border=BOX)
+        S.cell(2, None, row=r, border=BOX)
+        S.merge(r, 1, r, 2)
         for i, text in enumerate(INSTRUCTIONS, 1):
             r += 1
-            S.cell(1, f"{i})", row=r, align=Alignment(horizontal="center", vertical="center"))
-            S.cell(2, text, row=r, align=LEFT_MID)
-            ws.row_dimensions[r].height = 15 * lines_for(text, 88)
-        box(ws, first, 1, r, 2, outer=THIN, inner=THIN)
+            self._numbered(S, r, i, text)
+        self._instruction_legends(S, 15, r)
         r += 2
-        S.cell(1, "Comments/Assumptions", row=r, font=label, align=CENTER_NOWRAP); S.merge(r, 1, r, 2)
-        first = r
+        S.cell(1, "Comments/Assumptions", row=r, font=Font(bold=True), align=Alignment(horizontal="center"),
+               border=BOX)
+        S.cell(2, None, row=r, border=BOX)
+        S.merge(r, 1, r, 2)
         for i, text in enumerate(COMMENTS, 1):
             r += 1
-            S.cell(1, f"{i})", row=r, align=Alignment(horizontal="center", vertical="center"))
-            S.cell(2, text, row=r, align=LEFT_MID)
-            ws.row_dimensions[r].height = 15 * lines_for(text, 88)
-        box(ws, first, 1, r, 2, outer=THIN, inner=THIN)
-        # colour coding key
-        S.cell(4, "Color Coding Key:", row=1)
-        for rr, text, fill in ((2, "User Input", FILL_INPUT), (3, "Calculated", None),
-                               (4, "Linked to Another Cell", FILL_LINK),
-                               (5, "Override Score Row", FILL_OVERRIDE)):
-            S.cell(4, text, row=rr, fill=fill, align=CENTER_NOWRAP, border=True)
-        S.cell(4, "Select an orange cell to read its guidance note.", row=6, font=FONT_NOTE)
-        S.cell(4, "Sheets: EASI Score (entries and results), Metrics (every rule and route), "
-                  "Reference (bands, curves, weights), Metadata (method identity).", row=7, font=FONT_NOTE)
-        ws.column_dimensions["A"].width = 20
-        ws.column_dimensions["B"].width = 90
-        ws.column_dimensions["C"].width = 4
-        ws.column_dimensions["D"].width = 28
+            self._numbered(S, r, i, text)
+        for col, width in (("A", 18.5703125), ("B", 67.5703125), ("C", 8.85546875), ("D", 8.85546875),
+                           ("E", 8.85546875), ("F", 8.85546875), ("G", 8.85546875), ("H", 18.85546875),
+                           ("I", 26.7109375)):
+            ws.column_dimensions[col].width = width
         ws.protection.sheet = True
         ws.protection.password = PASSWORD
 
-    def build_metadata(self, generator_sha: str):
-        ws = self.wb.create_sheet("Metadata")
-        S = Sheet(self.wb, ws, "Metadata")
-        S.title("Metadata and version information")
-        S.header("Item", "Value")
-        rows = [
-            ("Calculator version", TEMPLATE_VERSION),
-            ("Calculator date", TEMPLATE_DATE),
-            ("Scoring method digest", self.method_stamp),
-            ("Scoring identity", f"{self.identity.get('alternative_id')} ({self.identity.get('alternative_name')})"),
-            ("Criteria set", config.criteria_set()),
-            ("Reference curves", f"{self.identity.get('curve_count')} curves"),
-            ("Catalog sha256", self.identity.get("catalog_sha256")),
-            ("Curves sha256", self.identity.get("curves_sha256")),
-            ("NARS-9 geography sha256", self.identity.get("nars_geography_sha256")),
-            ("Rating anchors", f"Good {self.rating_index['Good']}, Fair {self.rating_index['Fair']}, Poor {self.rating_index['Poor']}"),
-            ("Function scores", f"Good {self.scores['Good']}, Fair {self.scores['Fair']}, Poor {self.scores['Poor']}"),
-            ("Outcome weights", f"direct {config.WEIGHTS['D']}, indirect {config.WEIGHTS['i']}"),
-            ("Condition classes", "index at or below 0.39 Non-Functioning, at or below 0.69 Functioning-at-Risk, else Functioning"),
-            ("Coverage threshold", str(COVERAGE_THRESHOLD)),
-            ("Worksheet layout", "EASI Score worksheet modelled on the SFARI calculator (entries, summary table, "
-                                 "legends and charts on one sheet); Metrics and Results carry the formulas"),
-            ("Generator", "apps/easi/scripts/build_calculator.py"),
-            ("Generator sha256", generator_sha),
-            ("Generated from", "apps/easi/data/screening-methods.json, reference-curves.json, cwa-mapping.json, "
-                               "easi-metrics.json, scoring-identity.json"),
-            ("Application", "EASI (apps/easi), STAF, USACE-WRISES/staf"),
-            ("Formula vocabulary", "IF AND OR NOT MIN MAX ROUND INDEX MATCH IFERROR ISNUMBER COUNT SUM SUMPRODUCT "
-                                   "AVERAGE STDEV.P PRODUCT UPPER TRIM SUBSTITUTE LEN NA"),
-        ]
-        for k, v in rows:
-            S.cell(1, k, border=True); S.cell(2, v, border=True); S.row += 1
-            self.wb.defined_names[f"meta_{k.lower().replace(' ', '_').replace('-', '_')}"] = DefinedName(
-                f"meta_{k.lower().replace(' ', '_').replace('-', '_')}", attr_text=S.ref(2, S.row - 1))
-        ws.column_dimensions["A"].width = 28
-        ws.column_dimensions["B"].width = 110
-        ws.sheet_view.showGridLines = False
-        ws.protection.sheet = True
-        ws.protection.password = PASSWORD
+    def _instruction_legends(self, S: Sheet, head: int, last: int):
+        """The scoring legends beside the steps, where SFARI's Instructions shows its own: the EASI
+        Index and Function Score classes as colour bars, and the score each rating gives."""
+        ws = S.ws
+        rows = list(range(head + 1, last + 1))
+        thirds = [rows[: len(rows) // 3], rows[len(rows) // 3: 2 * len(rows) // 3], rows[2 * len(rows) // 3:]]
+        classes = ((C_GOOD, "Functioning"), (C_FAIR, "Functioning At-Risk"), (C_POOR, "Non-Functioning"))
+        title = Font(size=11)
+        tick_top = Alignment(horizontal="right", vertical="top")
+        tick_bottom = Alignment(horizontal="right", vertical="bottom")
+        for tick_col, c1, c2, text, edges in ((4, 5, 6, "EASI Index Scoring", ("1.0", "0.7", "0.4", "0.0")),
+                                              (7, 8, 8, "Function Scoring", ("15", "11", "10", "6", "5", "0"))):
+            S.cell(tick_col, text, row=head, font=title, align=Alignment(horizontal="center"))
+            S.merge(head, tick_col, head, c2)
+            for k, (part, (color, label)) in enumerate(zip(thirds, classes)):
+                S.cell(c1, label, row=part[0], fill=solid(color), font=Font(bold=True), align=CENTER)
+                for rr in part:
+                    for cc in range(c1, c2 + 1):
+                        ws.cell(row=rr, column=cc).fill = solid(color)
+                S.merge(part[0], c1, part[-1], c2)
+                box(ws, part[0], c1, part[-1], c2, outer=THIN, inner=None)
+                if len(edges) == 4:        # index: the top, then each class's lower edge
+                    if k == 0:
+                        S.cell(tick_col, edges[0], row=part[0], align=tick_top)
+                    S.cell(tick_col, edges[k + 1], row=part[-1], align=tick_bottom)
+                else:                      # function score: each class's top and bottom score
+                    S.cell(tick_col, edges[2 * k], row=part[0], align=tick_top)
+                    S.cell(tick_col, edges[2 * k + 1], row=part[-1], align=tick_bottom)
+        # the score each rating gives (EASI's counterpart of SFARI's Likert to function score check)
+        S.cell(9, "Rating to Function Score", row=head, font=title, align=Alignment(horizontal="center"))
+        lines = [(f"{self.scores[r]}  {r} ({CLASS_LABELS[r]})", CLASS_FILL[r]) for r in RATINGS]
+        lines.append(("Not rated: left out of the sub-indices and the index", None))
+        for k, (text, color) in enumerate(lines, 1):
+            S.cell(9, text, row=head + k, fill=solid(color) if color else None,
+                   align=Alignment(horizontal="left", vertical="center", indent=1, wrap_text=True), border=BOX)
+
+    def _numbered(self, S: Sheet, row: int, n: int, text: str):
+        """One numbered line of the steps or the comments: the number centred, the text wrapped."""
+        S.cell(1, f"{n})", row=row, align=Alignment(horizontal="center", vertical="center"), border=BOX)
+        S.cell(2, text, row=row, align=LEFT_MID, border=BOX)
+        S.ws.row_dimensions[row].height = 15.0 * lines_for(text, 62)
+
+    def stamp(self, generator_sha: str):
+        """The workbook's identity, out of sight in its document properties: the scoring method
+        digest it was generated under, the package digest of the method files it was generated
+        from (what the apps match before they serve it) and the generator's sha256."""
+        for name, value in ((STAMP_METHOD, self.method_stamp), (STAMP_PACKAGE, method_files_digest()),
+                            (STAMP_GENERATOR, generator_sha)):
+            self.wb.custom_doc_props.append(StringProperty(name=name, value=value))
 
     # ---- assemble -----------------------------------------------------------
     def build(self, generator_sha: str) -> bytes:
@@ -2009,8 +2243,8 @@ class Builder:
         self.build_results()
         self.build_score_results()
         self.build_instructions()
-        self.build_metadata(generator_sha)
-        order = ["Instructions", SCORE, "Metrics", "Results", "Reference", "Metadata", "ChartData"]
+        self.stamp(generator_sha)
+        order = ["Instructions", SCORE, "Metrics", "Results", "Reference", "ChartData"]
         self.wb._sheets = [self.wb[name] for name in order]
         self.wb.active = 1
         for ws in self.wb.worksheets:
@@ -2077,16 +2311,20 @@ def generate(*, method_stamp: str | None = None, generator_sha: str | None = Non
     return Builder(method_stamp=method_stamp).build(generator_sha)
 
 
+def method_files_digest() -> str:
+    """``method_package.package_digest`` of the active method files: the digest a method package
+    of exactly these files carries, and the adopted method's pin names."""
+    from easi import method_package as mp
+    data_dir = Path(config.DATA_DIR)
+    return mp.package_digest({n: hashlib.sha256((data_dir / n).read_bytes()).hexdigest() for n in mp.METHOD_FILES})
+
+
 def committed_stamps(path: str) -> dict:
-    """The identity a committed workbook records in its Metadata sheet: the scoring method
-    digest it was generated under and the sha256 of the generator that built it."""
-    from openpyxl import load_workbook
-    wb = load_workbook(path, read_only=True)
-    try:
-        rows = {r[0].value: r[1].value for r in wb["Metadata"].iter_rows(min_row=3) if r[0].value}
-    finally:
-        wb.close()
-    return {"method": rows.get("Scoring method digest"), "generator": rows.get("Generator sha256")}
+    """The identity a committed workbook records in its document properties: the scoring
+    method digest it was generated under and the sha256 of the generator that built it."""
+    with open(path, "rb") as f:
+        stamps = served.workbook_stamps(f.read())
+    return {"method": stamps.get(STAMP_METHOD), "generator": stamps.get(STAMP_GENERATOR)}
 
 
 def accepted_method_stamps() -> list[str]:
@@ -2103,9 +2341,7 @@ def accepted_method_stamps() -> list[str]:
     try:
         entry = ma.library_entry()
         if entry is not None:
-            data_dir = Path(config.DATA_DIR)
-            active = mp.package_digest({n: hashlib.sha256((data_dir / n).read_bytes()).hexdigest()
-                                        for n in mp.METHOD_FILES})
+            active = method_files_digest()
             version = ma.default_version(entry)
             envelope = json.loads((ma.version_dir(entry, version) / mp.ENVELOPE)
                                   .read_text(encoding="utf-8"))

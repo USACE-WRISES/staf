@@ -752,15 +752,26 @@ def _now() -> str:
 
 
 def calculator_stamps(blob: bytes) -> dict:
-    """The identity an EASI calculator workbook records in its Metadata sheet (rows from the
-    third: label, value): the scoring method digest it was generated under and the sha256 of
-    the generator that built it (``apps/easi/scripts/build_calculator.py``)."""
+    """The identity an EASI calculator workbook records: the scoring method digest it was
+    generated under and the sha256 of the generator that built it
+    (``apps/easi/scripts/build_calculator.py``). Since 2026-10-23 they are custom document
+    properties (the workbook has no Metadata sheet); an older workbook keeps them in its
+    Metadata sheet (rows from the third: label, value)."""
     import io
+    import re
+    import zipfile
+    from xml.sax.saxutils import unescape
+    with zipfile.ZipFile(io.BytesIO(blob)) as zf:
+        custom = zf.read("docProps/custom.xml").decode("utf-8") if "docProps/custom.xml" in zf.namelist() else ""
+    props = dict((unescape(n), unescape(v)) for n, v in re.findall(
+        r'<(?:\w+:)?property\b[^>]*\bname="([^"]*)"[^>]*>\s*<vt:lpwstr\b[^>]*>([^<]*)</vt:lpwstr>', custom))
+    if "Scoring method digest" in props:
+        return {"method": props.get("Scoring method digest"), "generator": props.get("Generator sha256")}
     from openpyxl import load_workbook
     wb = load_workbook(io.BytesIO(blob), read_only=True)
     try:
         if "Metadata" not in wb.sheetnames:
-            raise CandidateError("the workbook has no Metadata sheet; it is not an EASI calculator")
+            raise CandidateError("the workbook records no scoring method; it is not an EASI calculator")
         rows = {r[0].value: r[1].value for r in wb["Metadata"].iter_rows(min_row=3) if r and r[0].value}
     finally:
         wb.close()

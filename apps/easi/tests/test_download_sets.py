@@ -80,7 +80,7 @@ def test_every_download_opens_its_own_tab():
 
 
 def test_the_download_names_are_plain():
-    assert calculator.filled_filename() == "easi-calculator.xlsx"
+    assert calculator.filled_filename() == "2026-10-23_EASI Calculator.xlsx"
     assert report.desktop_metrics_filename() == "easi-desktop-metrics.pdf"
     src = Path(app.__file__).read_text(encoding="utf-8")
     assert 'f"easi-report{staf_web.scenario_suffix(' in src and "easi_report" not in src

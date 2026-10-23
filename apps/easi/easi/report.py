@@ -804,7 +804,7 @@ def build_desktop_metrics_pdf(result: dict) -> bytes:
         story += [Paragraph(_esc(line), note_style) for line in disclosures]
         story += [Paragraph(f"<b>{_esc(r['function'])}.</b> {_esc(r['note'])}", note_style) for r in notes]
     story += [Spacer(1, 8), Paragraph(
-        "The entries are the values the EASI calculator takes in column J of its EASI Score sheet, as the "
+        "The entries are the values the EASI calculator takes in column J of each scenario worksheet, as the "
         "application rated them. Generated from national datasets. A desktop screening estimate with "
         "per-metric confidence, not a field-validated assessment.", dim)]
 

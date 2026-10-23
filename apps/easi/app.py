@@ -4918,11 +4918,16 @@ def server(input, output, session):
 
     @render.download(filename=calculator.filled_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_site_calc():
-        # the calculator completed from this batch site's result (batch has no Assessment
-        # page, so Get Forms is not reachable from here)
+        # the workbook completed from this batch site's result, as Get Forms assembles it with one
+        # scenario (batch has no Assessment page, so Get Forms is not reachable from here)
         base = _modal_download_base()
         if base:
-            yield calculator.build_filled(base)
+            try:
+                data = easi_book.build(base, [(ScenarioSet().baseline, base.get("report") or {})], {})
+            except Exception as exc:  # noqa: BLE001 - never a failed download: the single calculator instead
+                print(f"EASI: the batch site workbook failed ({exc!r}); serving the single calculator", flush=True)
+                data = calculator.build_filled(base)
+            yield data
 
 
     @render.ui

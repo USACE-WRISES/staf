@@ -14,6 +14,10 @@ import { CT_CHART, CT_DRAWING, Package, R_CHART, R_DRAWING, type Rel, rel } from
 import { type DefinedName, definedName, WorkbookModel } from './workbook'
 
 const UNESC = { '&quot;': '"', '&apos;': "'" }
+/** clone._unescape: XML text to its characters, numeric character references first (openpyxl writes a
+ * formula's non-ASCII characters as ``&#8805;``), then the entities. */
+const unesc = (text: string): string => xmlUnescape(text.replace(/&#(x[0-9A-Fa-f]+|[0-9]+);/g,
+  (_m, n: string) => String.fromCodePoint(n[0] === 'x' || n[0] === 'X' ? parseInt(n.slice(1), 16) : parseInt(n, 10))), UNESC)
 const UID_NS = '6f1c2a52-4e7f-4a8e-9b1d-7d1d8f0a5c11'
 const FORMULA_TAGS = ['f', 'formula', 'formula1', 'formula2', 'xm:f']
 const REFUSE: [string, string][] = [['<tableParts', 'a table'], ['<oleObjects', 'an embedded object'], ['<controls', 'a form control'],
@@ -29,7 +33,7 @@ const tagPattern = (tag: string) => new RegExp(`(<${reEscape(tag)}\\b[^>]*?(?<!/
 
 function rewriteTag(xml: string, tag: string, fn: (text: string) => string): string {
   return xml.replace(tagPattern(tag), (all: string, open: string, body: string, close: string) => {
-    const text = xmlUnescape(body, UNESC)
+    const text = unesc(body)
     const next = fn(text)
     return next === text ? all : open + xmlEscape(next) + close
   })
@@ -40,7 +44,7 @@ export function rewriteSheetXml(xml: string, mapping: Map<string, string>): stri
   if (!mapping.size) return xml
   for (const tag of FORMULA_TAGS) xml = rewriteTag(xml, tag, (t) => F.rewrite(t, mapping))
   return xml.replace(/(<hyperlink\b[^>]*\slocation=")([^"]*)(")/g, (all: string, open: string, value: string, close: string) => {
-    const loc = xmlUnescape(value, UNESC)
+    const loc = unesc(value)
     const next = F.rewrite(loc, mapping)
     return next === loc ? all : open + xmlEscape(next, { '"': '&quot;' }) + close
   })
@@ -56,14 +60,14 @@ export function sheetFormulas(xml: string): string[] {
   const out: string[] = []
   for (const tag of FORMULA_TAGS) {
     const re = new RegExp(`<${reEscape(tag)}\\b[^>]*?(?<!/)>([\\s\\S]*?)</${reEscape(tag)}>`, 'g')
-    for (const m of xml.matchAll(re)) out.push(xmlUnescape(m[1], UNESC))
+    for (const m of xml.matchAll(re)) out.push(unesc(m[1]))
   }
-  for (const m of xml.matchAll(/<hyperlink\b[^>]*\slocation="([^"]*)"/g)) out.push(xmlUnescape(m[1], UNESC))
+  for (const m of xml.matchAll(/<hyperlink\b[^>]*\slocation="([^"]*)"/g)) out.push(unesc(m[1]))
   return out.filter(strip)
 }
 
 export function chartFormulas(xml: string): string[] {
-  return [...xml.matchAll(/<c:f\b[^>]*?(?<!\/)>([\s\S]*?)<\/c:f>/g)].map((m) => m[1]).filter(strip).map((t) => xmlUnescape(t, UNESC))
+  return [...xml.matchAll(/<c:f\b[^>]*?(?<!\/)>([\s\S]*?)<\/c:f>/g)].map((m) => m[1]).filter(strip).map((t) => unesc(t))
 }
 
 function deterministicUids(xml: string, seed: string): string {
@@ -210,7 +214,7 @@ export class ScenarioCloner {
       for (const m of xml.matchAll(CELL)) {
         const ref = /\br="([A-Z]+\d+)"/.exec(m[1])
         const fm = /<f\b[^>]*?(?<!\/)>([\s\S]*?)<\/f>/.exec(m[2] ?? '')
-        if (ref && fm && [...F.referencedSheets(xmlUnescape(fm[1], UNESC))].some((x) => members.has(x))) {
+        if (ref && fm && [...F.referencedSheets(unesc(fm[1]))].some((x) => members.has(x))) {
           if (!inside(cellRange(ref[1]), box)) throw new CloneError(`${blockSheet}!${ref[1]} reads the score sheet outside ${rng}`)
         }
       }

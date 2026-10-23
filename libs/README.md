@@ -95,8 +95,9 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   rules in `assets/staf.css`; owner, 2026-10-08): Get Forms offers the field forms (SFARI, DEEP),
   the metrics PDF, then the completed and blank workbooks; the report's pinned footer offers PDF,
   CSV, GeoJSON and the completed workbook, then Close. Download names are plain, with no site id
-  (`easi-calculator.xlsx`, `2026-10-19_SFARI Calculator.xlsx`, `deep-calculator-<id>-v<N>-<status>.xlsx`;
-  SFARI's name is its calculator's version, blank or completed, owner 2026-10-19; DEEP's names
+  (`2026-10-23_EASI Calculator.xlsx`, `2026-10-19_SFARI Calculator.xlsx`,
+  `deep-calculator-<id>-v<N>-<status>.xlsx`; EASI's and SFARI's names are their calculator's date,
+  blank or completed, owner 2026-10-19 and 2026-10-23; DEEP's names
   carry the version and the status, owner 2026-10-14). `assemble(..., banner=)` puts
   a status band across the top of the Summary and ReferenceCurves tabs, with a print header and a
   tab color (DEEP passes its assessment's status; EASI and SFARI pass nothing).

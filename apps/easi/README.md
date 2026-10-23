@@ -383,13 +383,14 @@ complete availability, not 20 independent field observations.
   ratings, and the page warns before it is closed with work that differs from the last Save or Open.
 - **Compare** shows the ECI, the three sub-indices and every function with the change from
   Existing Conditions; the report opens with the summary block (`easi/workbook.py`).
-- **The completed workbook** (Get Forms and the report) is one file: the calculator's
-  Instructions (the tab it opens on, owner 2026-10-19), Summary, Existing Conditions, a live
-  calculator per alternative, ReferenceCurves (the six curves this site was scored against and
-  the rating bands), then the calculator's other sheets
-  (`libs/staf_workbook`). Every download opens its own tab, which the browser closes once the
-  file starts, so the page never navigates; names are plain (`easi-calculator.xlsx`,
-  `easi-report.pdf`), with no site id. `workbook.py`, `scenario_state.py`,
+- **The completed workbook** (Get Forms and the report) is one file, laid out as SFARI's (owner,
+  2026-10-23): the calculator's Instructions (the tab it opens on), Summary (Reach name and NARS-9
+  region read live from Existing Conditions), Existing Conditions, a live calculator per
+  alternative, then Metrics and Reference (`libs/staf_workbook`). There is no ReferenceCurves tab:
+  Reference draws every curve and Metrics shows the Good, Fair and Poor ranges each value was rated
+  against. Every download opens its own tab, which the browser closes once the file starts, so the
+  page never navigates; names are plain (`2026-10-23_EASI Calculator.xlsx`, the calculator's date,
+  blank or completed; `easi-report.pdf`), with no site id. `workbook.py`, `scenario_state.py`,
   `session.py` and `_vendor/staf_workbook/` are presentation code outside the method digests.
 
 ## Data sources (all public, no API keys)
@@ -561,8 +562,9 @@ full rebuild, which regenerates methods and validation assets.
 
 ## Excel calculator
 
-`www/calculator/EASI_Calculator_1.1.xlsx` is an offline implementation of the
-same methodology: the user enters the desktop quantities, the NARS-9 region and
+`www/calculator/EASI_Calculator_Template_2026-10-23.xlsx` is an offline implementation of the
+same methodology, laid out as the SFARI calculator (owner, 2026-10-23: Instructions, a "Scenario"
+worksheet, Metrics and Reference; Model Version "EASI v1.0"; named by its date): the user enters the desktop quantities, the NARS-9 region and
 the channel slope, and the workbook rates the 20 metrics, applies the reference
 curves and the STAF rollup, and reports the sub-indices and the ECI. Every
 function ends with an **Override Score (Optional)** row, the rating select the
@@ -575,9 +577,20 @@ above it, a right-aligned bold prompt, a taller row) because it is a
 user-defined input and not a desktop quantity. The workbook is generated, never edited by
 hand, by `scripts/build_calculator.py` from the scoring definitions the app reads
 (`data/screening-methods.json`, `data/reference-curves.json`,
-`data/cwa-mapping.json`, `data/easi-metrics.json`, `data/scoring-identity.json`);
-its Metadata sheet carries the method digest and the catalog and curve hashes.
-The version lives in one place, `easi/calculator.py`, which the generator reads.
+`data/cwa-mapping.json`, `data/easi-metrics.json`, `data/scoring-identity.json`).
+The owner's own edit of the workbook (2026-10-23, kept in `notes/2026-10-23_EASI Calculator/`) is
+what the generator writes, checked cell by cell. Metrics shows the Good, Fair and Poor ranges beside
+every rated value (a curve's ranges follow the curve the scenario uses); Reference draws the 34
+reference curves, a chart per curve set, above the tables the formulas read. Neither takes entries
+and both say so. The workbook's identity (scoring method digest, package digest of the method
+files, generator sha256) is in its document properties, out of sight: `--check` regenerates with
+it, the apps serve the template only while the active method files carry the same package digest
+(`calculator.template_path`), and StreamCurves reads it before a calculator rides in a method
+package. The date lives in one place, `easi/calculator.py`, which the generator reads. It is the
+app's own, like SFARI's: the library's v1 and v2 packages keep the 1.0 and 1.1 workbooks they were
+published with. `scripts/build_blank_calculator.py` writes the blank workbook,
+`www/calculator/2026-10-23_EASI Calculator.xlsx` (`workbook.build_blank`: Instructions, Summary, an
+empty Scenario, Metrics, Reference).
 
 **Get Forms** on the Assessment page lists the 20 desktop metrics with the values
 each was rated from and offers three downloads: that list as a PDF
@@ -586,13 +599,13 @@ completed from the screening), and the **blank workbook**. The report's footer, 
 under the report, offers the completed workbook too, after GeoJSON, and the batch per-site report
 offers that site's: the same download sets as SFARI and DEEP (`staf_web.forms_downloads`,
 `staf_web.report_footer`). The blank is also reachable directly at
-`calculator/EASI_Calculator_1.1.xlsx` (`easi/calculator/...` inside STAF), and the site's Apply
+`calculator/2026-10-23_EASI Calculator.xlsx` (`easi/calculator/...` inside STAF), and the site's Apply
 STAF page offers it raw from `main` (`docs/_data/apps.yml`; `tests/test_site_links.py` fails when
 the file is renamed and the site is not).
 
 `calculator.build_filled(result)` completes the workbook without a spreadsheet
 library (openpyxl drops the charts on a round trip and is not a runtime
-dependency): it edits the EASI Score part inside the zip and copies every other
+dependency): it edits the Scenario part inside the zip and copies every other
 part byte for byte. `calculator.entries_from_result` reads the entries from the
 report alone: the values the engine rated, from each row's scoring trace; the
 site block; the NARS-9 region, the feature code and, only where needed, the slope

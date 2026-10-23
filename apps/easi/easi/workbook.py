@@ -1,12 +1,15 @@
-"""EASI's workbook and summary: the calculator once per scenario, then the Summary and
-ReferenceCurves tabs (the shared ``libs/staf_workbook``, vendored in ``_vendor``).
+"""EASI's workbook and summary: the calculator's Instructions, the Summary, then the calculator once
+per scenario, each tab named after its scenario (the shared ``libs/staf_workbook``, vendored in
+``_vendor``). It opens on Instructions. The layout follows SFARI's (owner, 2026-10-23): no
+ReferenceCurves tab (the template's Reference sheet draws every curve and Metrics shows the Good,
+Fair and Poor ranges each value was rated against), and the Summary's site block right under its
+title with Reach name and NARS-9 region read live from Existing Conditions, then a gap.
 
-Presentation code, outside the method digest. The calculator stays the active method's own
-workbook (``calculator.blank_bytes``); each scenario's tab is a copy of its EASI Score sheet with
-that scenario's screening typed in (the values the engine rated, the override scores and the
-notes), and the sheets that compute from it are copied too, hidden for the alternatives.
-ReferenceCurves shows the curves this site was scored against (one per curve metric, for its
-stratum) and the rating bands of the rule-based metrics.
+Presentation code, outside the method digest. The template is the app's own
+(``calculator.template_bytes``); each scenario's tab is a copy of its Scenario sheet with that
+scenario's screening typed in (the values the engine rated, the override scores and the notes), and
+the sheets that compute from it are copied too, hidden for the alternatives. The blank workbook is
+the same with one empty sheet named "Scenario" (``build_blank``).
 """
 from __future__ import annotations
 
@@ -15,11 +18,10 @@ import io
 import re
 import zipfile
 
-from . import calculator, config, screening_methods
+from . import calculator, config
 from ._vendor.staf_workbook.assemble import AssemblySpec, ScenarioInput, assemble
 from ._vendor.staf_workbook.model import compare as cmp_model
 from ._vendor.staf_workbook.model.compare import Measure, ScenarioScores
-from ._vendor.staf_workbook.model.refcurves import CurveBlock, RefCurves, TableBlock
 from ._vendor.staf_workbook.model.summary import L1_NAMES, NARS9_NAMES, SummaryInfo, regions_for_l3
 from ._vendor.staf_workbook.sheets import SummaryCells
 
@@ -28,10 +30,9 @@ SPEC = AssemblySpec("EASI", calculator.SHEET_NAME, force_recalc=True, lead=("Ins
 SUB_NAMES = {"physical": "sub_index_physical", "chemical": "sub_index_chemical",
              "biological": "sub_index_biological"}
 INDEX_DIGITS, FUNCTION_DIGITS = 2, 0
-#: The quantity each curve set scores, as a chart axis reads it
-CURVE_X = {"flow-variability": "Monthly flow variability (ratio)", "entrenchment": "Entrenchment ratio",
-           "corridor-woody": "Woody riparian cover (%)", "corridor-natural": "Natural riparian cover (%)"}
-SLOPE_TEXT = {"lt_0.5": "slope under 0.5%", "0.5_to_2": "slope 0.5 to 2%", "ge_2": "slope 2% or more"}
+#: the Summary's rows read live from Existing Conditions: the scenario sheet's Reach ID and NARS-9
+#: region entries (owner, 2026-10-23, as SFARI's Reach name and Reach length)
+SITE_CELLS = {"Reach name": "site_name", "NARS-9 region": "ctx_region"}
 
 
 def functions() -> list:
@@ -76,9 +77,11 @@ def _named_cells(template: bytes) -> dict:
     return out
 
 
-def summary_cells(template: bytes) -> SummaryCells:
-    """Where each scenario's results sit: the calculator's ECI and outcome cells, and each
-    function's score cell (``mNN_score``, NN its metric's catalog position)."""
+def summary_cells(template: bytes, stored: dict | None = None) -> SummaryCells:
+    """Where each scenario's results sit: the calculator's ECI and outcome cells, each function's
+    score cell (``mNN_score``, NN its metric's catalog position), and the site rows the Summary reads
+    live; ``stored`` (cell -> value, what Existing Conditions holds for this site) gives the values
+    those rows store as their results (none for the blank)."""
     names = _named_cells(template)
     position = dict((mid, n) for n, mid in enumerate(config.metrics_by_id(), 1))
     metric_of = dict((m.get("functionId"), mid) for mid, m in config.metrics_by_id().items())
@@ -88,8 +91,11 @@ def summary_cells(template: bytes) -> SummaryCells:
         key = f"m{n:02d}_score" if n else None
         if key in names:
             fns.append((fid, label, cat, names[key]))
+    site = dict((label, (*names[entry], (stored or {}).get(names[entry][1], "")))
+                for label, entry in SITE_CELLS.items())
     return SummaryCells(eci=names["eci"], sub=dict((k, names[v]) for k, v in SUB_NAMES.items()),
-                        functions=fns, index_digits=INDEX_DIGITS, function_digits=FUNCTION_DIGITS)
+                        functions=fns, index_digits=INDEX_DIGITS, function_digits=FUNCTION_DIGITS,
+                        site_cells=site, site_first=True)
 
 
 def _regions(strata: dict) -> dict:
@@ -121,61 +127,6 @@ def summary_info(result: dict) -> SummaryInfo:
                        d.get("drainage_area_sqkm"), order, _regions(report.get("strata") or {}))
 
 
-def _stratum_text(definition: dict, stratum: str) -> str:
-    if stratum == "national":
-        return "national curve"
-    kind = definition.get("stratifier")
-    if kind == "slope_class":
-        return SLOPE_TEXT.get(stratum, f"slope class {stratum}")
-    if kind == "nars9":
-        name = NARS9_NAMES.get(stratum)
-        return f"NARS-9 region {stratum}" + (f" ({name})" if name else "")
-    if kind == "l2":
-        return f"Level II ecoregion {stratum}"
-    return str(stratum)
-
-
-def reference_curves(report: dict) -> RefCurves:
-    """The curve each curve metric was scored against for this site, then the rating bands of the
-    metrics rated by rule. Scenarios change ratings, never the curves, so one set serves all."""
-    sets = screening_methods.curve_sets()
-    blocks, bands = [], []
-    for mkey, row in calculator._catalog_rows(report or {}):
-        trace = row.get("scoring") or {}
-        function = row.get("functionName") or row.get("name") or mkey
-        drawn = False
-        for name, used in (trace.get("curves") or {}).items():
-            set_id, stratum = (used or {}).get("set"), str((used or {}).get("stratum"))
-            definition = sets.get(set_id) or {}
-            curve = (definition.get("curves") or {}).get(stratum) or {}
-            points = [(float(p[0]), float(p[1])) for p in curve.get("points") or []
-                      if isinstance(p, (list, tuple)) and len(p) == 2]
-            if not points:
-                continue
-            n = (used or {}).get("n") or curve.get("n")
-            subtitle = f"{function}. {_stratum_text(definition, stratum).capitalize()}"
-            if n:
-                subtitle += f", {int(n):,} reference reaches"
-            label = next((f"{i.get('label')} ({i.get('units')})" if i.get("units") else str(i.get("label"))
-                          for i in trace.get("inputs") or [] if name != "method" and i.get("key") == name), None)
-            blocks.append(CurveBlock(row.get("name") or function, subtitle, label or CURVE_X.get(set_id, set_id),
-                                     "Index", [(_stratum_text(definition, stratum).capitalize(), points)]))
-            drawn = True
-        if drawn:
-            continue
-        for crit in ((row.get("methodCriteria") or {}).get("automated") or []):
-            b = crit.get("bands") or {}
-            if b:
-                unit = crit.get("units")
-                bands.append([function, str(crit.get("label") or crit.get("input") or "") + (f" ({unit})" if unit else ""),
-                              b.get("Good", ""), b.get("Fair", ""), b.get("Poor", "")])
-    if bands:
-        blocks.append(TableBlock("Rating bands", ["Function", "Measure", "Good", "Fair", "Poor"], bands,
-                                 widths=[30, 34, 18, 18, 18]))
-    return RefCurves("The reference curves this site was scored against, and the rating bands of the other "
-                     "metrics.", blocks)
-
-
 def scenario_result(base: dict, report: dict, notes: dict) -> dict:
     """The result dict the calculator reads for one scenario: the screening with that scenario's
     scored report and the shared notes."""
@@ -187,14 +138,24 @@ def build(base: dict, scenarios: list, notes: dict, *, today: _dt.date | None = 
           template: bytes | None = None) -> bytes:
     """The workbook for ``scenarios`` = [(Scenario, scored report), ...], Existing Conditions first."""
     today = today or _dt.date.today()
-    template = template if template is not None else calculator.blank_bytes()
-    inputs, scores = [], []
+    template = template if template is not None else calculator.template_bytes()
+    inputs, scores, stored = [], [], None
     for s, report in scenarios:
         values, notes_ref = calculator.filled_values(scenario_result(base, report, notes), today=today)
+        stored = values if stored is None else stored
         inputs.append(ScenarioInput(s.id, s.name, s.description,
                                     fill=lambda xml, v=values, r=notes_ref: calculator.fill_sheet(xml, v, r)))
         scores.append(scenario_scores(report))
     first = scenarios[0][1] if scenarios else (base or {}).get("report") or {}
     return assemble(template, SPEC, inputs, summary=summary_info({**(base or {}), "report": first}),
-                    cells=summary_cells(template), scores=scores, curves=reference_curves(first),
-                    generated_on=today)
+                    cells=summary_cells(template, stored or {}), scores=scores, generated_on=today)
+
+
+def build_blank() -> bytes:
+    """The blank workbook (``calculator.BLANK_PATH``): the template with one empty score sheet named
+    "Scenario" and the Summary's site rows and date left for the assessor. Nothing in it depends on
+    the day or a site, so ``scripts/build_blank_calculator.py`` writes it once."""
+    template = calculator.template_bytes()
+    return assemble(template, SPEC, [ScenarioInput("existing", calculator.SHEET_NAME)],
+                    summary=SummaryInfo("EASI", blank=True), cells=summary_cells(template),
+                    scores=[ScenarioScores()])

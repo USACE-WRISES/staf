@@ -1,7 +1,7 @@
-"""The Excel calculator ships with the app: the committed workbook, served blank from Get Forms."""
+"""The Excel calculator ships with the app: the committed template every workbook is assembled from,
+and the blank workbook Get Forms serves, both named by the calculator's date (owner, 2026-10-23)."""
 from __future__ import annotations
 
-import hashlib
 import re
 from pathlib import Path
 
@@ -16,13 +16,16 @@ SRC = Path(app.__file__).read_text(encoding="utf-8")
 def test_the_blank_is_the_committed_workbook():
     data = calculator.blank_bytes()
     assert data[:2] == b"PK" and len(data) > 20_000
-    assert hashlib.sha256(data).hexdigest() == hashlib.sha256(calculator.TEMPLATE_PATH.read_bytes()).hexdigest()
-    assert calculator.TEMPLATE_VERSION == "1.1"
-    assert calculator.blank_filename() == "EASI_Calculator_1.1.xlsx"
+    assert data == calculator.BLANK_PATH.read_bytes() != calculator.template_bytes()
+    assert calculator.TEMPLATE_VERSION == "2026-10-23"
+    assert calculator.blank_filename() == calculator.filled_filename() == "2026-10-23_EASI Calculator.xlsx"
+    assert calculator.BLANK_PATH.name == calculator.blank_filename()
+    assert calculator.TEMPLATE_PATH.name == "EASI_Calculator_Template_2026-10-23.xlsx"
     assert calculator.TEMPLATE_PATH.parent.name == "calculator"
     assert calculator.TEMPLATE_PATH.parent.parent.name == "www"     # a static asset, never vendored
-    # one calculator is served: no other workbook sits beside it
-    assert [p.name for p in calculator.TEMPLATE_PATH.parent.iterdir()] == ["EASI_Calculator_1.1.xlsx"]
+    # one calculator is served: the template and the blank made from it, nothing else beside them
+    assert sorted(p.name for p in calculator.TEMPLATE_PATH.parent.iterdir()) == sorted(
+        [calculator.TEMPLATE_PATH.name, calculator.BLANK_PATH.name])
 
 
 def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the_header():
@@ -62,7 +65,9 @@ def test_the_batch_popup_serves_the_site_completed_workbook():
     assert re.search(r'@render\.download\(filename=calculator\.filled_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+'
                      r"def dl_site_calc\(\):", SRC)
     body = SRC.split("def dl_site_calc():", 1)[1].split("@render", 1)[0]
-    assert "base = _modal_download_base()" in body and "yield calculator.build_filled(base)" in body
+    # the same workbook Get Forms assembles, with one scenario; the single calculator if that fails
+    assert "base = _modal_download_base()" in body and "easi_book.build(base, [(ScenarioSet().baseline" in body
+    assert "data = calculator.build_filled(base)" in body and "yield data" in body
 
 
 def test_the_help_points_to_get_forms():

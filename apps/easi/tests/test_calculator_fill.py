@@ -153,7 +153,7 @@ def _assessed_result() -> dict:
 
 def test_only_the_score_sheet_changes_and_only_the_intended_cells():
     res = _assessed_result()
-    blank, filled = calculator.blank_bytes(), calculator.build_filled(res, today=TODAY)
+    blank, filled = calculator.template_bytes(), calculator.build_filled(res, today=TODAY)
     assert filled == calculator.build_filled(res, today=TODAY)          # deterministic for a date
     with zipfile.ZipFile(io.BytesIO(blank)) as a, zipfile.ZipFile(io.BytesIO(filled)) as b:
         assert a.namelist() == b.namelist()
@@ -173,7 +173,7 @@ def test_only_the_score_sheet_changes_and_only_the_intended_cells():
     assert {ref for ref in before if before[ref] != after[ref]} == intended
     # the template's other parts are untouched, so the charts, validations and formats survive
     wb = openpyxl.load_workbook(io.BytesIO(filled))
-    ws = wb["EASI Score"]
+    ws = wb["Scenario"]
     assert len(ws._charts) == 2 and len(ws.data_validations.dataValidation) == 56 + 20
     assert ws.protection.sheet and ws.merged_cells.ranges
 
@@ -184,8 +184,8 @@ def test_round_trip_by_defined_name_and_the_workbook_calculates_as_filled(tmp_pa
     entries, _ = calculator.entries_from_result(res)
     path = tmp_path / calculator.filled_filename()
     path.write_bytes(calculator.build_filled(res, today=TODAY))
-    assert path.name == "easi-calculator.xlsx"           # plain, no site id (owner, 2026-10-08)
-    ws = openpyxl.load_workbook(path)["EASI Score"]
+    assert path.name == "2026-10-23_EASI Calculator.xlsx"     # the calculator's date, no site id (owner, 2026-10-23)
+    ws = openpyxl.load_workbook(path)["Scenario"]
     cells = calculator.entry_cells()
     for name, value in present(entries).items():
         got = ws[cells[name]].value
@@ -288,7 +288,7 @@ def test_every_function_carries_its_override_including_the_three_the_registry_do
     assert not any("no Override Score entry" in line for line in disclosures)
     assert disclosures[0] == ("Override scores: Catchment hydrology Poor (computed Good); Surface water storage "
                               "Poor (computed Fair); Watershed connectivity Poor (computed Good).")
-    ws = openpyxl.load_workbook(io.BytesIO(calculator.build_filled(res, today=TODAY)))["EASI Score"]
+    ws = openpyxl.load_workbook(io.BytesIO(calculator.build_filled(res, today=TODAY)))["Scenario"]
     cells = calculator.entry_cells()
     assert [ws[cells[f"ov_{mkey}_rating"]].value for mkey in cc.FUNCTIONS] == \
         ["Poor" if mkey in unflagged else None for mkey in cc.FUNCTIONS]
@@ -371,4 +371,4 @@ def test_the_site_block_and_the_download_name():
                              "clickedStream": {"gnisName": "", "nhdplusId": 10000900012345}}, "report": {}}
     site = calculator.site_identity(routed)
     assert site["label"] == "Unnamed stream, NHDPlusID 10000900012345" and site["comid"] == "9327042"
-    assert calculator.filled_filename() == "easi-calculator.xlsx"      # plain, no site id (owner, 2026-10-08)
+    assert calculator.filled_filename() == "2026-10-23_EASI Calculator.xlsx"   # the date, no site id (owner, 2026-10-23)

@@ -13,6 +13,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -725,6 +726,30 @@ def _fake_calculator(path: Path, method_version: str) -> Path:
     ws.append(["Generator sha256", "0" * 64])
     wb.save(path)
     return path
+
+
+def test_calculator_stamps_read_the_document_properties_first(tmp_path):
+    """Since 2026-10-23 EASI's workbook keeps its identity in its document properties (no Metadata
+    sheet); an older workbook's Metadata sheet still reads, and a workbook with neither is refused."""
+    from openpyxl import Workbook
+    from openpyxl.packaging.custom import StringProperty
+    wb = Workbook()
+    wb.active.title = "Scenario"
+    wb.custom_doc_props.append(StringProperty(name="Scoring method digest", value="abc123abc123"))
+    wb.custom_doc_props.append(StringProperty(name="Generator sha256", value="1" * 64))
+    stamped = tmp_path / "EASI_Calculator_Template_x.xlsx"
+    wb.save(stamped)
+    assert round4.calculator_stamps(stamped.read_bytes()) == {"method": "abc123abc123", "generator": "1" * 64}
+    old = _fake_calculator(tmp_path / "EASI_Calculator_old.xlsx", "def456def456")
+    assert round4.calculator_stamps(old.read_bytes()) == {"method": "def456def456", "generator": "0" * 64}
+    bare = tmp_path / "EASI_Calculator_bare.xlsx"
+    Workbook().save(bare)
+    with pytest.raises(round4.CandidateError, match="records no scoring method"):
+        round4.calculator_stamps(bare.read_bytes())
+    # the checkout's own template, what an import from the checkout carries
+    committed = sorted((APP.parent / "easi" / "www" / "calculator").glob("EASI_Calculator_*.xlsx"))
+    if committed:
+        assert re.fullmatch(r"[0-9a-f]{12}", round4.calculator_stamps(committed[0].read_bytes())["method"])
 
 
 def test_the_exporter_carries_a_calculator_generated_for_the_candidates_files(tmp_path):

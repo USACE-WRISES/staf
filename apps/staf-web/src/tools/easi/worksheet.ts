@@ -24,7 +24,7 @@ import {
   fnNav, metricAboutTip, metricLive, methodBody, methodCriteria, observedEditor, observedValue, OBSERVED_INPUTS, output, rateSelect,
   rollupRail, scorecard, stepper,
 } from './markup'
-import { functions, loadMethod, method, metricDefinition, metricsById } from './method'
+import { functions, loadMethod, metricDefinition, metricsById } from './method'
 import { resolve } from './methods'
 import { ctxFromInputs, type EasiAssessData, prefetch } from './prefetch'
 import { reportBody, reportFooter, summaryBlock, summaryRows } from './report'
@@ -39,9 +39,9 @@ import { displaySimplify } from '../../engine/simplify'
 import { svg } from '../../shared/reportmap'
 import { pyCopy, pySet } from '../../app/pyjson'
 import { fromBase64 } from '../../files/bytes'
-import { registerDownload } from '../../files/download'
+import { pageFile, registerDownload } from '../../files/download'
 import { scenarioSuffix, XLSX_MEDIA_TYPE } from '../../shared/downloads'
-import { available as calculatorAvailable, blankFilename, buildFilled, entryCells, filledFilename } from './calculator'
+import { available as calculatorAvailable, BLANK_URL, blankFilename, buildFilled, entryCells, filledFilename } from './calculator'
 import { todayIso } from '../../files/xlsx/calcfill'
 import { formsModal } from './forms'
 import {
@@ -166,8 +166,9 @@ export class EasiWorksheet {
       const xsPng = xsUrl ? fromBase64(xsUrl.slice(xsUrl.indexOf(',') + 1)) : null
       return buildPdf(res, this.reportScenario(), { summaryPng: await summaryPlotPng(res.report), xsPng })
     } })
-    // Get Forms: the adopted method's own calculator, blank, byte for byte
-    registerDownload('easi-dl_forms_blank', { filename: () => blankFilename(), mime: XLSX_MEDIA_TYPE, build: () => method().calculator })
+    // Get Forms: the blank workbook, byte for byte (the Shiny app's build_blank, copied by parity/copy_page.py)
+    registerDownload('easi-dl_forms_blank', { filename: () => blankFilename(), mime: XLSX_MEDIA_TYPE,
+      build: () => (calculatorAvailable() ? pageFile(BLANK_URL) : null) })
     // Get Forms: the desktop metrics list as a PDF (report.build_desktop_metrics_pdf)
     registerDownload('easi-dl_forms_pdf', { filename: 'easi-desktop-metrics.pdf', mime: 'application/pdf', build: async () => {
       const res = this.exportResult()

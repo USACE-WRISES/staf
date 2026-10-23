@@ -861,6 +861,7 @@ def _reset_all_caches() -> None:
     for fn in (getattr(geo, "_index", None), getattr(geo, "_nars9_names", None),
                getattr(bieger, "_divisions", None), getattr(nrsa, "_records", None),
                getattr(nrsa, "comid_by_site_id", None), getattr(calculator, "blank_bytes", None),
+               getattr(calculator, "template_bytes", None), getattr(calculator, "_folder_digest", None),
                getattr(calculator, "entry_cells", None)):
         if fn is not None and hasattr(fn, "cache_clear"):
             fn.cache_clear()

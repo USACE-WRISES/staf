@@ -20,7 +20,7 @@ from staf_workbook.xlsx.workbook import WorkbookModel
 from templates import DEEP, EASI, SFARI
 
 CASES = [
-    pytest.param(EASI, "EASI Score", {}, ["EASI Score", "Metrics", "Results", "ChartData"], id="easi"),
+    pytest.param(EASI, "Scenario", {}, ["Scenario", "Metrics", "Results", "ChartData"], id="easi"),
     pytest.param(DEEP, "DEEP Score", {}, ["DEEP Score", "Metrics", "Results", "ChartData"], id="deep"),
     pytest.param(SFARI, "Scenario", {"Instructions": "L4:P27"}, ["Scenario"], id="sfari"),
 ]
@@ -30,6 +30,7 @@ SCENARIOS = [ScenarioInput("existing", "Existing Conditions"), ScenarioInput("s2
 
 def _norm(xml: str) -> str:
     xml = re.sub(r"'([A-Za-z_][A-Za-z0-9_.]*)'!", lambda m: m.group(1) + "!", xml)   # optional quotes
+    xml = re.sub(r"&#([0-9]+);", lambda m: chr(int(m.group(1))), xml)              # a reference or the character
     xml = re.sub(r'="\{[0-9A-Fa-f-]{36}\}"', '="{ID}"', xml)
     xml = re.sub(r'\stabSelected="[^"]*"', "", xml)
     return re.sub(r'\scodeName="[^"]*"', "", xml)
@@ -137,7 +138,7 @@ def test_a_fill_lands_on_its_own_scenario_only():
                      xml, count=1)
         assert new != xml
         return new
-    spec = AssemblySpec("EASI", "EASI Score")
+    spec = AssemblySpec("EASI", "Scenario")
     built = build(EASI.read_bytes(), spec, [ScenarioInput("existing", "Existing Conditions"),
                                             ScenarioInput("s2", "Alternative 1", fill=fill),
                                             ScenarioInput("s3", "Alternative 2")])
@@ -146,3 +147,15 @@ def test_a_fill_lands_on_its_own_scenario_only():
     wb = WorkbookModel(pkg)
     has = dict((n, marker in pkg.text(wb.sheet(n).part)) for n in ("Existing Conditions", "Alternative 1", "Alternative 2"))
     assert has == {"Existing Conditions": False, "Alternative 1": True, "Alternative 2": False}
+
+
+def test_a_formula_with_character_references_keeps_its_characters():
+    """openpyxl writes a formula's non-ASCII characters as references (EASI's ranges, owner 2026-10-23:
+    ``"&#8804;"&ROUND(...)``); a copy rewrites the formula and must keep the character, never the
+    reference's text (``&amp;#8804;`` would show as "&#8804;" in Excel)."""
+    xml = '<c r="C5"><f>IF(ISNUMBER(Metrics!$B$5),"&#8804;"&amp;ROUND(Metrics!$B$5,2)&amp;" &#x2265;","")</f></c>'
+    out = rewrite_sheet_xml(xml, {"metrics": "S2 Metrics"})
+    assert "&amp;#" not in out
+    assert out == ('<c r="C5"><f>IF(ISNUMBER(\'S2 Metrics\'!$B$5),"≤"&amp;ROUND(\'S2 Metrics\'!$B$5,2)'
+                   '&amp;" ≥","")</f></c>')
+    assert sheet_formulas(xml) == ['IF(ISNUMBER(Metrics!$B$5),"≤"&ROUND(Metrics!$B$5,2)&" ≥","")']

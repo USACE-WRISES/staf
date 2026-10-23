@@ -7,8 +7,8 @@ Vite's public folder: served at the app's root in development and copied into ``
 - **From the Shiny apps** (the page's look and its shared scripts, while those apps exist): each tool's
   ``www/styles.css`` (and DEEP's ``deep.css``), the shared ``staf.css`` and ``metric-rows.css`` and page
   scripts (``libs/staf_workbook/assets``), DEEP's ``coverage.js``, the shell's ``staf-shell.css`` and
-  favicon (``apps/staf/www/shell``); SFARI's field forms PDF and blank calculator (``forms/sfari/``, Get
-  Forms' downloads); DEEP's state polygons (``data/us_states.geojson.gz``, kept with the data mirror's
+  favicon (``apps/staf/www/shell``); SFARI's field forms PDF and calculator template and blank
+  (``forms/sfari/``), EASI's calculator template and blank (``forms/easi/``), Get Forms' downloads; DEEP's state polygons (``data/us_states.geojson.gz``, kept with the data mirror's
   builder, ``tools/staf-web-data/data/``, which publishes them as ``engine/us_states.geojson``).
 - **From the Python packages the Shiny app runs on** (the repo's .venv): py-shiny's Bootstrap build, its
   fonts cut to the latin and latin-ext faces (every character the apps show), htmltools' ``fill.css``,
@@ -91,6 +91,8 @@ FROM_REPO = {
     "forms/sfari/SFARI_Field_Form_v1.0.pdf": "apps/sfari/data/FieldForm/SFARI_Field_Form_v1.0.pdf",
     "forms/sfari/SFARI_Calculator_Template_2026-10-19.xlsx": "apps/sfari/data/calculator/SFARI_Calculator_Template_2026-10-19.xlsx",
     "forms/sfari/2026-10-19_SFARI Calculator.xlsx": "apps/sfari/data/calculator/2026-10-19_SFARI Calculator.xlsx",
+    "forms/easi/EASI_Calculator_Template_2026-10-23.xlsx": "apps/easi/www/calculator/EASI_Calculator_Template_2026-10-23.xlsx",
+    "forms/easi/2026-10-23_EASI Calculator.xlsx": "apps/easi/www/calculator/2026-10-23_EASI Calculator.xlsx",
     "data/us_states.geojson.gz": "apps/deep/data/us_states.geojson.gz",
 }
 #: EASI's tables that live in Python modules, kept as JSON (``content/easi/config.json``): the metric

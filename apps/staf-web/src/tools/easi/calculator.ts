@@ -1,19 +1,32 @@
-// EASI's Excel calculator (easi/calculator.py): the blank (the adopted method package's own workbook),
-// its entry cells (the workbook's defined names), and the entries and disclosures a screening carries
-// into the completed copy (entries_from_result), which Get Forms' status line and the desktop metrics
-// PDF list beside the workbook.
+// EASI's Excel calculator (easi/calculator.py): the 2026-10-23 template (page/forms/easi, the app's
+// own copy, served for the method files it was generated from), its entry cells (the template's defined
+// names), and the entries and disclosures a screening carries into the completed copy
+// (entries_from_result), which Get Forms' status line and the desktop metrics PDF list beside the
+// workbook. The blank workbook is a file (BLANK_URL), made once by the Shiny app's build_blank.
 import { pyFloat } from '../../app/pyfmt'
+import { pageFile } from '../../files/download'
 import { cpLen, cpSlice, pyRstrip, pySqueeze, pyStrip } from '../../files/py'
 import { excelSerial, pyStr, sheetPart, xmlText } from '../../files/xlsx/calcfill'
 import { readZip, repack } from '../../files/zip'
 import { pyFloatOf } from './evaluator'
 import { slopeClass } from './geo'
-import { method, metricsById } from './method'
+import { metricsById, PIN } from './method'
 import { siteIdentity } from './report'
 
 type Obj = Record<string, any>
 
-export const SHEET_NAME = 'EASI Score'
+/** the calculator's date, which names every download (owner, 2026-10-23, as SFARI's) */
+export const TEMPLATE_VERSION = '2026-10-23'
+/** the template every workbook is assembled from (calculator.TEMPLATE_PATH) */
+export const TEMPLATE_URL = `forms/easi/EASI_Calculator_Template_${TEMPLATE_VERSION}.xlsx`
+/** the blank workbook, served as it is (calculator.BLANK_PATH); fetch encodes the space */
+export const BLANK_URL = `forms/easi/${TEMPLATE_VERSION}_EASI Calculator.xlsx`
+/** both workbooks download under the calculator's date */
+export const FILENAME = `${TEMPLATE_VERSION}_EASI Calculator.xlsx`
+/** the method files the template was generated from: its "Package digest" document property
+ * (tests/easi-calculator.test.ts holds the copied template to it) */
+export const TEMPLATE_PACKAGE_DIGEST = 'sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d'
+export const SHEET_NAME = 'Scenario'
 const ENTRY_PREFIXES = ['in_', 'ctx_', 'ov_', 'site_']
 export const NOTES_NAME = 'site_notes'
 export const NOTES_LABEL = 'Other Metrics/Notes:'
@@ -27,12 +40,19 @@ const CONTEXT_KEYS = new Set(['fcode', 'fcodeContext', 'meanAnnualFlow', 'annual
 const FCODE_KEYS = ['fcode', 'fcodeContext']
 export const VALID = ['Good', 'Fair', 'Poor']
 
-/** calculator.available: the adopted method carries a calculator. */
-export const available = (): boolean => method().calculator !== null
-/** calculator.blank_filename: the package's workbook, by its own name. */
-export const blankFilename = (): string => String(method().envelope?.calculator?.name ?? 'EASI_Calculator_1.1.xlsx')
-/** calculator.filled_filename */
-export const filledFilename = (): string => 'easi-calculator.xlsx'
+/** calculator.available: the template was generated from the adopted method's files (a workbook is only
+ * ever served for the files it was generated from). */
+export const available = (): boolean => PIN.packageDigest === TEMPLATE_PACKAGE_DIGEST
+/** calculator.blank_filename */
+export const blankFilename = (): string => FILENAME
+/** calculator.filled_filename: the calculator's date, with no site id */
+export const filledFilename = (): string => FILENAME
+
+/** calculator.template_bytes: the template, read once. */
+export function templateBytes(): Promise<Uint8Array> {
+  if (!available()) return Promise.reject(new Error('No calculator workbook was generated for the active EASI method version.'))
+  return pageFile(TEMPLATE_URL)
+}
 
 /** Python's truth value of a JSON value. */
 export function pyBool(v: unknown): boolean {
@@ -52,15 +72,14 @@ export function xmlUnescape(text: string): string {
 
 const stripQuotes = (s: string) => s.replace(/^'+|'+$/g, '')
 
-let cellsFor: [Uint8Array, Promise<Record<string, string>>] | null = null
+let cellsFor: Promise<Record<string, string>> | null = null
 
-/** calculator.entry_cells: entry name to cell on the EASI Score sheet, from the workbook's defined
- * names (read once per workbook). */
+/** calculator.entry_cells: entry name to cell on the Scenario sheet, from the template's defined names
+ * (read once). */
 export function entryCells(): Promise<Record<string, string>> {
-  const tpl = method().calculator
-  if (!tpl) return Promise.reject(new Error('No calculator workbook was generated for the active EASI method version.'))
-  if (!cellsFor || cellsFor[0] !== tpl) {
-    cellsFor = [tpl, (async () => {
+  if (!cellsFor) {
+    cellsFor = (async () => {
+      const tpl = await templateBytes()
       const book = new TextDecoder().decode(await readZip(tpl).read('xl/workbook.xml'))
       const cells: Record<string, string> = {}
       for (const m of book.matchAll(/<definedName\b[^>]*\bname="([^"]+)"[^>]*>([^<]*)<\/definedName>/g)) {
@@ -74,10 +93,10 @@ export function entryCells(): Promise<Record<string, string>> {
       }
       if (!(NOTES_NAME in cells)) throw new Error('EASI calculator template has no entry cells')
       return cells
-    })()]
-    cellsFor[1].catch(() => { cellsFor = null })
+    })()
+    cellsFor.catch(() => { cellsFor = null })
   }
-  return cellsFor[1]
+  return cellsFor
 }
 
 /** _catalog_rows: (mNN, row) in catalog order, the order of the workbook's rows. */
@@ -250,7 +269,7 @@ export function notesText(result: Obj | null, disclosures: string[], today: stri
 
 export type CellValue = string | number
 
-/** filled_values: ({cell: value}, the notes cell) for the EASI Score sheet; every scenario's copy of the
+/** filled_values: ({cell: value}, the notes cell) for the Scenario sheet; every scenario's copy of the
  * sheet has the same cells. */
 export async function filledValues(result: Obj | null, today: string): Promise<[Map<string, CellValue>, string]> {
   const cells = await entryCells()
@@ -294,12 +313,11 @@ export function fillSheet(sheetXml: string, values: Map<string, CellValue>, note
   return out
 }
 
-/** build_filled: the calculator with this screening typed into its entry cells (the fallback when the
- * scenario workbook cannot be assembled); only the EASI Score part changes. */
+/** build_filled: the template with this screening typed into its entry cells (the fallback when the
+ * scenario workbook cannot be assembled); only the Scenario part changes. */
 export async function buildFilled(result: Obj, today: string): Promise<Uint8Array> {
   const [values, notesRef] = await filledValues(result, today)
-  const source = method().calculator
-  if (!source) throw new Error('No calculator workbook was generated for the active EASI method version.')
+  const source = await templateBytes()
   const zin = readZip(source)
   const part = await sheetPart(zin, SHEET_NAME, 'EASI calculator template')
   const sheetXml = new TextDecoder().decode(await zin.read(part))
