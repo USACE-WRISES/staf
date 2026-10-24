@@ -113,6 +113,48 @@ def test_site_rows_can_read_the_calculator_live_right_under_the_title():
     assert "<v>Reach 7</v>" in xml and "<v>1200</v>" in xml               # the stored results
 
 
+def _rules(cell) -> set:
+    """The rules a cell shows (openpyxl keeps only a merged range's outline on its inner cells)."""
+    b = cell.border
+    return set((s.style, s.color.rgb[-6:]) for s in (b.left, b.right, b.top, b.bottom) if s.style)
+
+
+def _fill(cell):
+    return cell.fill.fgColor.rgb[-6:] if cell.fill.fill_type == "solid" else None
+
+
+def test_the_site_block_under_the_title_follows_the_colour_key():
+    """The owner's SFARI Summary (2026-10-19), EASI's too (owner, 2026-10-23): every label and value
+    ruled, the rows read from the scenario sheet grey with a grey rule as linked cells, the tier the
+    app sets plain, and every other value an orange entry; a summary block under a gap keeps its look."""
+    if not DEEP.is_file():
+        pytest.skip("DEEP template not present")
+    data = DEEP.read_bytes()
+    names = _names(data)
+    cells = SummaryCells(eci=names["eci"], sub=dict((k, names["sub_index_" + k]) for k in ("physical", "chemical", "biological")),
+                         functions=[], site_cells={"Reach name": ("DEEP Score", "B2", "Reach 7"), "Reach length": ("DEEP Score", "G2", 1200)},
+                         site_first=True)
+    out = assemble(data, AssemblySpec("DEEP", "DEEP Score"), [ScenarioInput("existing", "Existing Conditions")],
+                   summary=SummaryInfo("DEEP", blank=True), cells=cells, scores=[ScenarioScores()],
+                   generated_on=__import__("datetime").date(2026, 10, 23))
+    _wb, ws = _summary(out)
+    xml = Package(out).text(WorkbookModel(Package(out)).sheet("Summary").part)
+    style = dict(re.findall(r'<c r="([A-Z]+\d+)" s="(\d+)"', xml))
+    black, grey = set([("thin", "000000")]), set([("thin", "7F7F7F")])
+    for r in range(3, 12):
+        assert _rules(ws[f"A{r}"]) == black and _fill(ws[f"A{r}"]) is None, r
+        kind = {3: "linked", 5: "linked", 4: "fixed"}.get(r, "entry")
+        assert _fill(ws[f"B{r}"]) == {"linked": "F2F2F2", "fixed": None, "entry": "F8CBAD"}[kind], r
+        assert style[f"C{r}"] == style[f"D{r}"] == style[f"B{r}"], r      # the merged value cell, edge to edge
+        for col in "BCD":
+            assert _rules(ws[f"{col}{r}"]) == (grey if kind == "linked" else black), (col, r)
+    assert ws["B4"].value == "Detailed" and ws["B6"].value is None
+    plain, _fns = _deep([ScenarioInput("existing", "Existing Conditions")], [ScenarioScores()], blank=True)
+    _wb, ws = _summary(plain)
+    for r in range(4, 13):
+        assert _rules(ws[f"B{r}"]) == set() and _fill(ws[f"B{r}"]) is None, r
+
+
 def test_a_blank_summary_leaves_the_site_and_the_day_out():
     data, _fns = _deep([ScenarioInput("existing", "Existing Conditions")], [ScenarioScores()], blank=True)
     _wb, ws = _summary(data)

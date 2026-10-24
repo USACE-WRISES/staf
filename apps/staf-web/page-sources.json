@@ -203,7 +203,7 @@
   },
   "forms/easi/2026-10-23_EASI Calculator.xlsx": {
    "source": "apps/easi/www/calculator/2026-10-23_EASI Calculator.xlsx",
-   "sha256": "386075ada6ad105f6db2220a97476f0efc4c90903fe0d17360b968b785db1613"
+   "sha256": "7edebb8c605d229f81decae76482a0e761cd96fbed2026ea8b68cbd360ad5199"
   },
   "forms/easi/EASI_Calculator_Template_2026-10-23.xlsx": {
    "source": "apps/easi/www/calculator/EASI_Calculator_Template_2026-10-23.xlsx",
@@ -211,7 +211,7 @@
   },
   "forms/sfari/2026-10-19_SFARI Calculator.xlsx": {
    "source": "apps/sfari/data/calculator/2026-10-19_SFARI Calculator.xlsx",
-   "sha256": "157e7bad2de4eb403ccdc033fa906772d6ad017dfa558792f874ee5789350cf8"
+   "sha256": "fb7536e407c2030205a70b3ce37650242e518da8657558459c42c321d0b45939"
   },
   "forms/sfari/SFARI_Calculator_Template_2026-10-19.xlsx": {
    "source": "apps/sfari/data/calculator/SFARI_Calculator_Template_2026-10-19.xlsx",

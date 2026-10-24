@@ -13,7 +13,7 @@ from typing import Optional
 from .model.compare import ScenarioScores, excel_round
 from .model.compare import build as compare_build
 from .model.refcurves import CurveBlock, RefCurves, TableBlock
-from .model.summary import SummaryInfo
+from .model.summary import TIER, SummaryInfo
 from .xlsx.author import SheetWriter, col_letter
 from .xlsx.charts import ScatterChart, Series, add_charts
 from .xlsx.formula import quote_sheet
@@ -27,6 +27,9 @@ CURVES = "ReferenceCurves"
 INK, LABEL, MUTED = "2B3445", "5A6578", "7A8699"
 RULE, RULE_STRONG, TINT = "E5E8EE", "D5DEEA", "F6F8FB"
 UP, DOWN = "2F7A4B", "A33A3A"
+#: the calculators' colour key (their Instructions sheet), which the summary block follows when it sits
+#: under the title: an entry, a cell read from another sheet (and its rule), and every other rule
+KEY_ENTRY, KEY_LINKED, KEY_LINKED_RULE, KEY_RULE = "F8CBAD", "F2F2F2", "7F7F7F", "000000"
 #: Summary column widths (characters) and row heights (points; Excel never fits a merged or a
 #: custom-height row, so every row's height is set from its text)
 VALUE_W, CHANGE_W, LABEL_W_MIN, LABEL_W_MAX = 13, 10, 24, 44
@@ -72,7 +75,9 @@ class SummaryCells:
     #: summary-block rows read live from Existing Conditions: label -> (template sheet, cell, the value
     #: stored as the formula's result); SFARI's Reach name and Reach length (owner, 2026-10-19)
     site_cells: dict = field(default_factory=dict)
-    #: the summary block right under the title lines, a gap row after it (SFARI, owner 2026-10-19)
+    #: the summary block right under the title lines, a gap row after it (SFARI, owner 2026-10-19), in the
+    #: calculator's colour key: every label and value ruled, entries orange, ``site_cells`` grey as cells
+    #: linked to another sheet (the owner's SFARI Summary; EASI's, owner 2026-10-23)
     site_first: bool = False
 
 
@@ -114,6 +119,16 @@ class _SummaryStyles(_Styles):
         self.label_bold = sb.xf(font=f(bold=True, size=11, color=INK), border=self.rule, wrap=True)
         self.up = sb.dxf(bold=True, color=UP)
         self.down = sb.dxf(bold=True, color=DOWN)
+
+    def keyed(self) -> dict:
+        """The summary block's styles in the calculator's colour key: ``label``, ``entry`` (a value
+        typed in the workbook), ``linked`` (read from a scenario sheet) and ``fixed`` (set by the app)."""
+        sb, f = self.sb, self.sb.font
+        rule, linked_rule = sb.box(KEY_RULE), sb.box(KEY_LINKED_RULE)
+        return dict(label=sb.xf(font=f(size=11, color=LABEL), border=rule, wrap=True),
+                    entry=sb.xf(font=f(size=11, color=INK), fill=sb.fill(KEY_ENTRY), border=rule, wrap=True),
+                    linked=sb.xf(font=f(size=11, color=INK), fill=sb.fill(KEY_LINKED), border=linked_rule, wrap=True),
+                    fixed=sb.xf(font=f(size=11, color=INK), border=rule, wrap=True))
 
     def value(self, digits: int, bold: bool, base: bool) -> int:
         sb = self.sb
@@ -250,14 +265,14 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
     a_px = _col_px(widths[1])
     rest_px = sum(_col_px(widths[c]) for c in range(2, span + 1))
 
-    def pair(row, key, value, key_style=st.key, formula=None):
+    def pair(row, key, value, key_style=st.key, formula=None, val_style=st.val):
         w.text(f"A{row}", key, key_style)
         if formula is None:
-            w.text(f"B{row}", value, st.val)
+            w.text(f"B{row}", value, val_style)
         else:
-            w.formula(f"B{row}", formula, value, st.val)
+            w.formula(f"B{row}", formula, value, val_style)
         for c in range(3, span + 1):
-            w.blank(f"{col_letter(c)}{row}", st.val)
+            w.blank(f"{col_letter(c)}{row}", val_style)
         w.merge(f"B{row}:{col_letter(span)}{row}")
         w.height(row, _height(max(_lines(key, a_px), _lines(value, rest_px)), ROW_H))
         return row + 1
@@ -289,13 +304,18 @@ def add_summary_sheet(built, spec, sb: StyleBook, info: SummaryInfo, cells: Summ
         w.height(4, GAP_H)
         _mark(w, banner)
         row = 5
+    keyed = st.keyed() if cells.site_first else None
     for key, value in site:
+        styles = {}
+        if keyed:
+            kind = "linked" if key in cells.site_cells else "fixed" if key == TIER else "entry"
+            styles = dict(key_style=keyed["label"], val_style=keyed[kind])
         if key in cells.site_cells:
             sheet, cell, stored = cells.site_cells[key]
             ref = f"{quote_sheet(sheet_for(built, 0, sheet))}!{cell}"
-            row = pair(row, key, stored, formula=f'IF(ISBLANK({ref}),"",{ref})')
+            row = pair(row, key, stored, formula=f'IF(ISBLANK({ref}),"",{ref})', **styles)
         else:
-            row = pair(row, key, value)
+            row = pair(row, key, value, **styles)
     if banner is None and cells.site_first:
         w.height(row, ROW_H)
         row += 1

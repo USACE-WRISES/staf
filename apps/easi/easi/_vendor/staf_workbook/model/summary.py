@@ -25,6 +25,8 @@ NARS9_NAMES = {"CPL": "Coastal Plains", "NAP": "Northern Appalachians", "NPL": "
                "SAP": "Southern Appalachians", "SPL": "Southern Plains", "TPL": "Temperate Plains",
                "UMW": "Upper Midwest", "WMT": "Western Mountains", "XER": "Xeric"}
 NOT_AVAILABLE = "Not available"
+#: the one summary-block row the app sets for every site (never an entry)
+TIER = "Assessment tier"
 
 
 @functools.lru_cache(maxsize=1)
@@ -83,7 +85,7 @@ class SummaryInfo:
         area = f"{float(self.drainage_area_sqkm):,.2f} km²" if _num(self.drainage_area_sqkm) else NOT_AVAILABLE
         order = str(int(self.stream_order)) if _num(self.stream_order) and float(self.stream_order) > 0 else NOT_AVAILABLE
         rows = [("Reach name", (self.reach_name or "").strip() or "Unnamed"),
-                ("Assessment tier", self.tier),
+                (TIER, self.tier),
                 ("Reach length", length),
                 ("Drainage area", area),
                 ("Stream order (Strahler)", order),
@@ -92,7 +94,7 @@ class SummaryInfo:
                 ("EPA Level II ecoregion", _region(r.get("l2"), r.get("l2_name"))),
                 ("EPA Level III ecoregion", _region(r.get("l3"), r.get("l3_name")))]
         if self.blank:
-            return [(key, value if key == "Assessment tier" else "") for key, value in rows]
+            return [(key, value if key == TIER else "") for key, value in rows]
         return rows
 
 

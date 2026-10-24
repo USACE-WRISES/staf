@@ -13,6 +13,8 @@ export const L1_NAMES: Record<string, string> = { 1: 'Arctic Cordillera', 2: 'Tu
 export const NARS9_NAMES: Record<string, string> = { CPL: 'Coastal Plains', NAP: 'Northern Appalachians', NPL: 'Northern Plains',
   SAP: 'Southern Appalachians', SPL: 'Southern Plains', TPL: 'Temperate Plains', UMW: 'Upper Midwest', WMT: 'Western Mountains', XER: 'Xeric' }
 export const NOT_AVAILABLE = 'Not available'
+/** TIER: the one summary-block row the app sets for every site (never an entry) */
+export const TIER = 'Assessment tier'
 const TABLE = ((ecoregions as any).l3 ?? {}) as Record<string, any>
 
 export interface Regions {
@@ -109,7 +111,7 @@ export function summaryRows(info: SummaryInfo): [string, string][] {
   const area = isNum(info.drainageAreaSqkm) ? `${comma(toFloat(info.drainageAreaSqkm), 2)} km²` : NOT_AVAILABLE
   const order = isNum(info.streamOrder) && toFloat(info.streamOrder) > 0 ? String(Math.trunc(toFloat(info.streamOrder))) : NOT_AVAILABLE
   return [['Reach name', (info.reachName ?? '').trim() || 'Unnamed'],
-    ['Assessment tier', TIERS[info.app.toUpperCase()] ?? ''],
+    [TIER, TIERS[info.app.toUpperCase()] ?? ''],
     ['Reach length', length],
     ['Drainage area', area],
     ['Stream order (Strahler)', order],

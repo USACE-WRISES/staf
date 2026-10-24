@@ -90,17 +90,21 @@ class StyleBook:
         return self._memo[key]
 
     def border(self, *, bottom: Optional[str] = None, top: Optional[str] = None, bottom_style: str = "thin",
-               top_style: str = "thin") -> int:
-        if bottom is None and top is None:
+               top_style: str = "thin", left: Optional[str] = None, right: Optional[str] = None) -> int:
+        if bottom is None and top is None and left is None and right is None:
             return 0
-        key = ("border", bottom, top, bottom_style, top_style)
+        key = ("border", bottom, top, bottom_style, top_style, left, right)
         if key not in self._memo:
             def side(tag, rgb, style):
                 return f'<{tag} style="{style}"><color rgb="FF{rgb}"/></{tag}>' if rgb else f"<{tag}/>"
             self._memo[key] = self._append(
-                "borders", "<border><left/><right/>" + side("top", top, top_style)
-                           + side("bottom", bottom, bottom_style) + "<diagonal/></border>")
+                "borders", "<border>" + side("left", left, "thin") + side("right", right, "thin")
+                           + side("top", top, top_style) + side("bottom", bottom, bottom_style) + "<diagonal/></border>")
         return self._memo[key]
+
+    def box(self, rgb: str) -> int:
+        """A thin rule of colour ``rgb`` on all four sides."""
+        return self.border(left=rgb, right=rgb, top=rgb, bottom=rgb)
 
     def dxf(self, *, bold: bool = False, color: Optional[str] = None) -> int:
         """A differential format (a conditional format's font), appended to ``<dxfs>``."""

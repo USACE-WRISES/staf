@@ -385,7 +385,8 @@ complete availability, not 20 independent field observations.
   Existing Conditions; the report opens with the summary block (`easi/workbook.py`).
 - **The completed workbook** (Get Forms and the report) is one file, laid out as SFARI's (owner,
   2026-10-23): the calculator's Instructions (the tab it opens on), Summary (Reach name and NARS-9
-  region read live from Existing Conditions), Existing Conditions, a live calculator per
+  region read live from Existing Conditions and shaded grey as linked cells, the other site rows
+  orange entries, all of them ruled as the color key shows), Existing Conditions, a live calculator per
   alternative, then Metrics and Reference (`libs/staf_workbook`). There is no ReferenceCurves tab:
   Reference draws every curve and Metrics shows the Good, Fair and Poor ranges each value was rated
   against. Every download opens its own tab, which the browser closes once the file starts, so the

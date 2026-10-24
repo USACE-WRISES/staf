@@ -135,7 +135,9 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   template's other sheets. `SummaryInfo(blank=True)` leaves the Summary's site rows and its date
   empty (SFARI's blank workbook); `SummaryCells(site_cells=..., site_first=True)` puts the site
   block right under the title and reads chosen rows live from Existing Conditions (SFARI's Reach
-  name and Reach length, owner 2026-10-19). The app's calculator template is never changed; the toolkit edits the zip parts
+  name and Reach length, owner 2026-10-19), in the calculators' colour key: every label and value
+  ruled, the rows read live grey as linked cells, the tier plain, every other value an orange entry
+  (the owner's SFARI Summary; EASI's too, owner 2026-10-23). The app's calculator template is never changed; the toolkit edits the zip parts
   directly (never openpyxl load and save, which drops charts). The Summary is the Compare table
   on its side (owner, 2026-10-08): a row per measure (the index, then each function under its
   category), a column per scenario, each alternative followed by its change (conditional formats

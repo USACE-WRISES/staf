@@ -5,7 +5,7 @@
 // stored as their results so they read correctly before Excel recalculates.
 import { pySum } from '../../app/pyfmt'
 import { buildComparison, excelRound, type Measure, type ScenarioScores } from '../../shared/scenarios'
-import { type SummaryInfo, summaryRows } from '../../shared/summary'
+import { type SummaryInfo, summaryRows, TIER } from '../../shared/summary'
 import { isAlpha, isDigit, isUpper, pySplit, pyStrip } from '../py'
 import { type Built, type ScenarioInput, sheetFor, type AssemblySpec } from './assemble'
 import { colLetter, SheetWriter } from './author'
@@ -26,6 +26,12 @@ const RULE_STRONG = 'D5DEEA'
 const TINT = 'F6F8FB'
 const UP = '2F7A4B'
 const DOWN = 'A33A3A'
+/** The calculators' colour key (their Instructions sheet), which the summary block follows when it sits under
+ * the title: an entry, a cell read from another sheet (and its rule), and every other rule */
+const KEY_ENTRY = 'F8CBAD'
+const KEY_LINKED = 'F2F2F2'
+const KEY_LINKED_RULE = '7F7F7F'
+const KEY_RULE = '000000'
 /** Summary column widths (characters) and row heights (points) */
 const VALUE_W = 13
 /** sheets.BANNER_D_W: column D's width under a banner, so its line fits on one row (owner, 2026-10-14) */
@@ -59,7 +65,9 @@ export interface SummaryCells {
   /** summary-block rows read live from Existing Conditions: label to [template sheet, cell, the value stored as
    * the formula's result]; SFARI's Reach name and Reach length (owner, 2026-10-19) */
   siteCells: Record<string, [string, string, string | number]>
-  /** the summary block right under the title lines, a gap row after it (SFARI, owner 2026-10-19) */
+  /** the summary block right under the title lines, a gap row after it (SFARI, owner 2026-10-19), in the
+   * calculator's colour key: every label and value ruled, entries orange, ``siteCells`` grey as cells linked to
+   * another sheet (the owner's SFARI Summary; EASI's, owner 2026-10-23) */
   siteFirst: boolean
 }
 
@@ -129,6 +137,20 @@ class SummaryStyles extends Styles {
     this.labelBold = sb.xf({ font: f({ bold: true, size: 11, color: INK }), border: this.rule, wrap: true })
     this.up = sb.dxf({ bold: true, color: UP })
     this.down = sb.dxf({ bold: true, color: DOWN })
+  }
+
+  /** keyed: the summary block's styles in the calculator's colour key: ``label``, ``entry`` (a value typed in
+   * the workbook), ``linked`` (read from a scenario sheet) and ``fixed`` (set by the app). */
+  keyed(): Record<'label' | 'entry' | 'linked' | 'fixed', number> {
+    const sb = this.sb
+    const f = sb.font.bind(sb)
+    const rule = sb.box(KEY_RULE)
+    const linkedRule = sb.box(KEY_LINKED_RULE)
+    const label = sb.xf({ font: f({ size: 11, color: LABEL }), border: rule, wrap: true })
+    const entry = sb.xf({ font: f({ size: 11, color: INK }), fill: sb.fill(KEY_ENTRY), border: rule, wrap: true })
+    const linked = sb.xf({ font: f({ size: 11, color: INK }), fill: sb.fill(KEY_LINKED), border: linkedRule, wrap: true })
+    const fixed = sb.xf({ font: f({ size: 11, color: INK }), border: rule, wrap: true })
+    return { label, entry, linked, fixed }
   }
 
   value(digits: number, bold: boolean, base: boolean): number {
@@ -263,11 +285,11 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
   for (let c = 2; c <= span; c++) restCols.push(colPx(widths.get(c)!))
   const restPx = pySum(restCols)
 
-  const pair = (row: number, key: string, value: string | number, keyStyle = st.key, formula: string | null = null): number => {
+  const pair = (row: number, key: string, value: string | number, keyStyle = st.key, formula: string | null = null, valStyle = st.val): number => {
     w.text(`A${row}`, key, keyStyle)
-    if (formula === null) w.text(`B${row}`, value as string, st.val)
-    else w.formula(`B${row}`, formula, value, st.val)
-    for (let c = 3; c <= span; c++) w.blank(`${colLetter(c)}${row}`, st.val)
+    if (formula === null) w.text(`B${row}`, value as string, valStyle)
+    else w.formula(`B${row}`, formula, value, valStyle)
+    for (let c = 3; c <= span; c++) w.blank(`${colLetter(c)}${row}`, valStyle)
     w.merge(`B${row}:${colLetter(span)}${row}`)
     w.height(row, height(Math.max(lines(key, aPx), lines(value, restPx)), ROW_H))
     return row + 1
@@ -296,13 +318,16 @@ export function addSummarySheet(built: Built, spec: AssemblySpec, sb: StyleBook,
     mark(w, banner)
     row = 5
   }
+  const keyed = cells.siteFirst ? st.keyed() : null
   for (const [key, value] of site) {
     const live = Object.prototype.hasOwnProperty.call(cells.siteCells, key) ? cells.siteCells[key] : null
+    const keyStyle = keyed ? keyed.label : st.key
+    const valStyle = keyed ? keyed[live ? 'linked' : key === TIER ? 'fixed' : 'entry'] : st.val
     if (live) {
       const [sheet, cell, stored] = live
       const rf = `${quoteSheet(sheetFor(built, 0, sheet))}!${cell}`
-      row = pair(row, key, stored, st.key, `IF(ISBLANK(${rf}),"",${rf})`)
-    } else row = pair(row, key, value)
+      row = pair(row, key, stored, keyStyle, `IF(ISBLANK(${rf}),"",${rf})`, valStyle)
+    } else row = pair(row, key, value, keyStyle, null, valStyle)
   }
   if (!banner && cells.siteFirst) {
     w.height(row, ROW_H)

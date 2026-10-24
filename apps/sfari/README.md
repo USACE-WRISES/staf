@@ -62,7 +62,9 @@ pinned digest: the row map is what keeps a Likert value off the wrong metric.
 The owner's 2026-10-19 calculator (`notes/2026-10-19_SFARI Calculator/`) is the workbook every
 download follows: Instructions (the tab it opens on), Summary, then the score sheet, with no
 ReferenceCurves tab. Its Summary puts the site block right under the title, reads Reach name and
-Reach length live from the score sheet (B2, G2), then leaves a gap row. A blank names the score
+Reach length live from the score sheet (B2, G2), then leaves a gap row. The block follows the
+color key as the owner's file does: every label and value ruled, the two live rows grey as linked
+cells, the tier plain and the other rows orange entries. A blank names the score
 sheet "Scenario"; a completed workbook names each tab after its scenario as it is named online
 (owner, 2026-10-19). `data/calculator/` holds two files:
 - `SFARI_Calculator_Template_2026-10-19.xlsx`, the calculator every workbook is made from:

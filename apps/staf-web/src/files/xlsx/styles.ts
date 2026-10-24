@@ -91,16 +91,23 @@ export class StyleBook {
     return id
   }
 
-  border({ bottom = null as string | null, top = null as string | null, bottomStyle = 'thin', topStyle = 'thin' } = {}): number {
-    if (bottom === null && top === null) return 0
-    const key = JSON.stringify(['border', bottom, top, bottomStyle, topStyle])
+  border({ bottom = null as string | null, top = null as string | null, bottomStyle = 'thin', topStyle = 'thin',
+    left = null as string | null, right = null as string | null } = {}): number {
+    if (bottom === null && top === null && left === null && right === null) return 0
+    const key = JSON.stringify(['border', bottom, top, bottomStyle, topStyle, left, right])
     let id = this.memo.get(key)
     if (id === undefined) {
       const side = (tag: string, rgb: string | null, style: string) => (rgb ? `<${tag} style="${style}"><color rgb="FF${rgb}"/></${tag}>` : `<${tag}/>`)
-      id = this.append('borders', '<border><left/><right/>' + side('top', top, topStyle) + side('bottom', bottom, bottomStyle) + '<diagonal/></border>')
+      id = this.append('borders', '<border>' + side('left', left, 'thin') + side('right', right, 'thin')
+        + side('top', top, topStyle) + side('bottom', bottom, bottomStyle) + '<diagonal/></border>')
       this.memo.set(key, id)
     }
     return id
+  }
+
+  /** A thin rule of colour ``rgb`` on all four sides. */
+  box(rgb: string): number {
+    return this.border({ left: rgb, right: rgb, top: rgb, bottom: rgb })
   }
 
   /** A differential format (a conditional format's font), appended to <dxfs>. */
