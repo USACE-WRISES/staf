@@ -12,8 +12,10 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 #: the STAF data bundle the sections are placed on (its 2 m lines, the apps' lines)
 BUNDLE = Path(os.environ.get("XSGRID_BUNDLE") or r"D:\Data\nhdplus-hr\slim2\data")
-#: the 3DEP tile catalogs the bundle ships (``tables/dem1m_tiles.parquet``, ``dem19_quads.parquet``)
-CATALOGS = Path(os.environ.get("XSGRID_CATALOGS") or r"D:\Data\nhdplus-hr\slim2\tables")
+#: the 3DEP tile catalogs: the grid's copy of the two the bundle ships (``tables/dem1m_tiles.parquet``,
+#: ``dem19_quads.parquet``), with USGS's re-release of four central New Mexico projects swapped in
+#: (README "Tile catalogs"); a tile the catalog lists but USGS no longer serves stalls a run
+CATALOGS = Path(os.environ.get("XSGRID_CATALOGS") or r"D:\Data\xs-grid\catalogs")
 #: the archive (every sampled transect, float32) and the metrics: the dedicated drive
 ARCHIVE = Path(os.environ.get("XSGRID_ARCHIVE") or r"F:\staf-xs")
 #: working files (section tables, logs, the metrics' second copy)

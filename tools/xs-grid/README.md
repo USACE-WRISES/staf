@@ -99,7 +99,7 @@ The grid goes out region by region while the build runs. `xsgrid/release.py` pac
   - the half-width is eight regional bankfull widths, clamped to 250 to 800 m;
   - samples are spaced by min(10 m, DEM resolution), at most 2001 of them.
 - **Bankfull inputs.** Drainage area is the flowline's own `totdasqkm`, the value a click on that flowline uses. The Bieger division is looked up at the section point (`xsgrid.sections.divisions_at` equals `bieger.division_at`).
-- **Elevation source.** The rule is the app's (`dem_tiles.best_tile_dem`), applied per section, using the bundle's tile catalogs:
+- **Elevation source.** The rule is the app's (`dem_tiles.best_tile_dem`), applied per section, using the grid's copy of the bundle's tile catalogs (see "Tile catalogs"):
   1. the newest 1 m lidar project touching the transect that answers at least half of the samples;
   2. otherwise the next newest 1 m project;
   3. then the 1/9 arc-second (3 m) quads;
@@ -109,6 +109,17 @@ The grid goes out region by region while the build runs. `xsgrid/release.py` pac
 - **Sampling** (`config.SAMPLING_RULE`, version `xsgrid-1`). Each sample point is transformed from EPSG:5070 to the tile's own CRS and interpolated bilinearly between the four nearest cell centres of the native grid. The result is rounded to float32, the tiles' own precision, a change of at most 0.12 mm. The app instead reprojects a window and interpolates there, which depends on the window. The grid's numbers are exactly repeatable, so a section's profile can be rebuilt from its recorded tiles.
 - **Metrics.** Each section goes through the app's chain for one transect: `balanced_profile`, `simplify_profile`, then `summarize_profile` at the section's regional bankfull. The input is the float32 samples the archive keeps, so recomputing from the archive reproduces the metrics bit for bit (`run.py verify`).
 - **Faster thinning, same output.** `xsgrid.derive.simplify` replaces the last step of `simplify_profile`, a Visvalingam trim that rescans every point for each one it drops, with a heap. It uses the same areas by the same arithmetic and removes points in the same order (smallest first, leftmost on a tie), so the same points survive. The tests check this on 600 profiles, ties included. In the build, one section in 200 also runs the reference.
+
+## Tile catalogs
+
+The grid reads its own copy of the bundle's two catalogs, `D:\Data\xs-grid\catalogs` (`XSGRID_CATALOGS` overrides), so its inputs don't change under a national build that runs for weeks. `catalogs.json` there says what differs from the bundle's.
+
+- **2026-10-30:** USGS had re-released four central New Mexico 1 m projects, `NM_NRCS_Central_A1_2017`, `A2`, `A3` and `TL` (425 tiles), as one project, `NM_NRCS_Central_2017_D18` (359 tiles, named `USGS_1M_<zone>_x..y.._...`). The old folders hold no tiles any more.
+  - **Effect:** run 20 stalled for six hours on 1205's first cells. The prefetcher asked again and again for six tiles that answered 404, and the 1 m tier has no fallback for a tile the catalog lists but USGS doesn't serve.
+  - **Fix:** the copy drops the four projects and adds the re-release's rows, made by the national builder's own `dem.project_rows`. The other 125,428 rows are the bundle's, unchanged and in its order (project, then name). The quad catalog is copied as is.
+  - **Scope:** no published region had read the four projects. The regions they touch are all still to build: 1205, 1208, 1302, 1305, 1306, 1408 and 1502.
+- The bundle's own catalog, which the apps read, still lists the four projects.
+- **Before a start:** check the catalog against the bucket, since USGS can re-release or retire a project at any time. Listing each catalog project's `TIFF/` folder takes about 20 s.
 
 ## Storage
 
@@ -131,6 +142,7 @@ Metrics derived from float32 differ from metrics derived from float64 on about 6
 | `F:\staf-xs\regions\<vpu>.json` | counts, bytes, sha256, tiers, timings |
 | `F:\staf-xs\parts\<vpu>\` | per-cell part files while a region is in progress |
 | `D:\Data\xs-grid\sections\` | placed sections per region |
+| `D:\Data\xs-grid\catalogs\` | the grid's tile catalogs (`dem1m_tiles.parquet`, `dem19_quads.parquet`, `catalogs.json`; see "Tile catalogs") |
 | `D:\Data\xs-grid\tilecache\` | the 3DEP tiles in use, kept to about 100 GB (`--cache-gb`): the least recently used go first, except tiles used in the last 10 minutes, and the finished build empties it |
 | `D:\Data\xs-grid\logs\cells.jsonl` | one line per finished cell |
 | `D:\Data\xs-grid\release\` | the `staf-xs-current` files (`release.json`, `xs-<vpu>*.parquet`) |
